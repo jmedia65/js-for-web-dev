@@ -3,16 +3,177 @@ title: "JavaScript basics"
 description: "What JavaScript is, how it fits into web development, and essential syntax"
 ---
 
-{/* TODO: Write overview content */}
+## What is JavaScript?
 
-## What is JavaScript
+JavaScript is the programming language of the web. Every interactive website you've ever used — clicking buttons, loading new data without refreshing, updating a shopping cart — that's JavaScript running in the browser.
 
-{/* TODO: Brief history and role in the web */}
+```javascript
+// This runs in the browser
+document.querySelector("button").addEventListener("click", () => {
+  console.log("Button clicked!");
+});
+
+// This runs on the server (with Node.js)
+const express = require("express");
+const app = express();
+app.listen(3000);
+```
+
+JavaScript started as a browser-only language in 1995. Today it runs everywhere — browsers, servers (Node.js), mobile apps, and even desktop applications. For web development, it's not optional. HTML gives you structure, CSS gives you style, and JavaScript gives you behavior.
+
+<Info>
+In this course, you'll use JavaScript for two things: building React frontends and connecting them to your FastAPI backend. That covers the vast majority of what full-stack web developers do with JavaScript.
+</Info>
 
 ## JavaScript vs Python
 
-{/* TODO: High-level comparison */}
+You already know how to program. JavaScript and Python share the same core concepts — variables, functions, loops, objects. The differences are mostly syntax.
+
+```javascript
+// JavaScript
+function greetUser(name) {
+  const message = `Hello, ${name}!`;
+  console.log(message);
+  return message;
+}
+
+const users = ["Jane", "John", "Alice"];
+
+for (const user of users) {
+  greetUser(user);
+}
+```
+
+```python
+# Python equivalent
+def greet_user(name):
+    message = f"Hello, {name}!"
+    print(message)
+    return message
+
+users = ["Jane", "John", "Alice"]
+
+for user in users:
+    greet_user(user)
+```
+
+The logic is identical. The wrapping is different. Here are the key differences you'll notice right away:
+
+| Feature | Python | JavaScript |
+|---|---|---|
+| Variables | `name = "Jane"` | `const name = "Jane";` |
+| Functions | `def greet():` | `function greet() {}` |
+| Blocks | Indentation | Curly braces `{}` |
+| Strings | `f"Hello, {name}"` | `` `Hello, ${name}` `` |
+| Print | `print()` | `console.log()` |
+| None/null | `None` | `null` (and `undefined`) |
+| Naming | `snake_case` | `camelCase` |
+
+<Tip>
+Don't try to memorize every difference up front. You'll pick them up naturally as you write code. The table above covers 90% of what trips people up in the first few days.
+</Tip>
 
 ## Syntax basics
 
-{/* TODO: Semicolons, curly braces, case sensitivity */}
+JavaScript has three syntax rules that differ from Python. Once you internalize these, the rest feels familiar.
+
+### Semicolons
+
+```javascript
+const name = "Jane";
+const age = 25;
+console.log(name); // "Jane"
+```
+
+Semicolons end each statement. JavaScript can technically guess where they go (called "automatic semicolon insertion"), but always include them. It avoids subtle bugs and every serious codebase uses them.
+
+### Curly braces
+
+```javascript
+// Python uses indentation
+// JavaScript uses curly braces {}
+
+function calculateTotal(price, taxRate) {
+  const tax = price * taxRate;
+  const total = price + tax;
+  return total;
+}
+
+if (total > 100) {
+  console.log("Free shipping!");
+} else {
+  console.log("Shipping: $9.99");
+}
+```
+
+Curly braces `{}` define blocks of code — function bodies, if/else branches, loops. Indentation is optional (but you should still indent for readability).
+
+### Case sensitivity
+
+```javascript
+const userName = "Jane";
+const UserName = "John";
+const USERNAME = "ALICE";
+
+// These are three different variables
+console.log(userName); // "Jane"
+console.log(UserName); // "John"
+console.log(USERNAME); // "ALICE"
+```
+
+JavaScript is case-sensitive. `userName`, `UserName`, and `USERNAME` are three completely different variables. The convention is `camelCase` for most things, `PascalCase` for React components, and `UPPER_CASE` for constants.
+
+### Comments
+
+```javascript
+// Single-line comment
+
+/*
+  Multi-line comment
+  for longer explanations
+*/
+
+const apiUrl = "https://api.example.com"; // Inline comment
+```
+
+Two slashes `//` for single-line comments, `/* */` for multi-line. Same idea as Python's `#`, just different characters.
+
+## Running JavaScript
+
+You'll run JavaScript in two places during this course:
+
+### Browser console (for quick experiments)
+
+Open any browser, press `F12` (or `Cmd+Option+J` on Mac), and type directly into the Console tab.
+
+```javascript
+// Try this in your browser console right now
+const greeting = "Hello from JavaScript!";
+console.log(greeting); // "Hello from JavaScript!"
+```
+
+### Node.js (for files and projects)
+
+Create a `.js` file and run it with Node:
+
+```javascript hello.js
+const name = "Jane";
+console.log(`Welcome to JavaScript, ${name}!`);
+```
+
+```bash
+node hello.js
+# Welcome to JavaScript, Jane!
+```
+
+<Tip>
+Use the browser console to test quick ideas and one-liners. Use Node.js for anything you want to save or build on. You'll set up Node.js in the Getting Started section.
+</Tip>
+
+## What's next?
+
+Now that you know how JavaScript fits into web development and how its syntax compares to Python, let's start writing real code. First up: storing data in variables.
+
+<Card title="Variables" icon="box" href="/javascript-core/variables">
+Store and manage data using let and const
+</Card>

@@ -3,24 +3,293 @@ title: "Data types"
 description: "Understand the different types of data JavaScript can work with"
 ---
 
-{/* TODO: Write data types content */}
-
 ## Primitives
 
-{/* TODO: string, number, boolean, null, undefined */}
+Every value in JavaScript has a type. There are seven primitive types, but you'll use five of them daily: strings, numbers, booleans, `null`, and `undefined`.
+
+```javascript
+// String - text wrapped in quotes
+const name = "Jane Doe";
+const email = 'jane@example.com';
+const greeting = `Hello, ${name}!`; // Template literal (more on this next lesson)
+
+// Number - integers and decimals are the same type
+const age = 25;
+const price = 99.99;
+const temperature = -5;
+
+// Boolean - true or false
+const isLoggedIn = true;
+const hasPermission = false;
+
+// Null - intentionally empty ("I know there's nothing here")
+const selectedItem = null;
+
+// Undefined - not yet assigned ("This hasn't been set")
+let userInput;
+console.log(userInput); // undefined
+```
+
+That's it. No `int` vs `float`, no `str` vs `bytes`. JavaScript keeps it simpler than Python in this regard.
+
+<Tabs>
+<Tab title="JavaScript">
+```javascript
+// One number type for everything
+const count = 42;
+const price = 19.99;
+const negative = -10;
+
+typeof count; // "number"
+typeof price; // "number"
+```
+</Tab>
+
+<Tab title="Python">
+```python
+# Separate int and float types
+count = 42
+price = 19.99
+negative = -10
+
+type(count)  # <class 'int'>
+type(price)  # <class 'float'>
+```
+</Tab>
+</Tabs>
+
+### null vs undefined
+
+This is the one part that trips up Python developers. Python has `None`. JavaScript has two "nothing" values:
+
+```javascript
+// null = you explicitly set it to "nothing"
+let selectedUser = null; // "No user selected yet"
+
+// undefined = JavaScript set it because nothing was assigned
+let searchQuery;
+console.log(searchQuery); // undefined - "This variable exists but has no value"
+```
+
+<Tip>
+Use `null` when you want to intentionally say "empty" or "no value." Let `undefined` be JavaScript's default for "not yet assigned." In practice, you'll mostly use `null`.
+</Tip>
 
 ## Type checking
 
-{/* TODO: typeof operator */}
+Use `typeof` to check what type a value is. This is especially useful when debugging or validating API responses.
+
+```javascript
+typeof "Jane";       // "string"
+typeof 42;           // "number"
+typeof true;         // "boolean"
+typeof undefined;    // "undefined"
+typeof null;         // "object"  ← This is a bug. Seriously.
+typeof { name: "Jane" }; // "object"
+typeof [1, 2, 3];   // "object"  ← Arrays are objects too
+```
+
+<Warning>
+`typeof null` returns `"object"` instead of `"null"`. This is a well-known bug from 1995 that was never fixed because too much code depends on it. To check for null, use `value === null` instead.
+</Warning>
+
+```javascript
+// Checking for null properly
+const selectedUser = null;
+
+// ❌ Wrong: typeof doesn't help
+console.log(typeof selectedUser); // "object"
+
+// ✅ Correct: Direct comparison
+console.log(selectedUser === null); // true
+```
+
+To check if something is an array, use `Array.isArray()`:
+
+```javascript
+const users = ["Jane", "John", "Alice"];
+const user = { name: "Jane" };
+
+Array.isArray(users); // true
+Array.isArray(user);  // false
+```
 
 ## Type coercion
 
-{/* TODO: == vs === */}
+JavaScript tries to be "helpful" by automatically converting types when you mix them. This leads to some genuinely weird behavior.
+
+```javascript
+// JavaScript automatically converts types
+console.log("5" + 3);     // "53"  (number becomes string)
+console.log("5" - 3);     // 2     (string becomes number)
+console.log("5" * 2);     // 10    (string becomes number)
+console.log(true + 1);    // 2     (true becomes 1)
+console.log(false + 1);   // 1     (false becomes 0)
+console.log("" == false); // true  (both coerced to 0)
+```
+
+The `+` operator is particularly tricky — if either side is a string, it concatenates instead of adding. The other math operators (`-`, `*`, `/`) convert strings to numbers.
+
+<Warning>
+Don't rely on type coercion. Always convert types explicitly when you need to. Implicit coercion causes bugs that are hard to track down.
+</Warning>
+
+### Converting types explicitly
+
+```javascript
+// String to number
+const input = "42";
+const count = Number(input);
+console.log(count);        // 42
+console.log(typeof count); // "number"
+
+// Number to string
+const price = 99.99;
+const label = String(price);
+console.log(label);        // "99.99"
+console.log(typeof label); // "string"
+
+// Anything to boolean
+Boolean(0);         // false
+Boolean("");        // false
+Boolean(null);      // false
+Boolean(undefined); // false
+Boolean("hello");   // true
+Boolean(42);        // true
+Boolean([]);        // true  ← Empty arrays are truthy!
+```
+
+<Info>
+Values that convert to `false` are called "falsy": `0`, `""`, `null`, `undefined`, `NaN`, and `false`. Everything else is "truthy." You'll use this concept constantly in React for conditional rendering.
+</Info>
+
+## Equality: == vs ===
+
+This is the most important syntax rule in this entire lesson.
+
+```javascript
+// == (loose equality) - converts types before comparing
+console.log(5 == "5");    // true  (string "5" converted to number 5)
+console.log(0 == false);  // true  (false converted to 0)
+console.log("" == false); // true  (both converted to 0)
+console.log(null == undefined); // true
+
+// === (strict equality) - no type conversion, must match exactly
+console.log(5 === "5");    // false (different types)
+console.log(0 === false);  // false (different types)
+console.log("" === false); // false (different types)
+console.log(null === undefined); // false (different types)
+```
+
+<Tabs>
+<Tab title="JavaScript">
+```javascript
+// Always use === in JavaScript
+const userAge = "25";
+const minAge = 25;
+
+if (userAge === minAge) {
+  console.log("Match"); // Won't run - different types
+}
+
+if (Number(userAge) === minAge) {
+  console.log("Match"); // Runs - both are numbers now
+}
+```
+</Tab>
+
+<Tab title="Python">
+```python
+# Python's == already works like JavaScript's ===
+user_age = "25"
+min_age = 25
+
+if user_age == min_age:
+    print("Match")  # Won't run - Python doesn't coerce
+```
+</Tab>
+</Tabs>
+
+<Tip>
+Always use `===` and `!==`. Pretend `==` and `!=` don't exist. This is the universal recommendation from every JavaScript style guide, linter, and senior developer.
+</Tip>
 
 ## Common mistakes
 
-{/* TODO: == vs === gotcha */}
+<AccordionGroup>
+<Accordion title="Using == instead of ===">
+```javascript
+// ❌ Wrong: Loose equality causes unexpected matches
+const status = 0;
+if (status == false) {
+  console.log("No status"); // Runs! 0 is coerced to false
+}
+
+// ✅ Correct: Strict equality
+const status = 0;
+if (status === false) {
+  console.log("No status"); // Doesn't run - 0 is not false
+}
+if (status === 0) {
+  console.log("Status is zero"); // Runs - exact match
+}
+```
+
+<Warning>
+`==` converts types before comparing, which leads to surprising results like `0 == false` being `true`. Use `===` to compare both value and type.
+</Warning>
+</Accordion>
+
+<Accordion title="Confusing null and undefined">
+```javascript
+// ❌ Wrong: Treating them as interchangeable
+let data;
+if (data === null) {
+  console.log("No data"); // Doesn't run! data is undefined, not null
+}
+
+// ✅ Correct: Check for both, or use the right one
+let data;
+if (data == null) {
+  console.log("No data"); // Runs - == treats null and undefined as equal
+}
+
+// Or be explicit:
+if (data === null || data === undefined) {
+  console.log("No data"); // Runs
+}
+```
+
+<Warning>
+`undefined` means "not yet assigned." `null` means "intentionally empty." They're not the same thing, but `==` treats them as equal. This is the one exception where `==` is sometimes preferred — checking for `null == undefined` catches both.
+</Warning>
+</Accordion>
+
+<Accordion title="Assuming typeof null returns 'null'">
+```javascript
+// ❌ Wrong: Checking null with typeof
+const result = null;
+if (typeof result === "null") {
+  console.log("Result is null"); // Never runs!
+}
+
+// ✅ Correct: Direct comparison
+const result = null;
+if (result === null) {
+  console.log("Result is null"); // Runs
+}
+```
+
+<Warning>
+`typeof null` returns `"object"` due to a decades-old bug in JavaScript. Always check for null with `=== null`.
+</Warning>
+</Accordion>
+</AccordionGroup>
 
 ## What's next?
 
-{/* TODO: Card linking to template-literals */}
+You know the building blocks — strings, numbers, booleans, and how to compare them safely. Next, let's look at a cleaner way to work with strings using template literals.
+
+<Card title="Template literals" icon="quote-left" href="/javascript-core/template-literals">
+String interpolation, multi-line strings, and goodbye to string concatenation
+</Card>
