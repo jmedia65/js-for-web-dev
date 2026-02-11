@@ -1,0 +1,324 @@
+---
+title: "Fetching data from APIs"
+description: "Make HTTP requests to your FastAPI backend using fetch and async/await"
+---
+
+## Making API calls
+
+Every web app needs to communicate with a backend. JavaScript's `fetch()` function handles HTTP requests - GET to retrieve data, POST to create data, PUT to update, DELETE to remove.
+
+You'll use this pattern in almost every React component that needs backend data.
+
+## Basic GET request
+
+```javascript
+async function getUsers() {
+  const response = await fetch('http://localhost:8000/api/users');
+  const data = await response.json();
+  return data;
+}
+
+// Usage
+const users = await getUsers();
+console.log(users); // Array of user objects
+```
+
+`fetch()` returns a Promise, so you need `await`. The response needs to be converted to JSON with `.json()`.
+
+<Info>
+The `.json()` method also returns a Promise, which is why it needs `await` too. It reads the response body and parses it as JSON.
+</Info>
+
+## Handling errors
+
+```javascript
+async function getUsers() {
+  try {
+    const response = await fetch('http://localhost:8000/api/users');
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Failed to fetch users:', error);
+    throw error; // Re-throw so caller can handle it
+  }
+}
+```
+
+Always check `response.ok` before parsing. A 404 or 500 status won't throw an error automatically - you have to check for it.
+
+<Warning>
+`fetch()` only throws on network errors (no internet, DNS failure, etc.), not on HTTP error status codes. A 404 or 500 response is considered a "successful" fetch. Always check `response.ok`.
+</Warning>
+
+## POST request with data
+
+```javascript
+async function createUser(userData) {
+  const response = await fetch('http://localhost:8000/api/users', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(userData),
+  });
+  
+  if (!response.ok) {
+    throw new Error('Failed to create user');
+  }
+  
+  return response.json();
+}
+
+// Usage
+const newUser = await createUser({ 
+  name: "Jane Doe", 
+  email: "jane@example.com" 
+});
+console.log(newUser); // { id: 1, name: "Jane Doe", email: "jane@example.com" }
+```
+
+POST requests need three things:
+1. `method: 'POST'` - tells the server you're creating data
+2. `headers` with `Content-Type: application/json` - tells the server you're sending JSON
+3. `body` with `JSON.stringify()` - converts your JavaScript object to a JSON string
+
+<Tip>
+Always use `JSON.stringify()` when sending data to an API. The body must be a string, not a JavaScript object.
+</Tip>
+
+## PUT and DELETE requests
+
+```javascript
+// Update a user
+async function updateUser(userId, updates) {
+  const response = await fetch(`http://localhost:8000/api/users/${userId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(updates),
+  });
+  
+  if (!response.ok) throw new Error('Failed to update user');
+  return response.json();
+}
+
+// Delete a user
+async function deleteUser(userId) {
+  const response = await fetch(`http://localhost:8000/api/users/${userId}`, {
+    method: 'DELETE',
+  });
+  
+  if (!response.ok) throw new Error('Failed to delete user');
+  // DELETE often returns no content, so check first
+  if (response.status === 204) return null;
+  return response.json();
+}
+```
+
+PUT and DELETE follow the same pattern. DELETE requests usually don't have a body, and often return status 204 (No Content) instead of JSON.
+
+## Using environment variables
+
+```javascript
+// ❌ Don't hardcode your API URL
+const response = await fetch('http://localhost:8000/api/users');
+
+// ✅ Use an environment variable
+const API_URL = import.meta.env.VITE_API_URL;
+const response = await fetch(`${API_URL}/api/users`);
+```
+
+Store your API URL in a `.env` file so you can change it between development and production without modifying code.
+
+<Info>
+In Vite (the build tool we'll use), environment variables must start with `VITE_` to be exposed to your code. In your `.env` file: `VITE_API_URL=http://localhost:8000`
+</Info>
+
+## Complete example with error handling
+
+```javascript api/users.js
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
+export async function getUsers() {
+  try {
+    const response = await fetch(`${API_URL}/api/users`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch users: ${response.status}`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    throw error;
+  }
+}
+
+export async function createUser(userData) {
+  try {
+    const response = await fetch(`${API_URL}/api/users`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(userData),
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to create user: ${response.status}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Error creating user:', error);
+    throw error;
+  }
+}
+
+export async function updateUser(userId, updates) {
+  try {
+    const response = await fetch(`${API_URL}/api/users/${userId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates),
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to update user: ${response.status}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Error updating user:', error);
+    throw error;
+  }
+}
+
+export async function deleteUser(userId) {
+  try {
+    const response = await fetch(`${API_URL}/api/users/${userId}`, {
+      method: 'DELETE',
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to delete user: ${response.status}`);
+    }
+    
+    if (response.status === 204) return null;
+    return await response.json();
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    throw error;
+  }
+}
+```
+
+This is the pattern you'll use in every project - a separate file with all your API functions, proper error handling, and environment variables.
+
+<Tip>
+Put all your API functions in a separate file (like `api/users.js`). This separates concerns and makes your code easier to test and maintain.
+</Tip>
+
+## Common mistakes
+
+<AccordionGroup>
+<Accordion title="Forgetting to await fetch">
+```javascript
+// ❌ Wrong: Missing await
+async function getUsers() {
+  const data = fetch('http://localhost:8000/api/users');
+  console.log(data); // Promise { <pending> }
+  return data;
+}
+
+// ✅ Correct: Use await
+async function getUsers() {
+  const response = await fetch('http://localhost:8000/api/users');
+  const data = await response.json();
+  return data;
+}
+```
+
+<Warning>
+Without `await`, you get a Promise object, not the data. This is one of the most common async mistakes. Remember: `fetch()` returns a Promise, and so does `.json()`.
+</Warning>
+</Accordion>
+
+<Accordion title="Not checking response.ok">
+```javascript
+// ❌ Wrong: Assumes request succeeded
+async function getUsers() {
+  const response = await fetch('http://localhost:8000/api/users');
+  return response.json(); // Might fail on 404/500
+}
+
+// ✅ Correct: Check for errors
+async function getUsers() {
+  const response = await fetch('http://localhost:8000/api/users');
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+  return response.json();
+}
+```
+
+<Warning>
+A 404 or 500 response won't throw an error automatically. Always check `response.ok` before calling `.json()`. Otherwise you might try to parse an error page as JSON and get confusing errors.
+</Warning>
+</Accordion>
+
+<Accordion title="Forgetting JSON.stringify for POST/PUT">
+```javascript
+// ❌ Wrong: Sending object directly
+const response = await fetch('http://localhost:8000/api/users', {
+  method: 'POST',
+  body: { name: "Jane", email: "jane@example.com" },
+});
+
+// ✅ Correct: Stringify the object
+const response = await fetch('http://localhost:8000/api/users', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ name: "Jane", email: "jane@example.com" }),
+});
+```
+
+<Warning>
+The `body` must be a string, not a JavaScript object. Always use `JSON.stringify()`, and don't forget the `Content-Type` header.
+</Warning>
+</Accordion>
+
+<Accordion title="Not using try/catch">
+```javascript
+// ❌ Wrong: No error handling
+async function getUsers() {
+  const response = await fetch('http://localhost:8000/api/users');
+  return response.json();
+}
+
+// ✅ Correct: Wrap in try/catch
+async function getUsers() {
+  try {
+    const response = await fetch('http://localhost:8000/api/users');
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    return await response.json();
+  } catch (error) {
+    console.error('Failed to fetch users:', error);
+    throw error;
+  }
+}
+```
+
+<Warning>
+Network requests can fail for many reasons - no internet, server down, CORS errors. Always wrap fetch calls in try/catch so you can handle errors gracefully.
+</Warning>
+</Accordion>
+</AccordionGroup>
+
+## What's next?
+
+You can now fetch data from your FastAPI backend. Next, let's learn how to handle loading states so users know when data is being fetched.
+
+<Card title="Loading states" icon="spinner" href="/async-apis/loading-states">
+Show spinners and disable buttons during requests
+</Card>

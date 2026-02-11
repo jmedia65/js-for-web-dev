@@ -1,118 +1,299 @@
 {
-  "$schema": "https://mintlify.com/docs.json",
+  "$schema": "https://mintlify.com/schema.json",
   "theme": "mint",
-  "name": "Mint Starter Kit",
+  "name": "JavaScript for Web Dev",
+  "logo": {
+    "dark": "/logo/dark.svg",
+    "light": "/logo/light.svg"
+  },
+  "seo": {
+    "metatags": {
+      "robots": "noindex"
+    }
+  },
+  "favicon": "/favicon.svg",
   "colors": {
     "primary": "#16A34A",
     "light": "#07C983",
     "dark": "#15803D"
   },
-  "favicon": "/favicon.svg",
+  "background": {
+    "color": {
+      "dark": "#0a0d1a"
+    }
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "GitHub",
+        "href": "https://github.com/jmedia65/fastapi-react-full-stack"
+      }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "MaxterMedia",
+      "href": "https://maxtermedia.com"
+    }
+  },
   "navigation": {
+    "global": {
+      "anchors": [
+        {
+          "anchor": "FastAPI + React Repo",
+          "icon": "github",
+          "href": "https://github.com/jmedia65/fastapi-react-full-stack"
+        },
+        {
+          "anchor": "Community",
+          "icon": "slack",
+          "href": "https://maxtermedia.com/community"
+        }
+      ]
+    },
     "tabs": [
       {
-        "tab": "Guides",
+        "tab": "Introduction",
         "groups": [
           {
-            "group": "Getting started",
-            "pages": ["index", "quickstart", "development"]
-          },
-          {
-            "group": "Customization",
-            "pages": ["essentials/settings", "essentials/navigation"]
-          },
-          {
-            "group": "Writing content",
+            "group": "Start here",
             "pages": [
-              "essentials/markdown",
-              "essentials/code",
-              "essentials/images",
-              "essentials/reusable-snippets"
-            ]
-          },
-          {
-            "group": "AI tools",
-            "pages": [
-              "ai-tools/cursor",
-              "ai-tools/claude-code",
-              "ai-tools/windsurf"
+              "introduction/welcome",
+              "introduction/is-this-for-you",
+              "introduction/how-to-follow"
             ]
           }
         ]
       },
       {
-        "tab": "API reference",
+        "tab": "Getting Started",
         "groups": [
           {
-            "group": "API documentation",
-            "pages": ["api-reference/introduction"]
+            "group": "Setup",
+            "pages": [
+              "getting-started/installing-node",
+              "getting-started/vscode-setup",
+              "getting-started/first-javascript-file",
+              "getting-started/running-javascript"
+            ]
           },
           {
-            "group": "Endpoint examples",
+            "group": "Package management",
             "pages": [
-              "api-reference/endpoint/get",
-              "api-reference/endpoint/create",
-              "api-reference/endpoint/delete",
-              "api-reference/endpoint/webhook"
+              "getting-started/understanding-npm",
+              "getting-started/project-setup"
             ]
           }
         ]
-      }
-    ],
-    "global": {
-      "anchors": [
-        {
-          "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
-          "icon": "book-open-cover"
-        },
-        {
-          "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
-          "icon": "newspaper"
-        }
-      ]
-    }
-  },
-  "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
-  },
-  "navbar": {
-    "links": [
+      },
       {
-        "label": "Support",
-        "href": "mailto:hi@mintlify.com"
+        "tab": "JavaScript Core",
+        "groups": [
+          {
+            "group": "Fundamentals",
+            "pages": [
+              "javascript-core/overview",
+              "javascript-core/variables",
+              "javascript-core/data-types",
+              "javascript-core/template-literals",
+              "javascript-core/comments"
+            ]
+          },
+          {
+            "group": "Functions",
+            "pages": [
+              "javascript-core/functions-basics",
+              "javascript-core/arrow-functions",
+              "javascript-core/parameters-arguments"
+            ]
+          },
+          {
+            "group": "Scope",
+            "pages": [
+              "javascript-core/understanding-scope",
+              "javascript-core/closures"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Working with Data",
+        "groups": [
+          {
+            "group": "Data structures",
+            "pages": [
+              "working-with-data/arrays",
+              "working-with-data/array-methods",
+              "working-with-data/objects",
+              "working-with-data/destructuring",
+              "working-with-data/spread-operator"
+            ]
+          },
+          {
+            "group": "Working with JSON",
+            "pages": ["working-with-data/json-basics"]
+          },
+          {
+            "group": "Control flow",
+            "pages": [
+              "working-with-data/conditionals",
+              "working-with-data/loops"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Async & APIs",
+        "groups": [
+          {
+            "group": "Understanding async",
+            "pages": [
+              "async-apis/why-async-matters",
+              "async-apis/callbacks",
+              "async-apis/promises",
+              "async-apis/async-await"
+            ]
+          },
+          {
+            "group": "Making API calls",
+            "pages": [
+              "async-apis/fetch-basics",
+              "async-apis/handling-responses",
+              "async-apis/error-handling",
+              "async-apis/loading-states"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "DOM & Browser",
+        "groups": [
+          {
+            "group": "Understanding the DOM",
+            "pages": ["dom-browser/what-is-dom", "dom-browser/dev-tools"]
+          },
+          {
+            "group": "DOM manipulation",
+            "pages": [
+              "dom-browser/selecting-elements",
+              "dom-browser/modifying-elements",
+              "dom-browser/creating-elements"
+            ]
+          },
+          {
+            "group": "Events",
+            "pages": [
+              "dom-browser/event-listeners",
+              "dom-browser/form-handling"
+            ]
+          },
+          {
+            "group": "Browser APIs",
+            "pages": ["dom-browser/local-storage"]
+          }
+        ]
+      },
+      {
+        "tab": "React Essentials",
+        "groups": [
+          {
+            "group": "Getting started with React",
+            "pages": [
+              "react-essentials/what-is-react",
+              "react-essentials/setup-react-project"
+            ]
+          },
+          {
+            "group": "Core concepts",
+            "pages": [
+              "react-essentials/components-jsx",
+              "react-essentials/props",
+              "react-essentials/use-state",
+              "react-essentials/use-effect"
+            ]
+          },
+          {
+            "group": "React patterns",
+            "pages": [
+              "react-essentials/conditional-rendering",
+              "react-essentials/list-rendering",
+              "react-essentials/forms-in-react",
+              "react-essentials/component-composition"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Full-Stack",
+        "groups": [
+          {
+            "group": "Setup",
+            "pages": [
+              "full-stack/project-structure",
+              "full-stack/environment-variables"
+            ]
+          },
+          {
+            "group": "Connecting React to FastAPI",
+            "pages": [
+              "full-stack/understanding-cors",
+              "full-stack/api-client-layer",
+              "full-stack/type-safety"
+            ]
+          },
+          {
+            "group": "Building a CRUD app",
+            "pages": [
+              "full-stack/create-operation",
+              "full-stack/read-operation",
+              "full-stack/update-operation",
+              "full-stack/delete-operation"
+            ]
+          },
+          {
+            "group": "Production patterns",
+            "pages": [
+              "full-stack/full-example-walkthrough",
+              "full-stack/error-handling-stack",
+              "full-stack/loading-states-everywhere"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Next Steps",
+        "groups": [
+          {
+            "group": "Summary",
+            "pages": [
+              "next-steps/course-wrap-up",
+              "next-steps/the-essential-20-percent"
+            ]
+          },
+          {
+            "group": "Going further",
+            "pages": [
+              "next-steps/recommended-resources",
+              "next-steps/deployment-basics"
+            ]
+          },
+          {
+            "group": "Community",
+            "pages": ["next-steps/get-help"]
+          }
+        ]
       }
-    ],
-    "primary": {
-      "type": "button",
-      "label": "Dashboard",
-      "href": "https://dashboard.mintlify.com"
-    }
-  },
-  "contextual": {
-    "options": [
-      "copy",
-      "view",
-      "chatgpt",
-      "claude",
-      "perplexity",
-      "mcp",
-      "cursor",
-      "vscode"
     ]
   },
   "footer": {
     "socials": {
-      "x": "https://x.com/mintlify",
-      "github": "https://github.com/mintlify",
-      "linkedin": "https://linkedin.com/company/mintlify"
+      "x": "https://x.com/maxtermedia",
+      "github": "https://github.com/jmedia65",
+      "linkedin": "https://www.linkedin.com/company/maxtermedia"
     }
   },
-  "seo": {
-    "metatags": {
-      "robots": "noindex"
+  "integrations": {
+    "ga4": {
+      "measurementId": "G-XXXXXXXXXX"
     }
   }
 }

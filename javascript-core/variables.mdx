@@ -1,0 +1,186 @@
+---
+title: "Variables"
+description: "Store and manage data in your JavaScript programs using let and const"
+---
+
+## What are variables?
+
+Variables store data that you'll use throughout your program - user input, API responses, calculation results, and more.
+
+JavaScript has two ways to declare variables: `let` for values that change, and `const` for values that don't.
+
+## Declaring variables
+
+```javascript
+// Use const for values that won't change
+const apiUrl = "https://api.example.com";
+const maxRetries = 3;
+const user = { name: "Jane", email: "jane@example.com" };
+
+// Use let for values that will change
+let userInput = "";
+let attemptCount = 0;
+let isLoading = false;
+```
+
+`const` prevents reassignment - once you set a value, you can't change it. `let` allows the value to be updated later.
+
+<Tip>
+Default to `const` unless you know the value needs to change. This prevents accidental reassignments and makes your code easier to understand.
+</Tip>
+
+## Updating variables
+
+```javascript
+let count = 0;
+console.log(count); // 0
+
+count = 5;
+console.log(count); // 5
+
+count = count + 1;
+console.log(count); // 6
+
+// Shorthand
+count += 10;
+console.log(count); // 16
+```
+
+With `let`, you can reassign the variable as many times as needed. Use `+=`, `-=`, `*=`, `/=` for arithmetic shortcuts.
+
+## Naming conventions
+
+```javascript
+// Use camelCase for variable names
+const firstName = "Jane";
+const userEmail = "jane@example.com";
+const isLoggedIn = true;
+const totalPrice = 99.99;
+
+// Use UPPER_CASE for constants that never change
+const API_KEY = "abc123xyz";
+const MAX_FILE_SIZE = 5000000;
+const DEFAULT_TIMEOUT = 30000;
+```
+
+Start with a lowercase letter, then capitalize the first letter of each new word. For true constants (values that never change across your entire app), use UPPER_CASE with underscores.
+
+<Info>
+JavaScript variable names can contain letters, numbers, underscores, and dollar signs - but they can't start with a number.
+</Info>
+
+## Variable scope
+
+```javascript
+const globalVar = "I'm available everywhere";
+
+function myFunction() {
+  const functionVar = "I only exist inside this function";
+  
+  if (true) {
+    const blockVar = "I only exist inside this if block";
+    let anotherBlockVar = "Me too!";
+    
+    console.log(globalVar);      // Works
+    console.log(functionVar);    // Works
+    console.log(blockVar);       // Works
+  }
+  
+  console.log(blockVar);  // Error: blockVar is not defined
+}
+```
+
+Variables declared with `const` and `let` are "block-scoped" - they only exist within the nearest set of curly braces `{}`.
+
+<Tip>
+Keep variables in the smallest scope possible. This makes your code easier to debug and prevents naming conflicts.
+</Tip>
+
+## Comparing to Python
+
+<Tabs>
+<Tab title="JavaScript">
+```javascript
+// JavaScript uses const/let
+const name = "Jane";
+let age = 25;
+
+age = 26; // Can reassign let
+```
+</Tab>
+
+<Tab title="Python">
+```python
+# Python doesn't have const
+name = "Jane"
+age = 25
+
+age = 26  # Can always reassign
+```
+</Tab>
+</Tabs>
+
+Python doesn't distinguish between changeable and unchangeable variables - everything can be reassigned. JavaScript's `const` helps you catch bugs by preventing accidental reassignments.
+
+## Common mistakes
+
+<AccordionGroup>
+<Accordion title="Trying to reassign a const">
+```javascript
+// ❌ Wrong: Can't reassign const
+const name = "Jane";
+name = "John"; // TypeError: Assignment to constant variable
+
+// ✅ Correct: Use let if you need to reassign
+let name = "Jane";
+name = "John"; // Works fine
+```
+
+<Warning>
+`const` prevents reassignment, but it doesn't make objects or arrays immutable. You can still modify properties or add items - you just can't reassign the entire variable.
+</Warning>
+</Accordion>
+
+<Accordion title="Thinking const makes objects immutable">
+```javascript
+// This is actually OK with const:
+const user = { name: "Jane", age: 25 };
+user.age = 26; // Modifying a property works
+user.email = "jane@example.com"; // Adding a property works
+
+// This is what const prevents:
+user = { name: "John" }; // TypeError: Assignment to constant variable
+
+// Same with arrays:
+const numbers = [1, 2, 3];
+numbers.push(4); // Adding to array works
+numbers = [5, 6, 7]; // TypeError: Assignment to constant variable
+```
+
+<Warning>
+`const` only prevents reassigning the variable itself. You can still modify the contents of objects and arrays.
+</Warning>
+</Accordion>
+
+<Accordion title="Using var instead of let/const">
+```javascript
+// ❌ Wrong: var has confusing scoping rules
+var count = 0;
+
+// ✅ Correct: Always use let or const
+let count = 0;
+```
+
+<Warning>
+`var` is the old way of declaring variables. It has weird scoping rules and can cause bugs. Pretend it doesn't exist - always use `let` or `const`.
+</Warning>
+</Accordion>
+</AccordionGroup>
+
+## What's next?
+
+Now that you can store data in variables, let's learn about the different types of data JavaScript can handle.
+
+<Card title="Data types" icon="cube" href="/javascript-core/data-types">
+Numbers, strings, booleans, and more
+</Card>

@@ -1,0 +1,423 @@
+---
+title: "Managing state with useState"
+description: "Add interactive, dynamic data to your React components"
+---
+
+## What is state?
+
+State is data that can change over time - a form input, a toggle button, items in a shopping cart. When state changes, React automatically updates the UI to match.
+
+The `useState` hook is how you add state to function components. You'll use it constantly.
+
+## Basic useState example
+
+```jsx Counter.jsx
+import { useState } from 'react';
+
+function Counter() {
+  const [count, setCount] = useState(0);
+  
+  return (
+    <div>
+      <p>Count: {count}</p>
+      <button onClick={() => setCount(count + 1)}>
+        Increment
+      </button>
+      <button onClick={() => setCount(count - 1)}>
+        Decrement
+      </button>
+      <button onClick={() => setCount(0)}>
+        Reset
+      </button>
+    </div>
+  );
+}
+
+export default Counter;
+```
+
+`useState(0)` returns an array with two items:
+1. The current value (`count`)
+2. A function to update it (`setCount`)
+
+We use array destructuring to grab both: `const [count, setCount] = useState(0)`.
+
+<Tip>
+Always name the setter function `set` + the state variable name: `count`/`setCount`, `user`/`setUser`, `isOpen`/`setIsOpen`. This is a strong convention in React.
+</Tip>
+
+## How state updates work
+
+```jsx
+function Example() {
+  const [count, setCount] = useState(0);
+  
+  const handleClick = () => {
+    console.log('Before:', count); // 0
+    setCount(5);
+    console.log('After:', count);  // Still 0! 
+  };
+  
+  return <button onClick={handleClick}>Set to 5</button>;
+}
+```
+
+State updates are **asynchronous**. When you call `setCount(5)`, React schedules a re-render but doesn't update `count` immediately. The new value will be available on the next render.
+
+<Warning>
+Don't try to use the updated state value immediately after calling the setter. It won't be updated yet. React batches state updates for performance.
+</Warning>
+
+## Updating state based on previous value
+
+```jsx
+function Counter() {
+  const [count, setCount] = useState(0);
+  
+  // ❌ Wrong when updating multiple times
+  const handleIncrement = () => {
+    setCount(count + 1);
+    setCount(count + 1); // Both use the same 'count' value!
+  };
+  
+  // ✅ Correct: Use updater function
+  const handleIncrementTwice = () => {
+    setCount(prev => prev + 1); // Gets latest value
+    setCount(prev => prev + 1); // Gets latest value
+  };
+  
+  return (
+    <div>
+      <p>Count: {count}</p>
+      <button onClick={handleIncrement}>Add 1 (broken)</button>
+      <button onClick={handleIncrementTwice}>Add 2 (works)</button>
+    </div>
+  );
+}
+```
+
+When updating based on the previous state, use the updater function form: `setCount(prev => prev + 1)`. This ensures you always get the latest value, even if multiple updates happen.
+
+<Tip>
+If your new state depends on the old state, use the updater function: `setState(prev => ...)`. If it doesn't, you can pass the value directly: `setState(newValue)`.
+</Tip>
+
+## State with objects
+
+```jsx UserProfile.jsx
+import { useState } from 'react';
+
+function UserProfile() {
+  const [user, setUser] = useState({
+    name: "Jane Doe",
+    email: "jane@example.com",
+    age: 25
+  });
+  
+  const updateAge = () => {
+    // ❌ Wrong: Mutating state directly
+    user.age = 26;
+    
+    // ✅ Correct: Create new object
+    setUser({ ...user, age: 26 });
+  };
+  
+  const updateName = (newName) => {
+    setUser({ ...user, name: newName });
+  };
+  
+  return (
+    <div>
+      <h2>{user.name}</h2>
+      <p>Email: {user.email}</p>
+      <p>Age: {user.age}</p>
+      <button onClick={updateAge}>Increment Age</button>
+    </div>
+  );
+}
+
+export default UserProfile;
+```
+
+Never mutate state directly. Use the spread operator `...` to create a new object with the updated property. React only detects changes when you pass a new object to the setter.
+
+<Warning>
+Direct mutation (`user.age = 26`) won't trigger a re-render. React compares the old and new values - if they're the same object reference, it thinks nothing changed.
+</Warning>
+
+## Multiple state variables
+
+```jsx UserForm.jsx
+import { useState } from 'react';
+
+function UserForm() {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState(null);
+  
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setError(null);
+    
+    try {
+      const response = await fetch('http://localhost:8000/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email }),
+      });
+      
+      if (!response.ok) throw new Error('Failed to create user');
+      
+      // Clear form on success
+      setName('');
+      setEmail('');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
+  return (
+    <form onSubmit={handleSubmit}>
+      <input
+        type="text"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        placeholder="Name"
+        disabled={isSubmitting}
+      />
+      <input
+        type="email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        placeholder="Email"
+        disabled={isSubmitting}
+      />
+      <button type="submit" disabled={isSubmitting}>
+        {isSubmitting ? 'Saving...' : 'Save'}
+      </button>
+      {error && <p style={{ color: 'red' }}>{error}</p>}
+    </form>
+  );
+}
+
+export default UserForm;
+```
+
+You can have as many `useState` calls as you need. Each one is independent. Here we track form inputs, loading state, and errors separately.
+
+<Info>
+The `disabled={isSubmitting}` prevents users from submitting the form multiple times while a request is in flight. This is a crucial UX pattern.
+</Info>
+
+## State with arrays
+
+```jsx TodoList.jsx
+import { useState } from 'react';
+
+function TodoList() {
+  const [todos, setTodos] = useState([
+    { id: 1, text: "Learn JavaScript", done: false },
+    { id: 2, text: "Build a project", done: false }
+  ]);
+  const [input, setInput] = useState('');
+  
+  const addTodo = () => {
+    if (!input.trim()) return;
+    
+    const newTodo = {
+      id: Date.now(),
+      text: input,
+      done: false
+    };
+    
+    setTodos([...todos, newTodo]);
+    setInput('');
+  };
+  
+  const toggleTodo = (id) => {
+    setTodos(todos.map(todo =>
+      todo.id === id ? { ...todo, done: !todo.done } : todo
+    ));
+  };
+  
+  const deleteTodo = (id) => {
+    setTodos(todos.filter(todo => todo.id !== id));
+  };
+  
+  return (
+    <div>
+      <input
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        placeholder="Add a todo"
+      />
+      <button onClick={addTodo}>Add</button>
+      
+      <ul>
+        {todos.map(todo => (
+          <li key={todo.id}>
+            <input
+              type="checkbox"
+              checked={todo.done}
+              onChange={() => toggleTodo(todo.id)}
+            />
+            <span style={{ textDecoration: todo.done ? 'line-through' : 'none' }}>
+              {todo.text}
+            </span>
+            <button onClick={() => deleteTodo(todo.id)}>Delete</button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+export default TodoList;
+```
+
+For arrays, use array methods that return new arrays:
+- Add item: `[...array, newItem]`
+- Update item: `array.map(item => item.id === id ? updatedItem : item)`
+- Remove item: `array.filter(item => item.id !== id)`
+
+<Tip>
+Never use `.push()`, `.pop()`, `.splice()` or other mutating methods on state arrays. Always create a new array with spread `...` or array methods like `.map()` and `.filter()`.
+</Tip>
+
+## When to split state vs keep together
+
+```jsx
+// ❌ Too granular - related data split up
+function UserForm() {
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  // ... many more individual states
+}
+
+// ✅ Better - group related data
+function UserForm() {
+  const [user, setUser] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: ''
+  });
+  
+  const updateField = (field, value) => {
+    setUser({ ...user, [field]: value });
+  };
+}
+
+// ✅ Also good - separate unrelated concerns
+function UserForm() {
+  const [user, setUser] = useState({ firstName: '', lastName: '', email: '' });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState(null);
+}
+```
+
+Group related data in objects, but keep unrelated concerns (like loading states and errors) separate.
+
+## Common mistakes
+
+<AccordionGroup>
+<Accordion title="Mutating state directly">
+```jsx
+// ❌ Wrong: Direct mutation
+const [user, setUser] = useState({ name: "Jane", age: 25 });
+
+function updateAge() {
+  user.age = 26; // React won't detect this!
+  setUser(user); // Still the same object reference
+}
+
+// ✅ Correct: Create new object
+function updateAge() {
+  setUser({ ...user, age: 26 });
+}
+```
+
+<Warning>
+React only detects changes when you call the setter with a NEW object or array. Mutating the existing state and passing it back won't trigger a re-render because it's still the same reference.
+</Warning>
+</Accordion>
+
+<Accordion title="Using stale state in updates">
+```jsx
+// ❌ Wrong: Using current state value directly
+const [count, setCount] = useState(0);
+
+function incrementTwice() {
+  setCount(count + 1); // Uses 0
+  setCount(count + 1); // Also uses 0, because count hasn't updated yet
+  // Result: count is 1, not 2
+}
+
+// ✅ Correct: Use updater function
+function incrementTwice() {
+  setCount(prev => prev + 1); // Uses latest value
+  setCount(prev => prev + 1); // Uses latest value
+  // Result: count is 2
+}
+```
+
+<Warning>
+When multiple state updates happen in the same function, use the updater function form to ensure you're always working with the latest value.
+</Warning>
+</Accordion>
+
+<Accordion title="Forgetting that state updates are asynchronous">
+```jsx
+// ❌ Wrong: Expecting immediate update
+function handleClick() {
+  setCount(5);
+  console.log(count); // Still the old value!
+}
+
+// ✅ Correct: Use the new value in next render
+function handleClick() {
+  setCount(5);
+  // Don't try to use the new value here
+}
+
+// The new value will be available in the next render:
+console.log(count); // This will show 5 on the next render
+```
+
+<Warning>
+State updates are asynchronous. The new value won't be available until the component re-renders. Don't try to use the updated state immediately after calling the setter.
+</Warning>
+</Accordion>
+
+<Accordion title="Not using keys in lists">
+```jsx
+// ❌ Wrong: Missing key prop
+{todos.map(todo => (
+  <li>{todo.text}</li>
+))}
+
+// ✅ Correct: Include unique key
+{todos.map(todo => (
+  <li key={todo.id}>{todo.text}</li>
+))}
+```
+
+<Warning>
+When rendering lists, each item needs a unique `key` prop. This helps React efficiently update the DOM when items are added, removed, or reordered. Never use array index as a key if the list can change.
+</Warning>
+</Accordion>
+</AccordionGroup>
+
+## What's next?
+
+State lets you manage data within a component. Now let's learn how to fetch data from your backend when a component first loads.
+
+<Card title="Side effects with useEffect" icon="download" href="/react-essentials/use-effect">
+Fetch data when your component mounts
+</Card>
