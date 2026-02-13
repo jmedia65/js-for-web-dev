@@ -3,20 +3,246 @@ title: "Conditionals"
 description: "Make decisions in your code with if/else, ternary operators, and logical operators"
 ---
 
-{/* TODO: Write conditionals content */}
-
 ## if/else
 
-{/* TODO: Basic conditional syntax */}
+Same concept as Python, different syntax:
+
+```javascript
+const age = 25;
+
+if (age >= 18) {
+  console.log("Welcome");
+} else {
+  console.log("Too young");
+}
+// "Welcome"
+```
+
+<Tabs>
+<Tab title="JavaScript">
+```javascript
+if (score >= 90) {
+  grade = "A";
+} else if (score >= 80) {
+  grade = "B";
+} else if (score >= 70) {
+  grade = "C";
+} else {
+  grade = "F";
+}
+```
+</Tab>
+
+<Tab title="Python">
+```python
+if score >= 90:
+    grade = "A"
+elif score >= 80:
+    grade = "B"
+elif score >= 70:
+    grade = "C"
+else:
+    grade = "F"
+```
+</Tab>
+</Tabs>
+
+Two differences: curly braces instead of colons and indentation, and `else if` instead of `elif`.
+
+### Conditions must be in parentheses
+
+```javascript
+// Parentheses around the condition are required
+if (user.isAdmin) {
+  showAdminPanel();
+}
+
+// Python doesn't require them
+// if user.is_admin:
+//     show_admin_panel()
+```
+
+## Truthy and falsy values
+
+JavaScript evaluates any value as `true` or `false` in a condition. This matters more than you'd expect.
+
+**Falsy values** (evaluate to `false`):
+```javascript
+if (false)     // false
+if (0)         // false
+if ("")        // false (empty string)
+if (null)      // false
+if (undefined) // false
+if (NaN)       // false
+```
+
+**Everything else is truthy** — including some surprises:
+```javascript
+if ("hello")   // true — any non-empty string
+if (42)        // true — any non-zero number
+if ([])        // true — empty array!
+if ({})        // true — empty object!
+```
+
+<Warning>
+Empty arrays `[]` and empty objects `{}` are **truthy** in JavaScript. This is different from Python, where empty lists and dicts are falsy. To check if an array is empty, use `array.length === 0`.
+</Warning>
+
+### Practical use of truthy/falsy
+
+```javascript
+// Check if a variable has a useful value
+const username = getUserInput();
+
+if (username) {
+  console.log(`Hello, ${username}`);
+} else {
+  console.log("Please enter a username");
+}
+
+// Check if an array has items
+const users = await fetchUsers();
+
+if (users.length) { // 0 is falsy, any other number is truthy
+  renderUserList(users);
+} else {
+  renderEmptyState();
+}
+```
 
 ## Ternary operator
 
-{/* TODO: condition ? true : false */}
+A one-line if/else. You'll use this constantly in React for conditional rendering.
+
+```javascript
+const age = 25;
+const status = age >= 18 ? "adult" : "minor";
+console.log(status); // "adult"
+```
+
+The syntax: `condition ? valueIfTrue : valueIfFalse`
+
+```javascript
+// Setting variables
+const greeting = user ? `Hello, ${user.name}` : "Hello, guest";
+
+// Template literals
+console.log(`Status: ${isActive ? "Active" : "Inactive"}`);
+
+// Function arguments
+fetchUsers(isAdmin ? "/api/admin/users" : "/api/users");
+```
+
+### Ternary in React
+
+This is where the ternary operator really shines:
+
+```jsx
+function UserGreeting({ user }) {
+  return (
+    <div>
+      {user ? (
+        <h1>Welcome back, {user.name}!</h1>
+      ) : (
+        <h1>Please log in</h1>
+      )}
+    </div>
+  );
+}
+```
+
+<Tip>
+Keep ternaries simple — one condition, two outcomes. If you need more complex logic, use an `if/else` block or extract the logic into a separate function.
+</Tip>
 
 ## Logical operators
 
-{/* TODO: &&, ||, ?? */}
+### && (AND) — short-circuit rendering
+
+Returns the second value if the first is truthy. Otherwise returns the first.
+
+```javascript
+const isLoggedIn = true;
+const message = isLoggedIn && "Welcome back!";
+console.log(message); // "Welcome back!"
+
+const isLoggedIn = false;
+const message = isLoggedIn && "Welcome back!";
+console.log(message); // false
+```
+
+In React, `&&` is the most common way to conditionally show something:
+
+```jsx
+{isLoading && <Spinner />}
+{error && <ErrorMessage text={error} />}
+{users.length > 0 && <UserList users={users} />}
+```
+
+### || (OR) — fallback values
+
+Returns the first truthy value.
+
+```javascript
+const username = inputValue || "Anonymous";
+const theme = savedTheme || "light";
+const port = process.env.PORT || 3000;
+```
+
+<Warning>
+`||` treats `0`, `""`, and `false` as falsy — so `0 || 5` returns `5`, not `0`. If you need to only fall back on `null`/`undefined`, use `??` instead.
+</Warning>
+
+### ?? (nullish coalescing) — null/undefined fallback
+
+Returns the right side only if the left is `null` or `undefined`. Doesn't trigger on `0`, `""`, or `false`.
+
+```javascript
+const count = 0;
+
+console.log(count || 10);  // 10 — treats 0 as falsy
+console.log(count ?? 10);  // 0  — only falls back on null/undefined
+
+const name = "";
+console.log(name || "Anonymous");  // "Anonymous" — treats "" as falsy
+console.log(name ?? "Anonymous");  // "" — only falls back on null/undefined
+```
+
+<Tip>
+Use `??` when a value of `0`, `""`, or `false` is valid and shouldn't be replaced. Use `||` when you want any falsy value to trigger the fallback.
+</Tip>
+
+## switch statements
+
+For multiple conditions against the same value:
+
+```javascript
+const status = "processing";
+
+switch (status) {
+  case "pending":
+    console.log("Waiting for review");
+    break;
+  case "processing":
+    console.log("Being processed");
+    break;
+  case "completed":
+    console.log("Done!");
+    break;
+  default:
+    console.log("Unknown status");
+}
+// "Being processed"
+```
+
+<Warning>
+Don't forget `break` after each case. Without it, execution "falls through" to the next case. This is a common source of bugs.
+</Warning>
 
 ## What's next?
 
-{/* TODO: Card linking to loops */}
+You can make decisions with conditionals. Now let's learn how to repeat actions with loops.
+
+<Card title="Loops" icon="rotate" href="/working-with-data/loops">
+Iterate over data with for loops and more
+</Card>

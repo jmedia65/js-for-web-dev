@@ -3,16 +3,78 @@ title: "Welcome to JavaScript for Web Dev"
 description: "What you'll build, what you'll learn, and how this course is structured"
 ---
 
-{/* TODO: Write welcome page content */}
-
 ## What you'll build
 
-{/* TODO: Overview of what learners will accomplish */}
+By the end of this course, you'll build interactive web UIs with React and connect them to a FastAPI backend. You'll go from "I know Python" to "I can build a full-stack web app."
+
+```javascript
+// This is the kind of code you'll write confidently:
+async function getUsers() {
+  const response = await fetch("http://localhost:8000/api/users");
+  const data = await response.json();
+  return data;
+}
+```
+
+```jsx UserList.jsx
+import { useState, useEffect } from 'react';
+
+function UserList() {
+  const [users, setUsers] = useState([]);
+
+  useEffect(() => {
+    getUsers().then(data => setUsers(data));
+  }, []);
+
+  return (
+    <ul>
+      {users.map(user => (
+        <li key={user.id}>{user.name}</li>
+      ))}
+    </ul>
+  );
+}
+```
+
+That might look unfamiliar now. By Section 8, you'll write code like this without thinking twice.
 
 ## What you'll learn
 
-{/* TODO: High-level learning outcomes */}
+This course covers the JavaScript you actually need for web development — not everything JavaScript can do, but the 20% you'll use 80% of the time.
 
-## Course structure overview
+- **JavaScript fundamentals** — variables, functions, arrays, objects, and how they differ from Python
+- **Async programming** — fetch data from APIs, handle errors, manage loading states
+- **DOM basics** — select elements, handle events, work with forms
+- **React** — components, props, state, effects, and common UI patterns
+- **Full-stack integration** — connect a React frontend to a FastAPI backend with a complete CRUD app
 
-{/* TODO: Brief walkthrough of the 9 sections */}
+<Info>
+This course has a companion repository: a production-ready FastAPI + React application you'll reference throughout Section 8. You can find it on [GitHub](https://github.com/jmedia65/fastapi-react-full-stack).
+</Info>
+
+## Course structure
+
+The course is organized into 9 sections. Each one builds on the last:
+
+| Section | What you'll learn |
+|---|---|
+| **Getting Started** | Install Node.js, set up VS Code, run your first JavaScript file |
+| **JavaScript Core** | Variables, data types, functions, scope — the foundation |
+| **Working with Data** | Arrays, objects, destructuring, JSON — how data moves around |
+| **Async & APIs** | Promises, async/await, fetch — how to talk to your backend |
+| **DOM & Browser** | Select elements, handle events, work with forms — the browser layer |
+| **React Essentials** | Components, props, state, effects — building interactive UIs |
+| **Full-Stack** | Connect React to FastAPI — build a real CRUD application |
+| **Next Steps** | Where to go after this course |
+
+<Tip>
+You don't have to go in order, but the sections are designed to build on each other. If you already know some JavaScript, feel free to skip ahead to what's new for you.
+</Tip>
+
+## What's next?
+
+Before diving in, let's make sure this course is the right fit for your background and goals.
+
+<Card title="Is this for you?" icon="user" href="/introduction/is-this-for-you">
+Check if your background matches what this course expects
+</Card>

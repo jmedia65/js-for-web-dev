@@ -3,24 +3,332 @@ title: "Error handling"
 description: "Handle errors gracefully in your API calls and async code"
 ---
 
-{/* TODO: Write error handling content */}
+## Why error handling matters
+
+Network requests fail. Servers go down. Users lose internet. APIs return unexpected data. If you don't handle errors, your app shows a blank screen or crashes silently.
+
+```javascript
+// ❌ No error handling — app crashes silently
+async function getUsers() {
+  const response = await fetch("/api/users");
+  const users = await response.json();
+  return users;
+}
+
+// ✅ With error handling — app stays usable
+async function getUsers() {
+  try {
+    const response = await fetch("/api/users");
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return await response.json();
+  } catch (error) {
+    console.error("Failed to load users:", error);
+    throw error;
+  }
+}
+```
 
 ## try/catch/finally
 
-{/* TODO: Error handling structure */}
+The core pattern for handling errors in async code:
 
-## Network errors vs HTTP errors
+```javascript
+async function loadUserProfile(userId) {
+  try {
+    // Code that might fail
+    const response = await fetch(`/api/users/${userId}`);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const user = await response.json();
+    return user;
 
-{/* TODO: When fetch throws vs when it doesn't */}
+  } catch (error) {
+    // Runs if anything in try block throws
+    console.error("Error loading profile:", error.message);
+    return null; // Return a fallback value
+
+  } finally {
+    // Always runs — success or failure
+    console.log("Request finished");
+  }
+}
+```
+
+<Tabs>
+<Tab title="JavaScript">
+```javascript
+try {
+  const data = await riskyOperation();
+} catch (error) {
+  console.error(error.message);
+} finally {
+  cleanup();
+}
+```
+</Tab>
+
+<Tab title="Python">
+```python
+try:
+    data = await risky_operation()
+except Exception as error:
+    print(error)
+finally:
+    cleanup()
+```
+</Tab>
+</Tabs>
+
+Same structure, same behavior. Python catches specific exception types; JavaScript catches everything in one `catch` block.
+
+## Two types of fetch errors
+
+This is where people get confused. `fetch` can fail in two different ways:
+
+### 1. Network errors — fetch itself throws
+
+```javascript
+try {
+  // These throw immediately — no response at all
+  const response = await fetch("/api/users");
+} catch (error) {
+  // TypeError: Failed to fetch
+  // Causes: no internet, DNS failure, CORS blocked, server unreachable
+  console.error("Network error:", error.message);
+}
+```
+
+### 2. HTTP errors — fetch succeeds but status is bad
+
+```javascript
+const response = await fetch("/api/users/999");
+
+// fetch succeeded — we got a response
+// But the status is 404 (not found)
+console.log(response.ok);     // false
+console.log(response.status); // 404
+
+// We need to check manually and throw
+if (!response.ok) {
+  throw new Error(`HTTP ${response.status}`);
+}
+```
+
+<Warning>
+`fetch` only throws on **network** failures. A 404 or 500 response is not an error from `fetch`'s perspective — it successfully received a response. Always check `response.ok`.
+</Warning>
+
+### Handling both types
+
+```javascript
+async function getUsers() {
+  try {
+    const response = await fetch("/api/users");
+
+    // Type 2: HTTP error (404, 500, etc.)
+    if (!response.ok) {
+      const errorBody = await response.json().catch(() => ({}));
+      throw new Error(errorBody.detail || `HTTP ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    // Type 1: Network error (no internet, CORS, etc.)
+    // Type 2: HTTP error (thrown above)
+    // Both are caught here
+    console.error("Request failed:", error.message);
+    throw error;
+  }
+}
+```
 
 ## User-friendly error messages
 
-{/* TODO: Translating errors for users */}
+Don't show raw error messages to users. Translate them into something helpful:
+
+```javascript
+function getErrorMessage(error) {
+  // Network errors
+  if (error.message === "Failed to fetch") {
+    return "Can't connect to the server. Check your internet connection.";
+  }
+
+  // HTTP errors
+  if (error.message.includes("401")) {
+    return "Please log in to continue.";
+  }
+  if (error.message.includes("403")) {
+    return "You don't have permission to do that.";
+  }
+  if (error.message.includes("404")) {
+    return "The item you're looking for doesn't exist.";
+  }
+  if (error.message.includes("500")) {
+    return "Something went wrong on our end. Please try again.";
+  }
+
+  // Fallback
+  return "Something went wrong. Please try again.";
+}
+
+// Usage
+try {
+  const users = await getUsers();
+} catch (error) {
+  showNotification(getErrorMessage(error)); // User sees a friendly message
+}
+```
+
+### In React
+
+```jsx
+function UserList() {
+  const [users, setUsers] = useState([]);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadUsers() {
+      try {
+        const response = await fetch("/api/users");
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        setUsers(data);
+      } catch (error) {
+        setError(getErrorMessage(error));
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadUsers();
+  }, []);
+
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p className="error">{error}</p>;
+  return <ul>{users.map(u => <li key={u.id}>{u.name}</li>)}</ul>;
+}
+```
+
+## Re-throwing errors
+
+Sometimes you want to handle an error *and* let the caller handle it too:
+
+```javascript
+async function getUsers() {
+  try {
+    const response = await fetch("/api/users");
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return await response.json();
+  } catch (error) {
+    console.error("API error:", error); // Log it
+    throw error; // Re-throw so the caller can handle it too
+  }
+}
+
+// Caller handles the user-facing part
+try {
+  const users = await getUsers();
+  renderUserList(users);
+} catch (error) {
+  showErrorBanner(getErrorMessage(error));
+}
+```
+
+<Tip>
+Re-throw errors when lower-level code shouldn't decide what the user sees. Log the error for debugging, then throw it up to the component that can show a user-friendly message.
+</Tip>
 
 ## Common mistakes
 
-{/* TODO: Not handling errors at all */}
+<AccordionGroup>
+<Accordion title="Swallowing errors silently">
+```javascript
+// ❌ Wrong: catching the error but doing nothing
+async function getUsers() {
+  try {
+    const response = await fetch("/api/users");
+    return await response.json();
+  } catch (error) {
+    // Error is caught but nobody knows about it
+    // App shows blank screen — no data, no error message
+  }
+}
+
+// ✅ Correct: handle or re-throw
+async function getUsers() {
+  try {
+    const response = await fetch("/api/users");
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return await response.json();
+  } catch (error) {
+    console.error("Failed:", error);
+    throw error; // Let the caller handle it
+  }
+}
+```
+
+<Warning>
+An empty `catch` block is almost always a bug. If you catch an error, either handle it (show a message, return a fallback) or re-throw it. Silent failures are the hardest bugs to find.
+</Warning>
+</Accordion>
+
+<Accordion title="Not checking response.ok before parsing">
+```javascript
+// ❌ Wrong: parsing without checking status
+async function getUser(id) {
+  const response = await fetch(`/api/users/${id}`);
+  return response.json(); // Might parse a 404 error page as JSON
+}
+
+// ✅ Correct: check status first
+async function getUser(id) {
+  const response = await fetch(`/api/users/${id}`);
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.detail || `HTTP ${response.status}`);
+  }
+  return response.json();
+}
+```
+</Accordion>
+
+<Accordion title="Using .catch() and try/catch together unnecessarily">
+```javascript
+// ❌ Confusing: mixing Promise .catch() with try/catch
+async function getUsers() {
+  try {
+    const response = await fetch("/api/users").catch(err => {
+      throw err; // Unnecessary — try/catch already handles this
+    });
+    return response.json();
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+// ✅ Clean: just use try/catch with async/await
+async function getUsers() {
+  try {
+    const response = await fetch("/api/users");
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return await response.json();
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+}
+```
+
+<Warning>
+When using async/await, stick with `try/catch`. Don't mix in `.catch()` — it adds confusion without any benefit.
+</Warning>
+</Accordion>
+</AccordionGroup>
 
 ## What's next?
 
-{/* TODO: Card linking to loading-states */}
+Error handling keeps your app stable. Now let's make it feel fast with loading states — showing users what's happening while requests are in flight.
+
+<Card title="Loading states" icon="spinner" href="/async-apis/loading-states">
+Show users what's happening during requests
+</Card>

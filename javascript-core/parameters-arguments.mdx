@@ -3,20 +3,188 @@ title: "Parameters and arguments"
 description: "Pass data into functions with default values and destructuring"
 ---
 
-{/* TODO: Write parameters content */}
+## Parameters vs arguments
+
+A quick terminology note: **parameters** are the variables in the function definition. **Arguments** are the actual values you pass when calling the function.
+
+```javascript
+// "name" and "age" are parameters
+function createUser(name, age) {
+  return { name, age };
+}
+
+// "Sarah" and 28 are arguments
+const user = createUser("Sarah", 28);
+console.log(user); // { name: "Sarah", age: 28 }
+```
+
+In practice, people use the terms interchangeably. Don't worry about it.
 
 ## Default parameters
 
-{/* TODO: Default values syntax */}
+Give parameters a fallback value when no argument is provided:
+
+```javascript
+function greet(name, greeting = "Hello") {
+  return `${greeting}, ${name}!`;
+}
+
+console.log(greet("Sarah"));           // "Hello, Sarah!"
+console.log(greet("Sarah", "Hey"));    // "Hey, Sarah!"
+console.log(greet("Sarah", "Welcome")); // "Welcome, Sarah!"
+```
+
+<Tabs>
+<Tab title="JavaScript">
+```javascript
+function createUser(name, role = "viewer") {
+  return { name, role };
+}
+```
+</Tab>
+
+<Tab title="Python">
+```python
+def create_user(name, role="viewer"):
+    return {"name": name, "role": role}
+```
+</Tab>
+</Tabs>
+
+Same concept, same position — defaults go in the parameter list. JavaScript uses `=`, Python uses `=`. No surprises here.
+
+### Practical example
+
+```javascript
+async function fetchUsers(page = 1, limit = 10) {
+  const response = await fetch(
+    `http://localhost:8000/api/users?page=${page}&limit=${limit}`
+  );
+  return response.json();
+}
+
+// Use defaults
+const firstPage = await fetchUsers();
+
+// Override both
+const thirdPage = await fetchUsers(3, 25);
+```
+
+<Tip>
+Put required parameters first, optional parameters (with defaults) last. This is the same convention as Python.
+</Tip>
 
 ## Rest parameters
 
-{/* TODO: ...args syntax */}
+Collect any number of arguments into an array using `...`:
+
+```javascript
+function sum(...numbers) {
+  return numbers.reduce((total, n) => total + n, 0);
+}
+
+console.log(sum(1, 2, 3));       // 6
+console.log(sum(10, 20, 30, 40)); // 100
+```
+
+The rest parameter `...numbers` gathers all arguments into a real array. You can then use array methods on it.
+
+```javascript
+function logAll(label, ...items) {
+  console.log(`${label}:`);
+  items.forEach(item => console.log(`  - ${item}`));
+}
+
+logAll("Fruits", "Apple", "Banana", "Cherry");
+// Fruits:
+//   - Apple
+//   - Banana
+//   - Cherry
+```
+
+<Tabs>
+<Tab title="JavaScript">
+```javascript
+function sum(...numbers) {
+  return numbers.reduce((total, n) => total + n, 0);
+}
+```
+</Tab>
+
+<Tab title="Python">
+```python
+def sum(*numbers):
+    return sum(numbers)  # Built-in sum works on tuples
+```
+</Tab>
+</Tabs>
+
+JavaScript uses `...args`, Python uses `*args`. Same idea.
+
+<Warning>
+The rest parameter must be the last parameter. `function bad(...args, last)` is a syntax error.
+</Warning>
 
 ## Destructuring parameters
 
-{/* TODO: Object destructuring in params */}
+When a function takes an object, you can destructure it right in the parameter list:
+
+```javascript
+// Without destructuring
+function displayUser(user) {
+  console.log(`${user.name} (${user.email})`);
+}
+
+// With destructuring — cleaner
+function displayUser({ name, email }) {
+  console.log(`${name} (${email})`);
+}
+
+const user = { name: "Sarah", email: "sarah@example.com", role: "admin" };
+displayUser(user); // "Sarah (sarah@example.com)"
+```
+
+This is a pattern you'll see everywhere in React. Component props are destructured this way:
+
+```jsx
+// React component with destructured props
+function UserCard({ name, email, role }) {
+  return (
+    <div>
+      <h2>{name}</h2>
+      <p>{email}</p>
+      <span>{role}</span>
+    </div>
+  );
+}
+```
+
+### Destructuring with defaults
+
+Combine destructuring and default values:
+
+```javascript
+function createRequest({ method = "GET", url, body = null }) {
+  console.log(`${method} ${url}`);
+  if (body) console.log("Body:", body);
+}
+
+createRequest({ url: "http://localhost:8000/api/users" });
+// "GET http://localhost:8000/api/users"
+
+createRequest({ method: "POST", url: "/api/users", body: { name: "Sarah" } });
+// "POST /api/users"
+// "Body: { name: 'Sarah' }"
+```
+
+<Tip>
+Destructured parameters with defaults are the cleanest way to handle options objects. You'll see this pattern in API client functions, React components, and configuration.
+</Tip>
 
 ## What's next?
 
-{/* TODO: Card linking to understanding-scope */}
+You know how to define functions and pass data into them. Next, let's understand *where* variables live — scope determines which parts of your code can see which variables.
+
+<Card title="Understanding scope" icon="layer-group" href="/javascript-core/understanding-scope">
+How JavaScript determines where variables are accessible
+</Card>

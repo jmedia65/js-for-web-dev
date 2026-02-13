@@ -3,20 +3,320 @@ title: "Loading states everywhere"
 description: "Provide consistent loading feedback throughout your full-stack application"
 ---
 
-{/* TODO: Write loading states content */}
+## The user should never wonder "is it working?"
+
+Every time your app talks to the API, the user should see feedback. No feedback = "is it broken?" Feedback = "it's working." This is the difference between an app that feels amateur and one that feels professional.
 
 ## Page-level loading
 
-{/* TODO: Full page spinners */}
+When a page loads data for the first time, show a full-page loading state:
 
-## Component-level loading
+```jsx
+function UserDashboard() {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-{/* TODO: Skeleton screens */}
+  useEffect(() => {
+    getUsers()
+      .then(data => setUsers(data))
+      .catch(err => setError(err.message))
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="page-loading">
+        <div className="spinner"></div>
+        <p>Loading users...</p>
+      </div>
+    );
+  }
+
+  if (error) return <p>Error: {error}</p>;
+
+  return (
+    <div>
+      <h1>Users ({users.length})</h1>
+      {/* ... */}
+    </div>
+  );
+}
+```
+
+A simple CSS spinner:
+
+```css
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #e5e7eb;
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.page-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 4rem;
+  gap: 1rem;
+}
+```
 
 ## Button loading states
 
-{/* TODO: Disabled + spinner pattern */}
+Disable buttons and show feedback during API calls:
 
-## Consistent patterns
+```jsx
+function CreateUserForm({ onSubmit }) {
+  const [submitting, setSubmitting] = useState(false);
 
-{/* TODO: Reusable loading components */}
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      await onSubmit(formData);
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      {/* ... inputs ... */}
+      <button type="submit" disabled={submitting}>
+        {submitting ? "Creating..." : "Create User"}
+      </button>
+    </form>
+  );
+}
+```
+
+The button tells the user three things:
+1. **Before click**: "Create User" — here's what this does
+2. **During API call**: "Creating..." + disabled — your request is being processed
+3. **After completion**: back to "Create User" — ready for the next action
+
+<Tip>
+Always disable buttons during API calls. This prevents double submissions — clicking "Create User" twice would create two users. The `disabled` attribute stops the second click.
+</Tip>
+
+## Delete button with loading
+
+```jsx
+function DeleteButton({ onDelete, label = "Delete" }) {
+  const [deleting, setDeleting] = useState(false);
+
+  async function handleClick() {
+    if (!window.confirm("Are you sure?")) return;
+    setDeleting(true);
+    try {
+      await onDelete();
+    } catch {
+      setDeleting(false); // Reset on error so user can retry
+    }
+  }
+
+  return (
+    <button onClick={handleClick} disabled={deleting} className="btn-danger">
+      {deleting ? "Deleting..." : label}
+    </button>
+  );
+}
+```
+
+## Inline loading for updates
+
+When editing a single item in a list, show loading on that item only — not the whole page:
+
+```jsx
+function UserCard({ user, onUpdate, onDelete }) {
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  async function handleSave(formData) {
+    setSaving(true);
+    try {
+      await onUpdate(user.id, formData);
+      setEditing(false);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className={`user-card ${saving || deleting ? "loading" : ""}`}>
+      {editing ? (
+        <EditForm user={user} onSave={handleSave} saving={saving} />
+      ) : (
+        <>
+          <span>{user.name} — {user.email}</span>
+          <button onClick={() => setEditing(true)}>Edit</button>
+          <button onClick={handleDelete} disabled={deleting}>
+            {deleting ? "..." : "Delete"}
+          </button>
+        </>
+      )}
+    </div>
+  );
+}
+```
+
+```css
+.user-card.loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+```
+
+The subtle opacity change tells users "this item is being updated" without blocking the entire page.
+
+## Skeleton screens
+
+For a polished feel, show placeholder shapes instead of a spinner:
+
+```jsx
+function UserCardSkeleton() {
+  return (
+    <div className="user-card skeleton">
+      <div className="skeleton-line skeleton-name"></div>
+      <div className="skeleton-line skeleton-email"></div>
+    </div>
+  );
+}
+
+function UserList() {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // ... fetch users ...
+
+  if (loading) {
+    return (
+      <div>
+        <UserCardSkeleton />
+        <UserCardSkeleton />
+        <UserCardSkeleton />
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      {users.map(user => <UserCard key={user.id} user={user} />)}
+    </div>
+  );
+}
+```
+
+```css
+.skeleton-line {
+  height: 16px;
+  background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 4px;
+}
+
+.skeleton-name { width: 40%; margin-bottom: 8px; }
+.skeleton-email { width: 60%; }
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+```
+
+<Info>
+Skeleton screens feel faster than spinners because they show the layout of what's coming. The user's brain starts processing the structure before data arrives. Use skeletons for lists and cards, spinners for simple operations.
+</Info>
+
+## A reusable loading pattern
+
+Wrap the loading/error/data pattern into a reusable component:
+
+```jsx
+function AsyncContent({ loading, error, onRetry, children, empty, emptyMessage = "No data" }) {
+  if (loading) {
+    return (
+      <div className="page-loading">
+        <div className="spinner"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="error-state">
+        <p>{error}</p>
+        {onRetry && <button onClick={onRetry}>Try Again</button>}
+      </div>
+    );
+  }
+
+  if (empty) {
+    return <p className="empty-state">{emptyMessage}</p>;
+  }
+
+  return children;
+}
+```
+
+```jsx
+// Usage — much cleaner
+function UserDashboard() {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // ... fetch logic ...
+
+  return (
+    <div>
+      <h1>Users</h1>
+      <AsyncContent
+        loading={loading}
+        error={error}
+        onRetry={loadUsers}
+        empty={users.length === 0}
+        emptyMessage="No users yet. Create one above!"
+      >
+        {users.map(user => (
+          <UserCard key={user.id} user={user} />
+        ))}
+      </AsyncContent>
+    </div>
+  );
+}
+```
+
+## Loading state checklist
+
+| Action | Loading indicator | Where |
+|---|---|---|
+| Page first load | Spinner or skeleton | Replace page content |
+| Form submit | "Saving..." + disabled button | The submit button |
+| Delete | "Deleting..." + disabled button | The delete button |
+| Inline edit | Opacity + disabled | The item being edited |
+| Search/filter | (instant, no loading needed) | Client-side filtering |
+
+<Tip>
+The rule is simple: every API call needs loading feedback. If a user clicks something and nothing visibly happens for even half a second, add a loading state. Users will assume it's broken if they don't see immediate feedback.
+</Tip>
+
+## What's next?
+
+Congratulations — you've built a complete full-stack application with React and FastAPI. You have CRUD operations, error handling, loading states, and professional UX patterns.
+
+Now let's wrap up the course and prepare you for what comes next.
+
+<Card title="Course wrap-up" icon="graduation-cap" href="/next-steps/course-wrap-up">
+Review what you've learned and where to go from here
+</Card>

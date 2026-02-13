@@ -3,16 +3,182 @@ title: "Setting up a React project"
 description: "Create a new React project with Vite and run it locally"
 ---
 
-{/* TODO: Write React setup content */}
+## Create a React project in 60 seconds
 
-## Using Vite
+We use **Vite** (pronounced "veet") as the build tool. It's fast, simple, and the recommended way to start React projects.
 
-{/* TODO: npm create vite@latest */}
+```bash
+npm create vite@latest my-react-app -- --template react
+cd my-react-app
+npm install
+npm run dev
+```
+
+Your app is now running at `http://localhost:5173`. Every time you save a file, the browser updates instantly.
+
+<Info>
+Vite is to JavaScript what FastAPI is to Python — the modern, fast, no-nonsense choice. It replaces the older Create React App (CRA), which is no longer recommended.
+</Info>
 
 ## Project structure
 
-{/* TODO: What each file/folder is */}
+```
+my-react-app/
+├── node_modules/       # Dependencies (don't edit)
+├── public/             # Static files (images, favicon)
+├── src/
+│   ├── App.jsx         # Your main component
+│   ├── App.css         # Styles for App component
+│   ├── main.jsx        # Entry point — renders App into the DOM
+│   └── index.css       # Global styles
+├── index.html          # The single HTML page
+├── package.json        # Dependencies and scripts
+└── vite.config.js      # Vite configuration
+```
 
-## Running the dev server
+### The files that matter
 
-{/* TODO: npm run dev */}
+**index.html** — The single HTML page. React renders everything into `<div id="root">`.
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>My React App</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
+```
+
+**src/main.jsx** — The entry point. Renders your App component into the root div.
+
+```jsx
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App.jsx';
+import './index.css';
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
+```
+
+**src/App.jsx** — Your main component. This is where you start building.
+
+```jsx
+function App() {
+  return (
+    <div>
+      <h1>Hello, React!</h1>
+    </div>
+  );
+}
+
+export default App;
+```
+
+<Tip>
+Start by editing `App.jsx`. Delete the default content and replace it with your own. You'll add more components as files in the `src/` folder and import them into `App.jsx`.
+</Tip>
+
+## The .jsx extension
+
+React files use `.jsx` instead of `.js`. JSX lets you write HTML-like syntax inside JavaScript — you'll learn more in the next lesson.
+
+```jsx
+// This is JSX — HTML inside JavaScript
+function Greeting() {
+  return <h1>Hello, World!</h1>;
+}
+```
+
+<Info>
+`.jsx` and `.js` both work in Vite. The convention is `.jsx` for files that contain JSX (which is almost every React file). Some projects use `.tsx` for TypeScript + JSX.
+</Info>
+
+## Key scripts
+
+Your `package.json` includes these scripts:
+
+```bash
+npm run dev       # Start development server (hot reload)
+npm run build     # Build for production
+npm run preview   # Preview the production build locally
+```
+
+You'll spend 99% of your time using `npm run dev`.
+
+## Adding your first component
+
+Create a new file in `src/`:
+
+```jsx
+// src/UserCard.jsx
+function UserCard({ name, email }) {
+  return (
+    <div className="user-card">
+      <h2>{name}</h2>
+      <p>{email}</p>
+    </div>
+  );
+}
+
+export default UserCard;
+```
+
+Import and use it in `App.jsx`:
+
+```jsx
+// src/App.jsx
+import UserCard from './UserCard';
+
+function App() {
+  return (
+    <div>
+      <h1>My App</h1>
+      <UserCard name="Sarah Chen" email="sarah@example.com" />
+      <UserCard name="John Park" email="john@example.com" />
+    </div>
+  );
+}
+
+export default App;
+```
+
+That's the entire workflow: create a component file, export it, import it where you need it.
+
+## Organizing components
+
+As your app grows, create folders to organize:
+
+```
+src/
+├── components/
+│   ├── UserCard.jsx
+│   ├── Navbar.jsx
+│   └── Spinner.jsx
+├── pages/
+│   ├── Home.jsx
+│   └── Settings.jsx
+├── api/
+│   └── users.js          # API functions (not React)
+├── App.jsx
+└── main.jsx
+```
+
+<Tip>
+Don't over-organize early. Start with all components in `src/`, and extract into folders when you have 10+ files. The folder structure isn't enforced by React — use whatever makes sense for your project.
+</Tip>
+
+## What's next?
+
+Your project is running. Now let's learn the core building blocks — components and JSX.
+
+<Card title="Components and JSX" icon="cube" href="/react-essentials/components-jsx">
+Build UI with reusable components using JSX syntax
+</Card>

@@ -3,16 +3,286 @@ title: "Read operation"
 description: "Fetch and display data from your FastAPI backend in React components"
 ---
 
-{/* TODO: Write read operation content */}
+## Fetching a list on mount
 
-## Fetching data on mount
+The most common Read operation: load data when a page first appears.
 
-{/* TODO: useEffect + fetch pattern */}
+<Tabs>
+<Tab title="Backend (Python)">
+```python
+@app.get("/api/users")
+def get_users():
+    return users  # Returns a list of user objects
+```
+</Tab>
+<Tab title="API Client (JS)">
+```jsx
+// frontend/src/api/users.js
+export async function getUsers() {
+  const response = await fetch(`${API_URL}/api/users`);
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  return response.json();
+}
+```
+</Tab>
+</Tabs>
 
-## Displaying the data
+## The component — loading, error, data
 
-{/* TODO: Rendering lists and details */}
+```jsx
+import { useState, useEffect } from 'react';
+import { getUsers } from '../api/users';
 
-## Loading and error states
+function UserList() {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-{/* TODO: Complete loading/error/data pattern */}
+  useEffect(() => {
+    async function loadUsers() {
+      try {
+        const data = await getUsers();
+        setUsers(data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadUsers();
+  }, []);
+
+  if (loading) return <p>Loading users...</p>;
+  if (error) return <p className="error">Error: {error}</p>;
+  if (users.length === 0) return <p>No users yet. Create one above!</p>;
+
+  return (
+    <ul>
+      {users.map(user => (
+        <li key={user.id}>
+          <strong>{user.name}</strong> — {user.email}
+        </li>
+      ))}
+    </ul>
+  );
+}
+```
+
+Four states handled in order:
+1. **Loading** — show a spinner or "Loading..." text
+2. **Error** — show what went wrong
+3. **Empty** — data loaded but the list is empty
+4. **Data** — render the list
+
+This is the pattern you'll use for every page that displays data. It never changes.
+
+## Fetching a single record
+
+For detail pages (e.g., `/users/3`), fetch one record by ID:
+
+<Tabs>
+<Tab title="Backend (Python)">
+```python
+@app.get("/api/users/{user_id}")
+def get_user(user_id: int):
+    user = find_user(user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
+```
+</Tab>
+<Tab title="API Client (JS)">
+```jsx
+export async function getUser(id) {
+  const response = await fetch(`${API_URL}/api/users/${id}`);
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  return response.json();
+}
+```
+</Tab>
+</Tabs>
+
+```jsx
+function UserDetail({ userId }) {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    async function loadUser() {
+      try {
+        const data = await getUser(userId);
+        setUser(data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadUser();
+  }, [userId]); // Re-fetch when userId changes
+
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p className="error">{error}</p>;
+  if (!user) return <p>User not found</p>;
+
+  return (
+    <div>
+      <h2>{user.name}</h2>
+      <p>{user.email}</p>
+      <p>Role: {user.role}</p>
+    </div>
+  );
+}
+```
+
+<Info>
+Notice `[userId]` in the dependency array. If the user navigates from one profile to another, `userId` changes and the effect re-runs — fetching the new user automatically.
+</Info>
+
+## Rendering with components
+
+Break the display into reusable components:
+
+```jsx
+function UserCard({ user }) {
+  return (
+    <div className="user-card">
+      <h3>{user.name}</h3>
+      <p>{user.email}</p>
+      {user.role === "admin" && <span className="badge">Admin</span>}
+    </div>
+  );
+}
+
+function UserList() {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    getUsers()
+      .then(data => setUsers(data))
+      .catch(err => setError(err.message))
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return <Spinner />;
+  if (error) return <ErrorMessage message={error} />;
+  if (users.length === 0) return <EmptyState message="No users yet" />;
+
+  return (
+    <div className="user-grid">
+      {users.map(user => (
+        <UserCard key={user.id} user={user} />
+      ))}
+    </div>
+  );
+}
+```
+
+The smart component (`UserList`) handles state and fetching. The presentational component (`UserCard`) just displays data. This is the composition pattern from the React Essentials section.
+
+## Search and filter
+
+Add client-side filtering to your list:
+
+```jsx
+function SearchableUserList() {
+  const [users, setUsers] = useState([]);
+  const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getUsers()
+      .then(data => setUsers(data))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const filtered = users.filter(user =>
+    user.name.toLowerCase().includes(search.toLowerCase()) ||
+    user.email.toLowerCase().includes(search.toLowerCase())
+  );
+
+  if (loading) return <p>Loading...</p>;
+
+  return (
+    <div>
+      <input
+        type="text"
+        value={search}
+        onChange={e => setSearch(e.target.value)}
+        placeholder="Search by name or email..."
+      />
+      <p>{filtered.length} of {users.length} users</p>
+      {filtered.map(user => (
+        <UserCard key={user.id} user={user} />
+      ))}
+    </div>
+  );
+}
+```
+
+Fetch the full list once, then filter in the browser. This is fast for small-to-medium lists (hundreds of items). For large datasets, filter on the backend with query parameters.
+
+<Tip>
+For small datasets (under ~500 items), client-side filtering is simpler and faster — no extra API calls on every keystroke. For large datasets, send the search term as a query parameter: `GET /api/users?search=sarah`.
+</Tip>
+
+## Refreshing data
+
+Sometimes you need to reload data — after creating, updating, or deleting:
+
+```jsx
+function UserDashboard() {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  async function loadUsers() {
+    setLoading(true);
+    try {
+      const data = await getUsers();
+      setUsers(data);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadUsers();
+  }, []);
+
+  async function handleUserCreated(newUser) {
+    // Option 1: Add to local state (instant, no extra request)
+    setUsers(prev => [...prev, newUser]);
+
+    // Option 2: Refetch the full list (always in sync with backend)
+    // await loadUsers();
+  }
+
+  return (
+    <div>
+      <CreateUserForm onUserCreated={handleUserCreated} />
+      {loading ? <p>Loading...</p> : (
+        <ul>
+          {users.map(user => (
+            <li key={user.id}>{user.name}</li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+```
+
+Option 1 (update local state) is faster. Option 2 (refetch) is simpler and always correct. Start with local state updates, and switch to refetching if you run into sync issues.
+
+## What's next?
+
+You can create and read records. Now let's add editing — loading existing data into a form and sending updates back to the API.
+
+<Card title="Update operation" icon="pen" href="/full-stack/update-operation">
+Edit existing records with a form that sends PUT requests to your API
+</Card>

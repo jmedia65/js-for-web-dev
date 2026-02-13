@@ -3,16 +3,232 @@ title: "Type safety"
 description: "Ensure your frontend and backend agree on data shapes"
 ---
 
-{/* TODO: Write type safety content */}
+## The problem: silent mismatches
 
-## The problem
+Your FastAPI backend defines data shapes with Pydantic models. Your React frontend sends and receives that data. If they disagree on the shape, things break — often silently.
 
-{/* TODO: Frontend/backend data mismatches */}
+```python
+# Backend expects this shape
+class UserCreate(BaseModel):
+    name: str
+    email: str
+    role: str = "viewer"
+```
 
-## Validation approaches
+```jsx
+// Frontend sends this — missing "role", has extra "username"
+const userData = { username: "Sarah", email: "sarah@example.com" };
+await createUser(userData);
+// Backend gets { username: "Sarah", email: "..." }
+// "name" is missing → 422 Validation Error
+// "username" is ignored silently
+```
 
-{/* TODO: Runtime checks, TypeScript preview */}
+The backend rejects it with a 422 error, but the error message isn't always obvious. Or worse — the frontend reads a field that the backend renamed, and you get `undefined` rendering on screen with no error at all.
 
-## Practical patterns
+## Keep your shapes in sync
 
-{/* TODO: Consistent API response shapes */}
+The simplest approach: **document the expected shapes in your API client file**.
+
+```jsx
+// frontend/src/api/users.js
+
+/*
+ * User shapes (must match backend Pydantic models):
+ *
+ * UserCreate: { name: string, email: string, role?: string }
+ * UserUpdate: { name?: string, email?: string, role?: string }
+ * User:       { id: number, name: string, email: string, role: string, created_at: string }
+ */
+
+import { apiClient } from './client';
+
+export const getUsers = () => apiClient("/api/users");
+export const createUser = (data) =>
+  apiClient("/api/users", { method: "POST", body: JSON.stringify(data) });
+```
+
+This is documentation, not enforcement — but it tells any developer exactly what the backend expects.
+
+## Runtime validation
+
+For critical operations, validate before sending:
+
+```jsx
+function validateUserData(data) {
+  const errors = {};
+
+  if (!data.name || data.name.trim() === "") {
+    errors.name = "Name is required";
+  }
+
+  if (!data.email || !data.email.includes("@")) {
+    errors.email = "Valid email is required";
+  }
+
+  return {
+    isValid: Object.keys(errors).length === 0,
+    errors,
+  };
+}
+
+// Use before API call
+function handleSubmit(formData) {
+  const { isValid, errors } = validateUserData(formData);
+
+  if (!isValid) {
+    setErrors(errors);
+    return;
+  }
+
+  createUser(formData); // Only sends if valid
+}
+```
+
+<Tip>
+Validate on the frontend for instant user feedback. But always validate on the backend too — frontend validation can be bypassed. Pydantic handles backend validation automatically. Think of frontend validation as a UX feature, not a security feature.
+</Tip>
+
+## Consistent API response shapes
+
+Design your backend responses to be predictable. When every endpoint follows the same pattern, the frontend code becomes simpler.
+
+```python
+# Backend — consistent patterns
+
+# List endpoint always returns an array
+@app.get("/api/users")
+def get_users():
+    return users  # Always returns []
+
+# Single item returns the object or 404
+@app.get("/api/users/{user_id}")
+def get_user(user_id: int):
+    user = find_user(user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
+
+# Create returns the created object with 201
+@app.post("/api/users", status_code=201)
+def create_user(user: UserCreate):
+    new_user = save_user(user)
+    return new_user  # Returns the full object with id
+
+# Update returns the updated object
+@app.put("/api/users/{user_id}")
+def update_user(user_id: int, user: UserUpdate):
+    updated = update_user_in_db(user_id, user)
+    return updated
+
+# Delete returns nothing with 204
+@app.delete("/api/users/{user_id}", status_code=204)
+def delete_user(user_id: int):
+    remove_user(user_id)
+```
+
+The frontend can rely on these patterns:
+- **GET list** → always an array (even if empty)
+- **GET single** → the object, or a 404 error
+- **POST** → returns the created object (with its new `id`)
+- **PUT** → returns the updated object
+- **DELETE** → returns nothing (204 status)
+
+## Handling backend validation errors
+
+FastAPI returns 422 errors with a structured format. Parse them in your API client:
+
+```jsx
+// frontend/src/api/client.js
+export async function apiClient(endpoint, options = {}) {
+  const response = await fetch(`${API_URL}${endpoint}`, {
+    headers: { "Content-Type": "application/json", ...options.headers },
+    ...options,
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+
+    // FastAPI 422 validation errors have a specific shape
+    if (response.status === 422 && errorData.detail) {
+      // Convert FastAPI's validation format to a simple object
+      const fieldErrors = {};
+      for (const err of errorData.detail) {
+        const field = err.loc[err.loc.length - 1]; // Last item is the field name
+        fieldErrors[field] = err.msg;
+      }
+      const error = new Error("Validation failed");
+      error.fieldErrors = fieldErrors;
+      throw error;
+    }
+
+    throw new Error(errorData.detail || `HTTP ${response.status}`);
+  }
+
+  if (response.status === 204) return null;
+  return response.json();
+}
+```
+
+```jsx
+// In your component
+async function handleSubmit(formData) {
+  try {
+    await createUser(formData);
+  } catch (err) {
+    if (err.fieldErrors) {
+      setErrors(err.fieldErrors); // Show per-field errors
+    } else {
+      setError(err.message); // Show general error
+    }
+  }
+}
+```
+
+<Info>
+FastAPI validation errors return an array of `{ loc: ["body", "email"], msg: "field required", type: "missing" }` objects. The code above extracts the field name and message into a simple `{ email: "field required" }` format that your form components can display directly.
+</Info>
+
+## TypeScript preview
+
+If you want true compile-time type safety, TypeScript is the answer. Here's a taste:
+
+```tsx
+// With TypeScript — errors caught before you even run the code
+interface User {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+}
+
+interface UserCreate {
+  name: string;
+  email: string;
+  role?: string;
+}
+
+export async function createUser(data: UserCreate): Promise<User> {
+  return apiClient("/api/users", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+// ❌ TypeScript error: Property 'username' does not exist on type 'UserCreate'
+createUser({ username: "Sarah", email: "sarah@example.com" });
+```
+
+TypeScript catches the `username` vs `name` mismatch at development time, before any code runs. This is the gold standard for full-stack type safety.
+
+<Tip>
+You don't need TypeScript to build full-stack apps. JavaScript with good documentation and runtime validation works fine, especially when you're learning. But once you're comfortable with JavaScript, TypeScript is a natural next step — it catches an entire category of bugs automatically.
+</Tip>
+
+## What's next?
+
+Your frontend and backend are connected, organized, and type-aware. Now let's build the four CRUD operations that make up every data-driven application — starting with Create.
+
+<Card title="Create operation" icon="plus" href="/full-stack/create-operation">
+Build a form that sends data to your FastAPI backend and creates a new record
+</Card>

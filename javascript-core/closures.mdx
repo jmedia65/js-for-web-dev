@@ -3,20 +3,149 @@ title: "Closures"
 description: "Understand how functions remember their surrounding variables"
 ---
 
-{/* TODO: Write closures content */}
+## What is a closure?
 
-## What are closures
+A closure is a function that remembers the variables from the scope where it was created — even after that scope has finished executing.
 
-{/* TODO: Functions remembering their environment */}
+You've already been using closures without knowing it. If you've written a function inside another function and used a variable from the outer function, that's a closure.
 
-## Practical use cases
+```javascript
+function createGreeter(greeting) {
+  // This inner function "closes over" the greeting variable
+  return function(name) {
+    return `${greeting}, ${name}!`;
+  };
+}
 
-{/* TODO: Real-world closure patterns */}
+const sayHello = createGreeter("Hello");
+const sayHey = createGreeter("Hey");
+
+console.log(sayHello("Sarah")); // "Hello, Sarah!"
+console.log(sayHey("John"));    // "Hey, John!"
+```
+
+`createGreeter` has finished running, but `sayHello` still remembers that `greeting` was `"Hello"`. That's a closure.
+
+## Why closures matter
+
+Closures aren't an abstract concept you need to master — they're a pattern that shows up naturally in JavaScript. Here are the places you'll actually use them.
+
+### Callbacks with context
+
+```javascript
+function setupLogger(prefix) {
+  return function(message) {
+    console.log(`[${prefix}] ${message}`);
+  };
+}
+
+const apiLog = setupLogger("API");
+const uiLog = setupLogger("UI");
+
+apiLog("Fetching users");  // "[API] Fetching users"
+uiLog("Button clicked");   // "[UI] Button clicked"
+```
+
+Each logger "remembers" its prefix. You create it once and use it everywhere.
+
+### Event handlers in loops
+
+```javascript
+function attachHandlers(buttons) {
+  for (let i = 0; i < buttons.length; i++) {
+    buttons[i].addEventListener("click", () => {
+      console.log(`Button ${i} clicked`); // Each handler remembers its own "i"
+    });
+  }
+}
+```
+
+Each click handler is a closure that captures its own copy of `i`. This is why `let` (block-scoped) works correctly in loops but `var` (function-scoped) doesn't.
+
+### Data privacy
+
+```javascript
+function createCounter(initial = 0) {
+  let count = initial; // Private — can't be accessed from outside
+
+  return {
+    increment: () => ++count,
+    decrement: () => --count,
+    getCount: () => count,
+  };
+}
+
+const counter = createCounter(10);
+console.log(counter.getCount());  // 10
+counter.increment();
+counter.increment();
+console.log(counter.getCount());  // 12
+
+// Can't access count directly
+console.log(counter.count); // undefined
+```
+
+The `count` variable is completely private. The only way to interact with it is through the returned functions. This pattern is useful for creating modules and encapsulated state.
+
+## Closures in React
+
+You use closures in React without thinking about it. Every event handler inside a component is a closure:
+
+```jsx
+function SearchBar() {
+  const [query, setQuery] = useState("");
+
+  const handleSubmit = () => {
+    // This is a closure — it "closes over" the query variable
+    console.log(`Searching for: ${query}`);
+    fetch(`/api/search?q=${query}`);
+  };
+
+  return (
+    <div>
+      <input value={query} onChange={e => setQuery(e.target.value)} />
+      <button onClick={handleSubmit}>Search</button>
+    </div>
+  );
+}
+```
+
+`handleSubmit` remembers `query` from the component scope. Every time the component re-renders, a new closure is created with the latest value of `query`.
+
+<Info>
+This is why React state "works" — your event handlers are closures that capture the current state values. When you hear about "stale closures" in React, it means a function captured an old value of state. The `useEffect` dependency array exists to manage this.
+</Info>
 
 ## Don't overthink it
 
-{/* TODO: Keep it practical, not academic */}
+Closures sound complicated when explained in theory, but they're a natural consequence of two things you already understand:
+
+1. Functions can be defined inside other functions
+2. Inner functions can access outer variables (lexical scope)
+
+That's it. When the inner function outlives the outer function, it keeps access to those variables. That's a closure.
+
+```javascript
+// You don't need to think "I'm creating a closure here"
+// Just write the code naturally:
+
+function fetchUserData(userId) {
+  const url = `http://localhost:8000/api/users/${userId}`;
+
+  // This callback is a closure — it uses "url" from the outer function
+  return fetch(url)
+    .then(response => response.json());
+}
+```
+
+<Tip>
+Don't try to memorize closure rules. Write functions inside functions, use variables from the outer scope when it's natural, and you're using closures. The concept will solidify through practice.
+</Tip>
 
 ## What's next?
 
-{/* TODO: Card linking to working-with-data/arrays */}
+You've covered the core of JavaScript — variables, types, strings, functions, scope, and closures. Now let's learn how to work with collections of data: arrays and objects.
+
+<Card title="Arrays" icon="list" href="/working-with-data/arrays">
+Store and access collections of data
+</Card>

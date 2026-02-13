@@ -3,16 +3,102 @@ title: "Your first JavaScript file"
 description: "Create and run your first JavaScript program"
 ---
 
-{/* TODO: Write first JS file content */}
-
 ## Creating hello.js
 
-{/* TODO: Step-by-step file creation */}
+<Steps>
+<Step title="Create a project folder">
+Open your terminal and create a folder for your practice files:
 
-## Running with Node.js
+```bash
+mkdir js-practice
+cd js-practice
+```
+</Step>
 
-{/* TODO: node hello.js */}
+<Step title="Create the file">
+Open this folder in VS Code:
 
-## Browser console basics
+```bash
+code .
+```
 
-{/* TODO: Using the browser console */}
+Create a new file called `hello.js` and add this code:
+
+```javascript hello.js
+const name = "Sarah";
+const language = "JavaScript";
+
+console.log(`Hello, ${name}!`);
+console.log(`Welcome to ${language} for Web Dev.`);
+console.log("Let's build something.");
+```
+</Step>
+
+<Step title="Run it">
+Open the integrated terminal in VS Code (`` Ctrl+` ``) and run:
+
+```bash
+node hello.js
+```
+
+```
+Hello, Sarah!
+Welcome to JavaScript for Web Dev.
+Let's build something.
+```
+</Step>
+</Steps>
+
+That's it. You just wrote and ran a JavaScript program.
+
+## What's happening here
+
+```javascript
+const name = "Sarah";              // Create a variable
+console.log(`Hello, ${name}!`);    // Print to the terminal
+```
+
+- `const` declares a variable (you'll learn more in the JavaScript Core section)
+- `console.log()` prints output to the terminal — JavaScript's version of Python's `print()`
+- Backticks `` ` `` with `${}` let you embed variables in strings — like Python's f-strings
+
+<Tabs>
+<Tab title="JavaScript">
+```javascript
+const name = "Sarah";
+console.log(`Hello, ${name}!`);
+```
+</Tab>
+
+<Tab title="Python">
+```python
+name = "Sarah"
+print(f"Hello, {name}!")
+```
+</Tab>
+</Tabs>
+
+## Try the browser console
+
+You can also run JavaScript directly in your browser. Open any browser, press `F12`, and click the **Console** tab.
+
+```javascript
+// Type this directly in the browser console:
+console.log("This runs in the browser!");
+2 + 2
+// 4
+```
+
+The browser console evaluates expressions immediately and shows the result. You don't need `console.log()` for simple expressions — the console shows the return value automatically.
+
+<Tip>
+Use the browser console for quick experiments. Use `.js` files with Node.js for anything you want to save.
+</Tip>
+
+## What's next?
+
+You've run JavaScript in two places — Node.js and the browser console. Let's explore the different ways to run JavaScript during development.
+
+<Card title="Running JavaScript" icon="terminal" href="/getting-started/running-javascript">
+All the ways to run JavaScript code
+</Card>

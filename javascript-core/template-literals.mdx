@@ -3,20 +3,157 @@ title: "Template literals"
 description: "Build dynamic strings with embedded expressions using backticks"
 ---
 
-{/* TODO: Write template literals content */}
-
 ## String interpolation
 
-{/* TODO: ${} syntax with examples */}
+Template literals let you embed variables and expressions directly inside strings. If you've used Python's f-strings, this will feel instantly familiar.
+
+```javascript
+const name = "Sarah";
+const age = 28;
+
+const message = `Hello, ${name}! You are ${age} years old.`;
+console.log(message); // "Hello, Sarah! You are 28 years old."
+```
+
+The key difference from regular strings: template literals use **backticks** (`` ` ``), not quotes. Variables go inside `${}`.
+
+<Tabs>
+<Tab title="JavaScript">
+```javascript
+const name = "Sarah";
+const role = "developer";
+
+const greeting = `Welcome, ${name}! You are a ${role}.`;
+console.log(greeting); // "Welcome, Sarah! You are a developer."
+```
+</Tab>
+
+<Tab title="Python">
+```python
+name = "Sarah"
+role = "developer"
+
+greeting = f"Welcome, {name}! You are a {role}."
+print(greeting)  # "Welcome, Sarah! You are a developer."
+```
+</Tab>
+</Tabs>
+
+Same concept, slightly different syntax. Backticks instead of `f"..."`, and `${}` instead of `{}`.
+
+## Expressions inside template literals
+
+You can put any JavaScript expression inside `${}` — math, function calls, ternary operators, method calls.
+
+```javascript
+const price = 29.99;
+const quantity = 3;
+
+console.log(`Total: $${(price * quantity).toFixed(2)}`); // "Total: $89.97"
+console.log(`Items: ${quantity > 1 ? "multiple" : "single"}`); // "Items: multiple"
+console.log(`Uppercase: ${"hello".toUpperCase()}`); // "Uppercase: HELLO"
+```
+
+<Tip>
+Use `.toFixed(2)` to format numbers as currency with exactly 2 decimal places. You'll use this pattern constantly when displaying prices.
+</Tip>
 
 ## Multi-line strings
 
-{/* TODO: Backtick multi-line */}
+Template literals preserve line breaks. No need for `\n` characters or string concatenation.
 
-## Comparing to Python f-strings
+```javascript
+const userName = "Sarah";
+const orderId = "ORD-2024-001";
 
-{/* TODO: Tabs component with JS vs Python */}
+const email = `
+Hello ${userName},
+
+Your order has been confirmed.
+Order ID: ${orderId}
+
+Thanks for your purchase!
+`;
+
+console.log(email);
+```
+
+This is much cleaner than the alternative:
+
+```javascript
+// ❌ Without template literals — messy
+const email = "Hello " + userName + ",\n\n" +
+  "Your order has been confirmed.\n" +
+  "Order ID: " + orderId + "\n\n" +
+  "Thanks for your purchase!";
+```
+
+<Warning>
+Multi-line template literals preserve all whitespace, including indentation. If you indent the template literal inside a function, those spaces will appear in the output. Keep the content flush-left if spacing matters.
+</Warning>
+
+## Building HTML strings
+
+You'll sometimes build HTML strings in JavaScript — especially before you learn React. Template literals make this readable.
+
+```javascript
+const user = { name: "Sarah", email: "sarah@example.com", role: "Admin" };
+
+const html = `
+<div class="user-card">
+  <h2>${user.name}</h2>
+  <p>${user.email}</p>
+  <span class="badge">${user.role}</span>
+</div>
+`;
+```
+
+<Info>
+Once you learn React in Section 7, you'll use JSX instead of building HTML strings. But it's useful to see this pattern first — it shows why template literals matter for web development.
+</Info>
+
+## Common mistakes
+
+<AccordionGroup>
+<Accordion title="Using quotes instead of backticks">
+```javascript
+// ❌ Wrong: Regular quotes don't interpolate
+const name = "Sarah";
+const message = "Hello, ${name}!";
+console.log(message); // "Hello, ${name}!" (literal text)
+
+// ✅ Correct: Use backticks
+const message2 = `Hello, ${name}!`;
+console.log(message2); // "Hello, Sarah!"
+```
+
+<Warning>
+Template literals **must** use backticks (`` ` ``). Single quotes `'...'` and double quotes `"..."` treat `${...}` as literal text.
+</Warning>
+</Accordion>
+
+<Accordion title="Forgetting the dollar sign">
+```javascript
+// ❌ Wrong: Missing $
+const name = "Sarah";
+const message = `Hello, {name}!`;
+console.log(message); // "Hello, {name}!"
+
+// ✅ Correct: Include $
+const message2 = `Hello, ${name}!`;
+console.log(message2); // "Hello, Sarah!"
+```
+
+<Warning>
+Python f-strings use `{name}`. JavaScript template literals need `${name}` — don't forget the dollar sign.
+</Warning>
+</Accordion>
+</AccordionGroup>
 
 ## What's next?
 
-{/* TODO: Card linking to comments */}
+You can build dynamic strings. Before we move to functions, let's cover one quick topic — comments.
+
+<Card title="Comments" icon="message" href="/javascript-core/comments">
+Add notes and documentation to your JavaScript code
+</Card>

@@ -3,16 +3,86 @@ title: "How to follow this course"
 description: "Tips for getting the most out of each lesson"
 ---
 
-{/* TODO: Write learning approach content */}
+## Two ways to run JavaScript
 
-## Browser console for quick tests
+Throughout this course, you'll run JavaScript in two places:
 
-{/* TODO: How to use the browser console */}
+### Browser console (for quick experiments)
+
+Open any browser, press `F12` (or `Cmd+Option+J` on Mac), and click the **Console** tab. Type JavaScript directly and press Enter.
+
+```javascript
+// Try this right now in your browser console:
+const greeting = "Hello from the console!";
+console.log(greeting); // "Hello from the console!"
+```
+
+The browser console is perfect for testing one-liners, checking syntax, and experimenting with small ideas.
+
+### VS Code + Node.js (for everything else)
+
+For anything more than a quick test, you'll write code in VS Code and run it with Node.js. You'll set this up in the next section.
+
+```javascript hello.js
+const name = "Sarah";
+console.log(`Welcome to JavaScript, ${name}!`);
+```
+
+```bash
+node hello.js
+# Welcome to JavaScript, Sarah!
+```
+
+<Tip>
+Use the browser console to quickly verify how something works. Use VS Code + Node.js for writing actual code you want to keep.
+</Tip>
 
 ## Code along with every example
 
-{/* TODO: Why hands-on practice matters */}
+Every lesson leads with working code. You'll get the most out of this course by typing each example yourself — not copying and pasting.
+
+Why typing matters:
+- You catch syntax differences between Python and JavaScript faster
+- Your hands learn the patterns (semicolons, curly braces, `const`)
+- You'll notice things you'd skip when just reading
+
+<Warning>
+Copying and pasting code is the fastest way to learn nothing. Even if it feels slow at first, type it out. After a few lessons, the JavaScript syntax will feel natural.
+</Warning>
+
+## How each lesson is structured
+
+Every lesson follows the same pattern:
+
+1. **What and why** — 2-3 sentences explaining the concept
+2. **Code examples** — working code you can run immediately
+3. **Explanation** — brief explanation after the code, not before
+4. **Tips and warnings** — best practices and common gotchas
+5. **Common mistakes** — things that trip people up, with fixes
+6. **What's next** — link to the next lesson
+
+Code examples show output as inline comments:
+
+```javascript
+const numbers = [1, 2, 3, 4, 5];
+const doubled = numbers.map(n => n * 2);
+console.log(doubled); // [2, 4, 6, 8, 10]
+```
 
 ## Learning tips
 
-{/* TODO: Practical advice for working through the course */}
+**Don't memorize syntax.** You'll look things up constantly — every developer does. Focus on understanding *what* each concept does and *when* to use it. The syntax will stick through repetition.
+
+**Break things on purpose.** When a code example works, change something and see what breaks. Remove a semicolon. Forget an `await`. Use `=` instead of `===`. The error messages teach you more than the working code.
+
+**Skip what you already know.** If you already understand variables and data types from another language, skim those lessons and jump to what's new. The sections are designed to build on each other, but you don't need to read every word.
+
+**Use the companion repo.** The [FastAPI + React repository](https://github.com/jmedia65/fastapi-react-full-stack) is a real, working application. When you reach the Full-Stack section, clone it and explore the code alongside the lessons.
+
+## What's next?
+
+Time to set up your development environment. Let's install Node.js.
+
+<Card title="Installing Node.js" icon="download" href="/getting-started/installing-node">
+Get JavaScript running on your machine
+</Card>

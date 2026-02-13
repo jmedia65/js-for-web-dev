@@ -3,24 +3,217 @@ title: "Functions basics"
 description: "Write reusable blocks of code with JavaScript functions"
 ---
 
-{/* TODO: Write functions basics content */}
+## What are functions?
+
+Functions are reusable blocks of code. You define them once and call them whenever you need that logic. If you've written `def` in Python, you already understand the concept — JavaScript just wraps it differently.
+
+```javascript
+function greet(name) {
+  return `Hello, ${name}!`;
+}
+
+console.log(greet("Sarah")); // "Hello, Sarah!"
+console.log(greet("John"));  // "Hello, John!"
+```
 
 ## Function declarations
 
-{/* TODO: function keyword syntax */}
+The most common way to create a function:
+
+```javascript
+function calculateTotal(price, taxRate) {
+  const tax = price * taxRate;
+  return price + tax;
+}
+
+const total = calculateTotal(99.99, 0.08);
+console.log(total); // 107.9892
+```
+
+<Tabs>
+<Tab title="JavaScript">
+```javascript
+function calculateTotal(price, taxRate) {
+  const tax = price * taxRate;
+  return price + tax;
+}
+```
+</Tab>
+
+<Tab title="Python">
+```python
+def calculate_total(price, tax_rate):
+    tax = price * tax_rate
+    return price + tax
+```
+</Tab>
+</Tabs>
+
+The structure is identical — keyword, name, parameters, body, return. JavaScript uses `function` instead of `def`, curly braces instead of indentation, and `camelCase` instead of `snake_case`.
 
 ## Return values
 
-{/* TODO: return statement */}
+Functions return `undefined` by default. If you want a value back, you need an explicit `return` statement.
+
+```javascript
+function add(a, b) {
+  return a + b; // Returns the sum
+}
+
+function logMessage(message) {
+  console.log(message); // No return — returns undefined
+}
+
+const result = add(5, 3);
+console.log(result); // 8
+
+const noResult = logMessage("Hello");
+console.log(noResult); // undefined
+```
+
+`return` also exits the function immediately. Code after `return` never runs.
+
+```javascript
+function checkAge(age) {
+  if (age < 18) {
+    return "Too young";
+  }
+  return "Welcome"; // Only runs if age >= 18
+}
+
+console.log(checkAge(15)); // "Too young"
+console.log(checkAge(25)); // "Welcome"
+```
 
 ## Function expressions
 
-{/* TODO: Assigning functions to variables */}
+You can also create functions by assigning them to variables:
+
+```javascript
+const multiply = function(a, b) {
+  return a * b;
+};
+
+console.log(multiply(4, 5)); // 20
+```
+
+This is called a **function expression**. The function doesn't have its own name — it's stored in the variable `multiply`.
+
+<Info>
+Function declarations are "hoisted" — you can call them before they appear in your code. Function expressions are not. For now, stick with function declarations. You'll use function expressions more when you learn arrow functions next.
+</Info>
+
+## Functions as values
+
+This is where JavaScript differs from Python in a meaningful way. Functions are values — you can pass them to other functions, store them in arrays, return them from functions.
+
+```javascript
+function applyOperation(a, b, operation) {
+  return operation(a, b);
+}
+
+function add(x, y) { return x + y; }
+function subtract(x, y) { return x - y; }
+
+console.log(applyOperation(10, 3, add));      // 13
+console.log(applyOperation(10, 3, subtract)); // 7
+```
+
+You'll use this pattern constantly. Array methods like `.map()`, `.filter()`, and `.forEach()` all take functions as arguments. React event handlers work the same way.
+
+<Tip>
+Get comfortable with passing functions as arguments. It's one of the most common patterns in JavaScript and React. You'll see it everywhere: `array.map(myFunction)`, `button.addEventListener("click", myFunction)`, `<button onClick={myFunction}>`.
+</Tip>
+
+## Calling vs referencing
+
+A subtle but important distinction:
+
+```javascript
+function sayHello() {
+  return "Hello!";
+}
+
+// Calling the function — runs it, gives you the result
+console.log(sayHello()); // "Hello!"
+
+// Referencing the function — passes the function itself
+console.log(sayHello); // [Function: sayHello]
+```
+
+With parentheses `()` you **call** the function. Without parentheses, you **reference** it. This matters when passing functions to event handlers or array methods — you pass the reference, not the result.
+
+```javascript
+// ✅ Correct: Pass the function reference
+button.addEventListener("click", handleClick);
+
+// ❌ Wrong: This CALLS handleClick immediately
+button.addEventListener("click", handleClick());
+```
 
 ## Common mistakes
 
-{/* TODO: Forgetting return */}
+<AccordionGroup>
+<Accordion title="Forgetting to return a value">
+```javascript
+// ❌ Wrong: Missing return
+function calculateTax(price) {
+  const tax = price * 0.08;
+  // Forgot to return! Returns undefined
+}
+
+const tax = calculateTax(100);
+console.log(tax); // undefined
+
+// ✅ Correct: Include return
+function calculateTax(price) {
+  const tax = price * 0.08;
+  return tax;
+}
+```
+
+<Warning>
+If your function computes a value but doesn't `return` it, you get `undefined`. This is one of the most common bugs in JavaScript — especially for Python developers, since Python returns `None` explicitly.
+</Warning>
+</Accordion>
+
+<Accordion title="Calling a function reference instead of passing it">
+```javascript
+// ❌ Wrong: Calls immediately, passes the return value
+setTimeout(doSomething(), 1000);
+
+// ✅ Correct: Passes the function, called later
+setTimeout(doSomething, 1000);
+```
+
+<Warning>
+When passing a function as an argument, don't add `()` unless you want it to run immediately. This trips up everyone at first — especially in React's `onClick` handlers.
+</Warning>
+</Accordion>
+
+<Accordion title="Semicolon after function declarations">
+```javascript
+// Function declarations — no semicolon needed
+function greet(name) {
+  return `Hello, ${name}!`;
+}
+
+// Function expressions — semicolon after the assignment
+const greet = function(name) {
+  return `Hello, ${name}!`;
+};
+```
+
+<Warning>
+Function declarations don't end with a semicolon (they're statements). Function expressions do (they're assignments). This is a minor style point — Prettier handles it automatically if you have it set up.
+</Warning>
+</Accordion>
+</AccordionGroup>
 
 ## What's next?
 
-{/* TODO: Card linking to arrow-functions */}
+You know how to write and call functions. JavaScript has a shorter, more modern syntax for functions called arrow functions — you'll use them everywhere in React.
+
+<Card title="Arrow functions" icon="arrow-right" href="/javascript-core/arrow-functions">
+Write shorter, cleaner functions with the modern syntax
+</Card>

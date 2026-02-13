@@ -3,20 +3,183 @@ title: "Browser DevTools"
 description: "Use browser developer tools to inspect, debug, and test your JavaScript"
 ---
 
-{/* TODO: Write DevTools content */}
+## Your most important tool
 
-## Opening DevTools
+Browser DevTools is where you'll spend a significant chunk of your development time. It lets you inspect the DOM, run JavaScript, monitor network requests, and debug errors — all without leaving the browser.
 
-{/* TODO: Keyboard shortcuts per browser */}
+### Opening DevTools
+
+<Tabs>
+<Tab title="Chrome / Edge">
+| Action | Shortcut |
+|---|---|
+| Open DevTools | `F12` or `Ctrl+Shift+I` (Windows) / `Cmd+Option+I` (Mac) |
+| Open Console directly | `Ctrl+Shift+J` (Windows) / `Cmd+Option+J` (Mac) |
+| Inspect element | `Ctrl+Shift+C` (Windows) / `Cmd+Option+C` (Mac) |
+</Tab>
+
+<Tab title="Firefox">
+| Action | Shortcut |
+|---|---|
+| Open DevTools | `F12` or `Ctrl+Shift+I` (Windows) / `Cmd+Option+I` (Mac) |
+| Open Console directly | `Ctrl+Shift+K` (Windows) / `Cmd+Option+K` (Mac) |
+| Inspect element | `Ctrl+Shift+C` (Windows) / `Cmd+Option+C` (Mac) |
+</Tab>
+
+<Tab title="Safari">
+| Action | Shortcut |
+|---|---|
+| Open DevTools | `Cmd+Option+I` |
+| Open Console directly | `Cmd+Option+C` |
+
+Enable DevTools first: Safari → Settings → Advanced → "Show features for web developers"
+</Tab>
+</Tabs>
+
+<Tip>
+Right-click any element on a page and select **"Inspect"** to jump directly to that element in the Elements panel. This is the fastest way to investigate any part of a page.
+</Tip>
 
 ## Elements panel
 
-{/* TODO: Inspecting the DOM */}
+The Elements panel shows the live DOM tree. You can inspect, edit, and experiment with any element on the page.
+
+### What you can do
+
+```
+Elements panel lets you:
+├── See the full DOM tree (expand/collapse nodes)
+├── Click an element to see its styles in the Styles pane
+├── Edit HTML directly (double-click any element)
+├── Edit CSS in real time (change values, add properties)
+├── Toggle classes on and off
+├── See computed styles (what the browser actually applied)
+└── Check element box model (margin, padding, border)
+```
+
+### Practical uses
+
+- **Debug layout issues**: Inspect an element, check its computed size, margin, and padding
+- **Test style changes**: Edit CSS values live — no need to save and reload
+- **Find elements**: Use `Ctrl+F` / `Cmd+F` in the Elements panel to search by text, selector, or XPath
+- **Check accessibility**: See element roles, ARIA attributes, and contrast ratios
+
+<Info>
+Changes you make in the Elements panel are temporary — they disappear when you refresh the page. This makes it safe to experiment without fear of breaking anything.
+</Info>
 
 ## Console panel
 
-{/* TODO: Running JavaScript interactively */}
+The Console is where you'll run JavaScript interactively, see errors, and debug your code.
+
+### Running JavaScript
+
+```javascript
+// Type these directly in the console
+
+// Access DOM elements
+document.querySelector("h1").textContent
+// "Hello, Sarah!"
+
+// Change the page
+document.body.style.backgroundColor = "lightblue"
+
+// Test your functions
+const numbers = [1, 2, 3, 4, 5];
+numbers.filter(n => n > 3);
+// [4, 5]
+
+// Inspect objects
+console.log({ name: "Sarah", age: 28 });
+console.table([{ id: 1, name: "Sarah" }, { id: 2, name: "John" }]);
+```
+
+### Console methods
+
+| Method | Purpose |
+|---|---|
+| `console.log()` | General output |
+| `console.error()` | Red error message |
+| `console.warn()` | Yellow warning |
+| `console.table()` | Display arrays/objects as a table |
+| `console.group()` / `console.groupEnd()` | Group related logs |
+| `console.time()` / `console.timeEnd()` | Measure execution time |
+| `console.clear()` | Clear the console |
+
+### Reading error messages
+
+When your code breaks, the console shows the error with a clickable file and line number:
+
+```
+Uncaught TypeError: Cannot read properties of null (reading 'textContent')
+    at script.js:15:23
+```
+
+This tells you:
+- **What**: Tried to read `.textContent` on something that's `null`
+- **Where**: `script.js`, line 15, column 23
+- **Why**: Probably tried to select an element that doesn't exist (yet)
+
+<Warning>
+If you see `null` errors when selecting elements, your JavaScript is likely running before the DOM is fully loaded. Either move your `<script>` tag to the bottom of `<body>`, or use `defer`: `<script defer src="script.js"></script>`.
+</Warning>
 
 ## Network panel
 
-{/* TODO: Monitoring API calls */}
+The Network panel shows every HTTP request the page makes — HTML, CSS, JavaScript, images, and API calls. This is essential for debugging your FastAPI integration.
+
+### What to look for
+
+- **Status codes**: 200 (success), 404 (not found), 500 (server error), CORS errors
+- **Request/response bodies**: Click a request to see what was sent and received
+- **Timing**: How long each request takes
+- **Headers**: Check Content-Type, Authorization, CORS headers
+
+### Filtering API calls
+
+Click the **Fetch/XHR** filter to show only API calls (hides images, CSS, etc.). This is the view you'll use most when debugging your frontend-backend communication.
+
+```
+Network panel → Fetch/XHR filter → Click a request → Preview/Response tab
+```
+
+<Tip>
+When debugging API issues, check the Network panel first. It shows exactly what your frontend sent and what the backend returned — no guessing required.
+</Tip>
+
+## Application panel
+
+The Application panel lets you inspect browser storage:
+
+- **localStorage**: Key-value pairs persisted between sessions
+- **sessionStorage**: Key-value pairs cleared when the tab closes
+- **Cookies**: Data sent with every request to the server
+
+You'll use this when working with localStorage later in this section.
+
+## DevTools workflow for debugging
+
+When something isn't working, follow this order:
+
+<Steps>
+<Step title="Check the Console">
+  Look for red error messages. They usually tell you exactly what's wrong and where.
+</Step>
+<Step title="Inspect the element">
+  Right-click the broken element → Inspect. Check if it exists, has the right classes, and has the expected content.
+</Step>
+<Step title="Check the Network panel">
+  If data isn't showing up, check if the API request succeeded. Look at the status code and response body.
+</Step>
+<Step title="Add console.log">
+  When the error isn't obvious, add `console.log()` statements to trace where values go wrong.
+</Step>
+</Steps>
+
+## What's next?
+
+You know how to inspect the DOM. Now let's learn how to find specific elements in it with JavaScript.
+
+<Card title="Selecting elements" icon="bullseye" href="/dom-browser/selecting-elements">
+Find and target HTML elements on the page
+</Card>

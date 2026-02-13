@@ -3,24 +3,273 @@ title: "Async/await"
 description: "Write asynchronous code that reads like synchronous code"
 ---
 
-{/* TODO: Write async/await content */}
+## The modern way to write async code
+
+`async/await` is syntactic sugar on top of Promises. It lets you write async code that reads top-to-bottom, just like synchronous code. This is what you'll use 90% of the time.
+
+```javascript
+async function getUsers() {
+  const response = await fetch("http://localhost:8000/api/users");
+  const users = await response.json();
+  return users;
+}
+```
+
+Two keywords, two rules:
+- **`async`** goes before the function declaration — marks it as asynchronous
+- **`await`** goes before a Promise — pauses execution until the Promise resolves
 
 ## async functions
 
-{/* TODO: async keyword */}
+Adding `async` to a function does one thing: it makes the function **always return a Promise**.
 
-## await keyword
+```javascript
+async function greet() {
+  return "Hello!";
+}
 
-{/* TODO: Pausing until promise resolves */}
+// Equivalent to:
+function greet() {
+  return Promise.resolve("Hello!");
+}
+
+// Both return a Promise
+greet().then(message => console.log(message)); // "Hello!"
+```
+
+This means any function that uses `await` inside it must be marked `async`.
+
+```javascript
+// ❌ Error: await is only valid in async functions
+function getUsers() {
+  const response = await fetch("/api/users"); // SyntaxError!
+}
+
+// ✅ Correct: mark function as async
+async function getUsers() {
+  const response = await fetch("/api/users");
+  return response.json();
+}
+```
+
+### Arrow function version
+
+```javascript
+// Regular async function
+async function getUsers() {
+  const response = await fetch("/api/users");
+  return response.json();
+}
+
+// Async arrow function
+const getUsers = async () => {
+  const response = await fetch("/api/users");
+  return response.json();
+};
+```
+
+## await — pausing until the Promise resolves
+
+`await` pauses the function until the Promise settles. The function doesn't block the page — it just pauses internally while other code keeps running.
+
+```javascript
+async function fetchAndLog() {
+  console.log("1. Starting fetch...");
+
+  const response = await fetch("/api/users"); // Pauses here
+  console.log("2. Got response");              // Runs after fetch completes
+
+  const users = await response.json();         // Pauses here
+  console.log("3. Parsed JSON");               // Runs after parsing
+
+  return users;
+}
+
+// Meanwhile, the rest of your app stays interactive
+fetchAndLog();
+console.log("4. This runs immediately — doesn't wait for fetchAndLog");
+
+// Output:
+// 1. Starting fetch...
+// 4. This runs immediately — doesn't wait for fetchAndLog
+// 2. Got response
+// 3. Parsed JSON
+```
+
+<Warning>
+`await` pauses the current `async` function, not the entire program. Other code outside the function continues to run. That's why line 4 prints before lines 2 and 3.
+</Warning>
 
 ## Error handling with try/catch
 
-{/* TODO: try/catch pattern */}
+Use `try/catch` to handle errors in async functions — just like you would in Python:
 
-## Comparing to Python's async/await
+```javascript
+async function getUsers() {
+  try {
+    const response = await fetch("http://localhost:8000/api/users");
 
-{/* TODO: Tabs component with JS vs Python */}
+    if (!response.ok) {
+      throw new Error(`HTTP error: ${response.status}`);
+    }
+
+    const users = await response.json();
+    return users;
+  } catch (error) {
+    console.error("Failed to fetch users:", error.message);
+    throw error; // Re-throw so the caller can handle it too
+  }
+}
+```
+
+`try/catch` catches both:
+- **Network errors** — when `fetch` itself fails (no internet, DNS failure)
+- **Errors you throw** — like when `response.ok` is false
+
+### try/catch/finally
+
+```javascript
+async function loadUsers() {
+  setLoading(true);
+
+  try {
+    const response = await fetch("/api/users");
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const users = await response.json();
+    setUsers(users);
+  } catch (error) {
+    setError(error.message);
+  } finally {
+    setLoading(false); // Always runs — success or failure
+  }
+}
+```
+
+<Tip>
+`finally` is perfect for resetting loading states. It runs regardless of success or failure, so you don't need to set `loading = false` in both the `try` and `catch` blocks.
+</Tip>
+
+## Sequential vs parallel
+
+### Sequential — one after another
+
+When each request depends on the previous result:
+
+```javascript
+async function getUserOrders(userId) {
+  const userResponse = await fetch(`/api/users/${userId}`);
+  const user = await userResponse.json();
+
+  // Need the user first to get their orders
+  const ordersResponse = await fetch(`/api/orders?userId=${user.id}`);
+  const orders = await ordersResponse.json();
+
+  return { user, orders };
+}
+```
+
+### Parallel — all at once
+
+When requests are independent, use `Promise.all()` with `await`:
+
+```javascript
+async function getDashboardData() {
+  // ❌ Sequential — slow (each waits for the previous)
+  const users = await fetch("/api/users").then(r => r.json());
+  const products = await fetch("/api/products").then(r => r.json());
+  const orders = await fetch("/api/orders").then(r => r.json());
+  // Total time: request1 + request2 + request3
+
+  // ✅ Parallel — fast (all run at the same time)
+  const [users, products, orders] = await Promise.all([
+    fetch("/api/users").then(r => r.json()),
+    fetch("/api/products").then(r => r.json()),
+    fetch("/api/orders").then(r => r.json()),
+  ]);
+  // Total time: max(request1, request2, request3)
+}
+```
+
+<Warning>
+A common mistake is using `await` for every request even when they don't depend on each other. If two requests are independent, run them in parallel with `Promise.all()`.
+</Warning>
+
+## Comparing to Python
+
+<Tabs>
+<Tab title="JavaScript">
+```javascript
+async function getUser(userId) {
+  try {
+    const response = await fetch(`/api/users/${userId}`);
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error("Error:", error.message);
+    throw error;
+  }
+}
+
+// Call it
+const user = await getUser(1);
+```
+</Tab>
+
+<Tab title="Python">
+```python
+import httpx
+
+async def get_user(user_id: int):
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(f"/api/users/{user_id}")
+            response.raise_for_status()
+            return response.json()
+    except httpx.HTTPError as error:
+        print(f"Error: {error}")
+        raise
+
+# Call it
+user = await get_user(1)
+```
+</Tab>
+</Tabs>
+
+The syntax is nearly identical. The big difference: in Python, async is opt-in (most code is synchronous). In JavaScript, **any code that touches the network is async by default**.
+
+## The pattern you'll use everywhere
+
+This is the complete async/await pattern for API calls:
+
+```javascript
+async function fetchData(endpoint) {
+  try {
+    const response = await fetch(`http://localhost:8000${endpoint}`);
+
+    if (!response.ok) {
+      throw new Error(`HTTP error: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error(`Failed to fetch ${endpoint}:`, error);
+    throw error;
+  }
+}
+
+// Usage
+const users = await fetchData("/api/users");
+const products = await fetchData("/api/products");
+```
+
+You'll see this exact pattern in nearly every web application. Learn it once, use it everywhere.
 
 ## What's next?
 
-{/* TODO: Card linking to fetch-basics */}
+You understand async/await. Now let's put it to work — making real HTTP requests to your FastAPI backend with `fetch`.
+
+<Card title="Fetching data from APIs" icon="cloud-arrow-down" href="/async-apis/fetch-basics">
+Make GET, POST, PUT, and DELETE requests with fetch
+</Card>

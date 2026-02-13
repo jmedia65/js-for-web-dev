@@ -3,20 +3,234 @@ title: "Destructuring"
 description: "Extract values from objects and arrays into individual variables"
 ---
 
-{/* TODO: Write destructuring content */}
+## Why destructuring?
+
+Destructuring lets you unpack values from objects and arrays into separate variables in a single line. Instead of writing `user.name`, `user.email`, `user.role` over and over, you extract them once.
+
+```javascript
+const user = { name: "Sarah", email: "sarah@example.com", role: "admin" };
+
+// ❌ Without destructuring — repetitive
+const name = user.name;
+const email = user.email;
+const role = user.role;
+
+// ✅ With destructuring — one line
+const { name, email, role } = user;
+
+console.log(name);  // "Sarah"
+console.log(email); // "sarah@example.com"
+console.log(role);  // "admin"
+```
 
 ## Object destructuring
 
-{/* TODO: { name, age } = user */}
+Pull specific properties out of an object by name:
+
+```javascript
+const product = {
+  id: 42,
+  name: "Wireless Headphones",
+  price: 79.99,
+  category: "Electronics",
+  inStock: true,
+};
+
+// Grab only what you need
+const { name, price, inStock } = product;
+
+console.log(name);    // "Wireless Headphones"
+console.log(price);   // 79.99
+console.log(inStock); // true
+// id and category are ignored
+```
+
+### Renaming variables
+
+When the property name conflicts with an existing variable or you want a clearer name:
+
+```javascript
+const apiResponse = { data: [...], error: null, status: 200 };
+
+// Rename "data" to "users" and "status" to "httpStatus"
+const { data: users, status: httpStatus } = apiResponse;
+
+console.log(users);      // [...]
+console.log(httpStatus);  // 200
+```
+
+### Default values
+
+Set fallbacks for properties that might not exist:
+
+```javascript
+const settings = { theme: "dark" };
+
+const { theme, language = "en", fontSize = 14 } = settings;
+
+console.log(theme);    // "dark" (from the object)
+console.log(language); // "en" (default — not in object)
+console.log(fontSize); // 14 (default — not in object)
+```
+
+### Nested destructuring
+
+```javascript
+const order = {
+  id: "ORD-001",
+  customer: {
+    name: "Sarah Chen",
+    address: { city: "Portland", state: "OR" },
+  },
+};
+
+const { customer: { name, address: { city } } } = order;
+
+console.log(name); // "Sarah Chen"
+console.log(city); // "Portland"
+```
+
+<Tip>
+Don't go more than two levels deep with nested destructuring. It quickly becomes unreadable. For deeply nested data, destructure in multiple steps or use dot notation.
+</Tip>
 
 ## Array destructuring
 
-{/* TODO: [first, second] = array */}
+Pull values out by position:
 
-## Real-world use cases
+```javascript
+const colors = ["red", "green", "blue"];
 
-{/* TODO: API responses, function params, React hooks */}
+const [first, second, third] = colors;
+
+console.log(first);  // "red"
+console.log(second); // "green"
+console.log(third);  // "blue"
+```
+
+### Skipping items
+
+```javascript
+const scores = [95, 87, 72, 91, 88];
+
+// Skip the first two
+const [, , third] = scores;
+console.log(third); // 72
+
+// Get first and rest
+const [best, ...remaining] = scores;
+console.log(best);      // 95
+console.log(remaining);  // [87, 72, 91, 88]
+```
+
+### Swapping variables
+
+```javascript
+let a = 1;
+let b = 2;
+
+[a, b] = [b, a];
+
+console.log(a); // 2
+console.log(b); // 1
+```
+
+## Where you'll use destructuring every day
+
+### React's useState
+
+You've already seen this — it's array destructuring:
+
+```jsx
+const [count, setCount] = useState(0);
+const [user, setUser] = useState(null);
+const [isLoading, setIsLoading] = useState(false);
+```
+
+`useState` returns a two-element array: `[currentValue, setterFunction]`. Destructuring gives them meaningful names.
+
+### React component props
+
+```jsx
+// Without destructuring
+function UserCard(props) {
+  return <h2>{props.name}</h2>;
+}
+
+// With destructuring — cleaner
+function UserCard({ name, email, role }) {
+  return (
+    <div>
+      <h2>{name}</h2>
+      <p>{email}</p>
+      <span>{role}</span>
+    </div>
+  );
+}
+```
+
+### Function parameters
+
+```javascript
+// Extract what you need in the parameter list
+function displayOrder({ id, customer, total }) {
+  console.log(`Order ${id} for ${customer}: $${total}`);
+}
+
+displayOrder({ id: "ORD-001", customer: "Sarah", total: 149.99, items: [...] });
+// "Order ORD-001 for Sarah: $149.99"
+```
+
+### API responses
+
+```javascript
+async function getUser(userId) {
+  const response = await fetch(`/api/users/${userId}`);
+  const { name, email, role } = await response.json();
+  return { name, email, role };
+}
+```
+
+## Comparing to Python
+
+<Tabs>
+<Tab title="JavaScript">
+```javascript
+// Object destructuring (no Python equivalent)
+const { name, age } = user;
+
+// Array destructuring
+const [first, second] = [1, 2];
+
+// In function params
+function greet({ name, age }) {
+  return `${name} is ${age}`;
+}
+```
+</Tab>
+
+<Tab title="Python">
+```python
+# No dict destructuring — must access individually
+name = user["name"]
+age = user["age"]
+
+# Tuple unpacking (similar to array destructuring)
+first, second = (1, 2)
+
+# No param destructuring — access dict keys
+def greet(user):
+    return f"{user['name']} is {user['age']}"
+```
+</Tab>
+</Tabs>
+
+Object destructuring is one of the biggest syntax wins JavaScript has over Python. It's everywhere in React code.
 
 ## What's next?
 
-{/* TODO: Card linking to spread-operator */}
+Destructuring unpacks values *out of* objects and arrays. The spread operator does the opposite — it expands them *into* new structures.
+
+<Card title="Spread operator" icon="expand" href="/working-with-data/spread-operator">
+Copy, merge, and expand arrays and objects
+</Card>

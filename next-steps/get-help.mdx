@@ -3,20 +3,109 @@ title: "Get help"
 description: "Join the community, ask questions, and contribute to the course"
 ---
 
-{/* TODO: Write community/help content */}
+## You will get stuck. That's normal.
 
-## Community channels
+Every developer — beginner and senior — gets stuck regularly. The difference isn't whether you get stuck, it's knowing where to look and how to ask. Here's your toolkit.
 
-{/* TODO: Slack, GitHub discussions */}
+## Where to look first
+
+Before asking anyone, try these in order:
+
+<Steps>
+<Step title="Read the error message">
+JavaScript error messages are usually clear. `Cannot read properties of undefined (reading 'name')` means something is `undefined` when you expected an object. Read the message, check the line number.
+</Step>
+<Step title="Check the browser DevTools">
+Console tab for JavaScript errors. Network tab for API request/response issues. Elements tab for what's actually rendered.
+</Step>
+<Step title="console.log() the data">
+Add `console.log(data)` before the line that breaks. Check if the data is what you expect. This solves 80% of bugs.
+</Step>
+<Step title="Search the error message">
+Copy the error message (without your specific file paths) and paste it into Google. Chances are someone has already solved this exact problem.
+</Step>
+</Steps>
+
+<Tip>
+When you Google an error, add the technology name. "Cannot read properties of undefined React" gets better results than just the error message alone.
+</Tip>
+
+## Where to ask questions
+
+### Stack Overflow
+
+The largest Q&A site for developers. Search first — your question has almost certainly been asked before.
+
+When asking a new question:
+- Include the **error message** (exact text)
+- Include the **relevant code** (minimal reproduction)
+- Describe what you **expected** vs what **happened**
+- Mention what you've **already tried**
+
+### MDN Web Docs
+
+Not just a reference — MDN has explanations, examples, and browser compatibility tables for every JavaScript feature. When you're confused about how something works, MDN is the answer.
+
+### React docs
+
+The new React docs at `react.dev` have interactive examples you can edit and run directly in the browser. If you're confused about a React concept, the docs probably have a tutorial for it.
 
 ## Asking good questions
 
-{/* TODO: How to get help effectively */}
+The quality of help you get depends on the quality of your question. Here's the formula:
 
-## Contributing
+```
+1. What I'm trying to do:       "I'm trying to fetch users and display them in a list"
+2. What I expected to happen:    "The list should show 3 users from the API"
+3. What actually happened:       "The page shows 'Loading...' forever"
+4. The error message (if any):   "No errors in the console"
+5. What I already tried:         "I checked the Network tab — the API returns 200 with data"
+6. Relevant code:                [minimal code snippet]
+```
 
-{/* TODO: How to contribute to the course */}
+A question like this gets answered quickly. "My code doesn't work, help" does not.
 
-## Report issues
+<Info>
+Creating a minimal reproduction is the most valuable debugging skill you can develop. Often, the act of simplifying the problem to its essentials reveals the bug — and you solve it yourself before even asking.
+</Info>
 
-{/* TODO: GitHub issues link */}
+## Reference documentation
+
+Bookmark these. You'll come back to them constantly.
+
+| Resource | What it covers |
+|---|---|
+| **MDN Web Docs** | JavaScript, DOM, Web APIs, CSS |
+| **react.dev** | React components, hooks, patterns |
+| **fastapi.tiangolo.com** | FastAPI endpoints, validation, middleware |
+| **vitejs.dev** | Vite configuration, environment variables, building |
+| **developer.chrome.com/docs/devtools** | Chrome DevTools guides |
+
+## Common problems and where to look
+
+| Problem | Where to check |
+|---|---|
+| "Cannot read properties of undefined" | Your data isn't what you think — `console.log` it |
+| CORS error in console | Backend CORS middleware configuration |
+| API returns 422 | Your request body doesn't match the Pydantic model |
+| Component doesn't re-render | You might be mutating state instead of creating new objects |
+| useEffect runs infinitely | Check your dependency array for objects/arrays |
+| Form input won't type | Missing `onChange` handler on a controlled input |
+| "Module not found" | Check your import path — relative (`./`) and case sensitivity |
+| `key` warning in console | Add a unique `key` prop to items in `.map()` |
+
+## Contributing to this course
+
+Found a typo? Want to suggest an improvement? This course is open source.
+
+- **Report issues**: Open a GitHub issue describing the problem
+- **Suggest improvements**: Pull requests are welcome
+- **Share feedback**: Let us know what helped and what was confusing
+
+## Keep going
+
+You've completed the course. You have the foundation. The rest is practice and curiosity.
+
+Build something this week. It doesn't have to be perfect — it has to exist. Every project you build makes you better. Every bug you fix teaches you something new.
+
+Welcome to full-stack development.

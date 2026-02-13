@@ -3,16 +3,263 @@ title: "Error handling across the stack"
 description: "Handle errors consistently from FastAPI to React for a great user experience"
 ---
 
-{/* TODO: Write error handling stack content */}
+## Errors happen everywhere
 
-## Backend error responses
+In a full-stack app, errors can occur at every layer:
 
-{/* TODO: FastAPI HTTPException patterns */}
+```
+User action
+  → Frontend validation error     (missing field)
+  → Network error                 (server down, no internet)
+  → Backend validation error      (invalid email format)
+  → Backend business logic error  (duplicate email)
+  → Database error                (connection timeout)
+```
 
-## Frontend error handling
+Good error handling means the user always sees a clear, helpful message — regardless of where the error originated.
 
-{/* TODO: Catching and displaying errors */}
+## Layer 1: Backend errors (FastAPI)
 
-## User-friendly error messages
+FastAPI provides structured error responses. Use `HTTPException` for expected errors:
 
-{/* TODO: Translating technical errors for users */}
+```python
+from fastapi import HTTPException
+
+@app.post("/api/users", status_code=201)
+def create_user(data: UserCreate):
+    # Business logic error
+    if any(u["email"] == data.email for u in users):
+        raise HTTPException(
+            status_code=409,
+            detail="A user with this email already exists"
+        )
+
+    new_user = save_user(data)
+    return new_user
+
+@app.get("/api/users/{user_id}")
+def get_user(user_id: int):
+    user = find_user(user_id)
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail="User not found"
+        )
+    return user
+```
+
+Pydantic handles validation errors automatically. If someone sends `{ "name": 123 }` instead of a string, FastAPI returns a 422 with details — you don't need to code this.
+
+### Common HTTP status codes for errors
+
+| Code | Meaning | When to use |
+|---|---|---|
+| 400 | Bad Request | Malformed request |
+| 404 | Not Found | Resource doesn't exist |
+| 409 | Conflict | Duplicate (email already taken) |
+| 422 | Validation Error | Invalid data (Pydantic handles this) |
+| 500 | Internal Server Error | Unexpected bug on the server |
+
+<Tip>
+Write clear `detail` messages. They travel all the way to the user's screen. "A user with this email already exists" is better than "Conflict" or "Error 409".
+</Tip>
+
+## Layer 2: API client (JavaScript)
+
+Your API client translates HTTP errors into JavaScript errors:
+
+```jsx
+// frontend/src/api/client.js
+const API_URL = import.meta.env.VITE_API_URL;
+
+export async function apiClient(endpoint, options = {}) {
+  let response;
+
+  try {
+    response = await fetch(`${API_URL}${endpoint}`, {
+      headers: { "Content-Type": "application/json", ...options.headers },
+      ...options,
+    });
+  } catch (err) {
+    // Network error — server is down, no internet, CORS issue
+    throw new Error("Unable to connect to the server. Please check your connection.");
+  }
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+
+    // FastAPI validation errors (422)
+    if (response.status === 422 && Array.isArray(errorData.detail)) {
+      const fieldErrors = {};
+      for (const err of errorData.detail) {
+        const field = err.loc[err.loc.length - 1];
+        fieldErrors[field] = err.msg;
+      }
+      const error = new Error("Please fix the highlighted fields");
+      error.fieldErrors = fieldErrors;
+      throw error;
+    }
+
+    // All other errors — use the backend's message
+    throw new Error(errorData.detail || `Something went wrong (HTTP ${response.status})`);
+  }
+
+  if (response.status === 204) return null;
+  return response.json();
+}
+```
+
+This handles three types of errors:
+1. **Network errors** — `fetch()` itself throws (no response at all)
+2. **Validation errors** — 422 with field-level details from Pydantic
+3. **Other HTTP errors** — 404, 409, 500, etc. with `detail` message from FastAPI
+
+## Layer 3: React components
+
+Components catch errors and display them to the user:
+
+```jsx
+function CreateUserForm({ onSubmit }) {
+  const [formData, setFormData] = useState({ name: "", email: "" });
+  const [errors, setErrors] = useState({});       // Field-level errors
+  const [globalError, setGlobalError] = useState(null); // General errors
+  const [submitting, setSubmitting] = useState(false);
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setErrors({});
+    setGlobalError(null);
+    setSubmitting(true);
+
+    try {
+      await onSubmit(formData);
+      setFormData({ name: "", email: "" });
+    } catch (err) {
+      if (err.fieldErrors) {
+        // Validation errors → show next to each field
+        setErrors(err.fieldErrors);
+      } else {
+        // Network/server errors → show at the top
+        setGlobalError(err.message);
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      {globalError && (
+        <div className="error-banner">{globalError}</div>
+      )}
+
+      <div>
+        <input name="name" value={formData.name} onChange={...} />
+        {errors.name && <p className="field-error">{errors.name}</p>}
+      </div>
+
+      <div>
+        <input name="email" value={formData.email} onChange={...} />
+        {errors.email && <p className="field-error">{errors.email}</p>}
+      </div>
+
+      <button disabled={submitting}>
+        {submitting ? "Saving..." : "Save"}
+      </button>
+    </form>
+  );
+}
+```
+
+Two error display zones:
+- **Global errors** (top of form) — network errors, server errors, unexpected issues
+- **Field errors** (next to inputs) — validation errors for specific fields
+
+## Page-level error handling
+
+For data fetching errors, use the early return pattern:
+
+```jsx
+function UserDashboard() {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  async function loadUsers() {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await getUsers();
+      setUsers(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => { loadUsers(); }, []);
+
+  if (loading) return <p>Loading...</p>;
+
+  if (error) {
+    return (
+      <div className="error-page">
+        <h2>Something went wrong</h2>
+        <p>{error}</p>
+        <button onClick={loadUsers}>Try Again</button>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <h1>Users</h1>
+      {/* ... */}
+    </div>
+  );
+}
+```
+
+<Info>
+The "Try Again" button calls `loadUsers()` directly. It resets the error, shows loading, and retries the fetch. Simple and effective.
+</Info>
+
+## The error flow — from backend to user
+
+```
+FastAPI raises HTTPException(status_code=409, detail="Email already exists")
+  ↓
+HTTP response: { "detail": "Email already exists" } with status 409
+  ↓
+apiClient() reads response, throws new Error("Email already exists")
+  ↓
+Component catches error, calls setGlobalError("Email already exists")
+  ↓
+User sees: "Email already exists" on screen
+```
+
+The `detail` message you write in Python shows up directly on the user's screen. Write it for humans, not for developers.
+
+## Error handling checklist
+
+Every component that makes API calls should handle:
+
+- [ ] **Network failures** — "Unable to connect" message with retry option
+- [ ] **Validation errors** — field-level messages next to inputs
+- [ ] **Not found (404)** — "Record not found" message
+- [ ] **Conflict (409)** — "Already exists" message
+- [ ] **Server errors (500)** — "Something went wrong" with retry option
+- [ ] **Loading state** — disable buttons, show spinners during requests
+
+<Warning>
+Never show raw error messages like "HTTP 500" or stack traces to users. Always translate technical errors into human-readable messages. The API client is the right place to do this translation.
+</Warning>
+
+## What's next?
+
+Errors are handled. The last piece of polish: loading states throughout your app — spinners, skeleton screens, and disabled buttons that make your app feel professional.
+
+<Card title="Loading states everywhere" icon="spinner" href="/full-stack/loading-states-everywhere">
+Provide consistent loading feedback throughout your full-stack application
+</Card>

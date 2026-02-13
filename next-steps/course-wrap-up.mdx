@@ -3,16 +3,73 @@ title: "Course wrap-up"
 description: "Review what you've learned and how it all connects"
 ---
 
-{/* TODO: Write course wrap-up content */}
+## You built a full-stack web application
 
-## What you've learned
+That's not a small thing. Let's look at what you actually learned:
 
-{/* TODO: Summary of all 9 sections */}
+| Section | What you learned |
+|---|---|
+| **JavaScript Core** | Variables, functions, arrow functions, scope, closures |
+| **Working with Data** | Arrays, objects, destructuring, spread, JSON, conditionals, loops |
+| **Async & APIs** | Promises, async/await, fetch, error handling, loading states |
+| **DOM & Browser** | Selecting elements, events, forms, localStorage |
+| **React Essentials** | Components, props, state, effects, lists, forms, composition |
+| **Full-Stack** | Project structure, CORS, API client, CRUD operations, error handling |
+
+That's a lot of ground. But here's what matters: **you can now build real web applications.** Not toy examples — actual apps that fetch data from an API, display it, let users create/edit/delete records, handle errors, and show loading states.
 
 ## How it all connects
 
-{/* TODO: The full-stack picture */}
+```
+User clicks a button
+  → React handles the event (DOM & Browser + React Essentials)
+  → Calls an API function (Async & APIs + Full-Stack)
+  → fetch() sends request to FastAPI (Full-Stack)
+  → FastAPI validates with Pydantic and returns JSON (Full-Stack)
+  → React updates state with the response (React Essentials)
+  → Component re-renders with new data (React Essentials)
+  → User sees the updated UI
+```
 
-## You're ready to build
+Every section built on the one before it. JavaScript Core gave you the language. Working with Data gave you the tools to transform data. Async & APIs taught you to talk to servers. React gave you the UI layer. Full-Stack wired it all together.
 
-{/* TODO: Encouragement and confidence */}
+## What you can build now
+
+With what you've learned, you can build:
+
+- **Admin dashboards** — CRUD interfaces for managing data
+- **User-facing apps** — registration, profiles, settings pages
+- **Data display apps** — fetching from APIs and rendering lists/charts
+- **Internal tools** — forms, tables, search/filter interfaces
+- **Portfolio projects** — anything that reads and writes data
+
+These aren't theoretical. The patterns you learned — `useState`, `useEffect`, `fetch`, loading/error/data, API client layer, CRUD state updates — are the exact same patterns used in production applications at companies of every size.
+
+## The three CRUD state updates
+
+If you remember nothing else, remember these:
+
+```jsx
+// CREATE — add to the end
+setItems(prev => [...prev, newItem]);
+
+// UPDATE — replace the matching item
+setItems(prev => prev.map(item => item.id === updated.id ? updated : item));
+
+// DELETE — remove the matching item
+setItems(prev => prev.filter(item => item.id !== deletedId));
+```
+
+These three lines power every data-driven React application.
+
+## You're ready
+
+The hardest part of learning JavaScript as a Python developer isn't the syntax — it's believing you can do it. You've already done it. You've written components, fetched data, handled errors, and built a full-stack app.
+
+The next time you look at a React codebase, you'll recognize the patterns. `useState`, `useEffect`, `.map()` with keys, controlled forms, API client files — you know what all of this does now.
+
+Keep building. Every new project reinforces what you've learned and teaches you something new.
+
+<Card title="The essential 20%" icon="star" href="/next-steps/the-essential-20-percent">
+A quick reference of the JavaScript concepts you'll use 80% of the time
+</Card>

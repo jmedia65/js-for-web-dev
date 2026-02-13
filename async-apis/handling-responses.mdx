@@ -3,20 +3,246 @@ title: "Handling responses"
 description: "Parse API responses and work with different response formats"
 ---
 
-{/* TODO: Write response handling content */}
+## The Response object
 
-## .json() method
+When `fetch` completes, you get a `Response` object. It's not the data itself — it's a wrapper with metadata about the response and methods to extract the body.
 
-{/* TODO: Parsing JSON responses */}
+```javascript
+const response = await fetch("http://localhost:8000/api/users");
 
-## Response properties
+console.log(response.status);     // 200
+console.log(response.ok);         // true (status 200-299)
+console.log(response.statusText); // "OK"
+console.log(response.headers);    // Headers object
+console.log(response.url);        // "http://localhost:8000/api/users"
+```
 
-{/* TODO: status, ok, headers */}
+## Key response properties
 
-## Checking for errors
+| Property | Type | Description |
+|---|---|---|
+| `response.ok` | boolean | `true` if status is 200–299 |
+| `response.status` | number | HTTP status code (200, 404, 500, etc.) |
+| `response.statusText` | string | Status text ("OK", "Not Found", etc.) |
+| `response.headers` | Headers | Response headers |
+| `response.url` | string | The URL that was fetched |
 
-{/* TODO: response.ok pattern */}
+### Status codes you'll see most often
+
+```javascript
+const response = await fetch("/api/users");
+
+switch (response.status) {
+  case 200: // OK — data returned
+    return await response.json();
+  case 201: // Created — new resource created (after POST)
+    return await response.json();
+  case 204: // No Content — success but no body (after DELETE)
+    return null;
+  case 400: // Bad Request — invalid data sent
+    throw new Error("Invalid request data");
+  case 401: // Unauthorized — not logged in
+    throw new Error("Please log in");
+  case 403: // Forbidden — logged in but not allowed
+    throw new Error("Access denied");
+  case 404: // Not Found — resource doesn't exist
+    throw new Error("Resource not found");
+  case 500: // Internal Server Error — server broke
+    throw new Error("Server error");
+}
+```
+
+<Tip>
+You don't need to memorize all status codes. The important ones: **200** (success), **201** (created), **204** (no content), **400** (bad request), **401** (unauthorized), **404** (not found), **500** (server error).
+</Tip>
+
+## Checking response.ok
+
+The most important property. It's `true` for any 2xx status code:
+
+```javascript
+async function getUsers() {
+  const response = await fetch("/api/users");
+
+  if (!response.ok) {
+    // Status is 400, 401, 403, 404, 500, etc.
+    throw new Error(`HTTP error: ${response.status}`);
+  }
+
+  // Status is 200, 201, etc.
+  return response.json();
+}
+```
+
+<Warning>
+`fetch` does **not** throw an error for 404 or 500 responses. It only throws on network failures (no internet, DNS error). You must check `response.ok` yourself. This is the most common source of bugs in fetch code.
+</Warning>
+
+## Extracting the response body
+
+The Response object has methods to read the body in different formats:
+
+```javascript
+const response = await fetch("/api/users");
+
+// Most common — parse as JSON
+const data = await response.json();
+
+// Plain text
+const text = await response.text();
+
+// Binary data (images, files)
+const blob = await response.blob();
+
+// Form data
+const formData = await response.formData();
+```
+
+<Warning>
+You can only read the body **once**. After calling `.json()`, you can't call `.text()` on the same response. If you need the body in multiple formats, use `.text()` first and parse manually.
+</Warning>
+
+### .json() — the one you'll use 90% of the time
+
+```javascript
+async function getUsers() {
+  const response = await fetch("http://localhost:8000/api/users");
+
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`);
+  }
+
+  const users = await response.json(); // Parse JSON body into a JS object/array
+  return users;
+}
+
+const users = await getUsers();
+console.log(users); // [{ id: 1, name: "Sarah Chen" }, ...]
+```
+
+Remember: `.json()` returns a Promise, so you need `await`. It calls `JSON.parse()` internally.
+
+## Reading response headers
+
+```javascript
+const response = await fetch("/api/users");
+
+// Get a specific header
+const contentType = response.headers.get("Content-Type");
+console.log(contentType); // "application/json"
+
+// Check total count (if your API sends it)
+const totalCount = response.headers.get("X-Total-Count");
+console.log(totalCount); // "42"
+
+// Iterate all headers
+response.headers.forEach((value, name) => {
+  console.log(`${name}: ${value}`);
+});
+```
+
+<Info>
+FastAPI and other backends can send custom headers like `X-Total-Count` for pagination. Access them with `response.headers.get("Header-Name")`.
+</Info>
+
+## Handling different response shapes
+
+Your FastAPI backend might return data in different structures. Handle them appropriately:
+
+```javascript
+// Single object
+const response = await fetch("/api/users/1");
+const user = await response.json();
+// { id: 1, name: "Sarah Chen", email: "sarah@example.com" }
+
+// Array
+const response = await fetch("/api/users");
+const users = await response.json();
+// [{ id: 1, name: "Sarah Chen" }, { id: 2, name: "John Park" }]
+
+// Paginated response
+const response = await fetch("/api/users?page=1&limit=10");
+const result = await response.json();
+// { data: [...], total: 42, page: 1, pages: 5 }
+const { data: users, total, pages } = result;
+
+// Empty response (204 No Content)
+const response = await fetch("/api/users/1", { method: "DELETE" });
+if (response.status === 204) {
+  console.log("Deleted successfully — no body to parse");
+}
+```
+
+### Handling error responses from your API
+
+FastAPI returns structured error responses. Parse them to show useful messages:
+
+```javascript
+async function createUser(userData) {
+  const response = await fetch("/api/users", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(userData),
+  });
+
+  if (!response.ok) {
+    // FastAPI returns { "detail": "Error message" }
+    const errorBody = await response.json();
+    throw new Error(errorBody.detail || `HTTP ${response.status}`);
+  }
+
+  return response.json();
+}
+
+// Usage
+try {
+  await createUser({ name: "" }); // Invalid data
+} catch (error) {
+  console.log(error.message); // "Name is required" (from FastAPI)
+}
+```
+
+<Tip>
+Don't just throw generic "request failed" errors. Parse the error response body — your FastAPI backend sends useful validation messages. Show those to your users.
+</Tip>
+
+## Complete pattern
+
+Here's how all of this comes together in a real API function:
+
+```javascript
+async function apiRequest(endpoint, options = {}) {
+  const response = await fetch(`http://localhost:8000${endpoint}`, options);
+
+  // Handle no-content responses
+  if (response.status === 204) {
+    return null;
+  }
+
+  // Parse the body (whether success or error)
+  const body = await response.json();
+
+  // Throw with the server's error message
+  if (!response.ok) {
+    throw new Error(body.detail || `HTTP ${response.status}`);
+  }
+
+  return body;
+}
+
+// Usage
+const users = await apiRequest("/api/users");
+const newUser = await apiRequest("/api/users", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ name: "Sarah Chen", email: "sarah@example.com" }),
+});
+```
 
 ## What's next?
 
-{/* TODO: Card linking to error-handling */}
+You know how to read responses. But what happens when things go wrong? Let's learn how to handle errors gracefully.
+
+<Card title="Error handling" icon="triangle-exclamation" href="/async-apis/error-handling">
+Handle errors in your API calls and async code
+</Card>

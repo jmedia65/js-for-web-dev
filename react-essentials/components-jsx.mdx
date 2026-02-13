@@ -3,24 +3,282 @@ title: "Components and JSX"
 description: "Build UI with reusable components using JSX syntax"
 ---
 
-{/* TODO: Write components & JSX content */}
+## Components are functions
 
-## What is JSX
+A React component is a JavaScript function that returns JSX — a description of what should appear on screen.
 
-{/* TODO: HTML-like syntax in JavaScript */}
+```jsx
+function Greeting() {
+  return <h1>Hello, World!</h1>;
+}
+```
 
-## Creating components
+That's a complete React component. A function. Returns JSX. Done.
 
-{/* TODO: Function components */}
+### Rules for components
+
+1. **Name starts with a capital letter** — `UserCard`, not `userCard`
+2. **Returns JSX** — the UI description
+3. **One component per file** (convention, not required)
+4. **Export it** so other files can use it
+
+```jsx
+// src/UserCard.jsx
+function UserCard() {
+  return (
+    <div className="user-card">
+      <h2>Sarah Chen</h2>
+      <p>sarah@example.com</p>
+    </div>
+  );
+}
+
+export default UserCard;
+```
+
+```jsx
+// src/App.jsx
+import UserCard from './UserCard';
+
+function App() {
+  return (
+    <div>
+      <UserCard />
+      <UserCard />
+    </div>
+  );
+}
+```
+
+<Warning>
+Component names must start with a capital letter. `<UserCard />` renders your component. `<userCard />` is treated as an HTML tag (which doesn't exist) and silently fails.
+</Warning>
+
+## What is JSX?
+
+JSX is a syntax extension that lets you write HTML-like code inside JavaScript. It's not actual HTML — it gets compiled to JavaScript function calls.
+
+```jsx
+// What you write (JSX)
+const element = <h1 className="title">Hello</h1>;
+
+// What the browser sees (JavaScript)
+const element = React.createElement('h1', { className: 'title' }, 'Hello');
+```
+
+You never write the `React.createElement` version. JSX does it for you. But knowing it's just JavaScript under the hood helps explain the rules.
 
 ## JSX rules
 
-{/* TODO: Single root, className, expressions */}
+### 1. Return a single root element
+
+```jsx
+// ❌ Error: Adjacent JSX elements must be wrapped
+function UserCard() {
+  return (
+    <h2>Sarah Chen</h2>
+    <p>sarah@example.com</p>
+  );
+}
+
+// ✅ Wrap in a parent element
+function UserCard() {
+  return (
+    <div>
+      <h2>Sarah Chen</h2>
+      <p>sarah@example.com</p>
+    </div>
+  );
+}
+
+// ✅ Or use a Fragment (no extra DOM element)
+function UserCard() {
+  return (
+    <>
+      <h2>Sarah Chen</h2>
+      <p>sarah@example.com</p>
+    </>
+  );
+}
+```
+
+`<>...</>` is a **Fragment** — it groups elements without adding an extra DOM node. Use it when you don't need a wrapper `div`.
+
+### 2. className instead of class
+
+```jsx
+// ❌ Wrong — class is a reserved word in JavaScript
+<div class="card">
+
+// ✅ Correct
+<div className="card">
+```
+
+### 3. camelCase for attributes
+
+```jsx
+// HTML            →  JSX
+// onclick         →  onClick
+// onchange        →  onChange
+// tabindex        →  tabIndex
+// for             →  htmlFor
+// style=""        →  style={{}}
+
+<button onClick={handleClick}>Click me</button>
+<label htmlFor="email">Email</label>
+<div tabIndex={0}>Focusable</div>
+```
+
+### 4. Close all tags
+
+```jsx
+// HTML allows self-closing tags to be open
+// <img src="photo.jpg">
+// <br>
+// <input type="text">
+
+// JSX requires all tags to be closed
+<img src="photo.jpg" />
+<br />
+<input type="text" />
+```
+
+### 5. JavaScript expressions in curly braces
+
+Use `{}` to embed any JavaScript expression inside JSX:
+
+```jsx
+function UserCard({ user }) {
+  const fullName = `${user.firstName} ${user.lastName}`;
+
+  return (
+    <div className="user-card">
+      <h2>{fullName}</h2>
+      <p>{user.email}</p>
+      <p>Joined: {new Date(user.createdAt).toLocaleDateString()}</p>
+      <p>Posts: {user.posts.length}</p>
+      <span className={user.isActive ? "active" : "inactive"}>
+        {user.isActive ? "Active" : "Inactive"}
+      </span>
+    </div>
+  );
+}
+```
+
+Inside `{}` you can use:
+- Variables: `{name}`
+- Expressions: `{count + 1}`
+- Function calls: `{formatDate(date)}`
+- Ternary operators: `{isActive ? "Yes" : "No"}`
+- Template literals: `` {`Hello, ${name}`} ``
+
+<Warning>
+You can only use **expressions** inside `{}`, not statements. `{if (x) ...}` won't work. Use ternary operators or `&&` instead. `{x ? "yes" : "no"}` and `{x && "shown"}` are the React way.
+</Warning>
+
+## Inline styles
+
+JSX styles use a JavaScript object with camelCase properties:
+
+```jsx
+// HTML:  <div style="background-color: blue; font-size: 16px;">
+// JSX:
+<div style={{ backgroundColor: "blue", fontSize: "16px" }}>
+  Styled content
+</div>
+```
+
+The double braces `{{ }}` are: outer `{}` for "this is JavaScript", inner `{}` for "this is an object."
+
+```jsx
+// You can also define styles separately
+const cardStyle = {
+  padding: "16px",
+  borderRadius: "8px",
+  backgroundColor: "#f9fafb",
+  boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+};
+
+function Card({ children }) {
+  return <div style={cardStyle}>{children}</div>;
+}
+```
+
+<Tip>
+Inline styles work but aren't ideal for large apps. For most projects, use CSS files (`import './App.css'`), CSS modules, or a library like Tailwind CSS. Inline styles are fine for dynamic values like `width: ${percentage}%`.
+</Tip>
+
+## JSX vs HTML cheat sheet
+
+| HTML | JSX |
+|---|---|
+| `class="card"` | `className="card"` |
+| `for="email"` | `htmlFor="email"` |
+| `onclick="fn()"` | `onClick={fn}` |
+| `style="color: red"` | `style={{ color: "red" }}` |
+| `<br>` | `<br />` |
+| `<img src="...">` | `<img src="..." />` |
+| `tabindex="0"` | `tabIndex={0}` |
+| `<!-- comment -->` | `{/* comment */}` |
 
 ## Common mistakes
 
-{/* TODO: Returning multiple elements without wrapper */}
+<AccordionGroup>
+<Accordion title="Returning multiple elements without a wrapper">
+```jsx
+// ❌ Error
+function Card() {
+  return (
+    <h2>Title</h2>
+    <p>Content</p>
+  );
+}
+
+// ✅ Use a Fragment
+function Card() {
+  return (
+    <>
+      <h2>Title</h2>
+      <p>Content</p>
+    </>
+  );
+}
+```
+
+<Warning>
+A component must return a single root element. Use `<>...</>` (Fragment) when you don't need an actual wrapper div in the DOM.
+</Warning>
+</Accordion>
+
+<Accordion title="Using class instead of className">
+```jsx
+// ❌ Warning in console
+<div class="card">Content</div>
+
+// ✅ Correct
+<div className="card">Content</div>
+```
+
+This is the most common JSX mistake. React will show a warning in the console, but it's easy to miss.
+</Accordion>
+
+<Accordion title="Forgetting curly braces for JavaScript">
+```jsx
+const name = "Sarah";
+
+// ❌ Literal text "name"
+<h1>name</h1>
+
+// ✅ JavaScript variable
+<h1>{name}</h1>
+```
+</Accordion>
+</AccordionGroup>
 
 ## What's next?
 
-{/* TODO: Card linking to props */}
+Components are reusable, but right now they always show the same content. Let's make them dynamic by passing data in with props.
+
+<Card title="Props" icon="arrow-right" href="/react-essentials/props">
+Pass data between React components
+</Card>

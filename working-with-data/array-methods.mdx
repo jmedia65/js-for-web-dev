@@ -3,36 +3,287 @@ title: "Array methods"
 description: "Transform, filter, and manipulate arrays with the essential 20% of methods"
 ---
 
-{/* TODO: Write array methods content */}
+## The methods you'll use every day
 
-## .map() - Transform each item
+JavaScript arrays have dozens of methods, but you'll use about six of them 90% of the time. These are the ones that matter for web development and React.
 
-{/* TODO: map examples */}
+Every method here takes a callback function — an arrow function that runs once for each item in the array.
 
-## .filter() - Keep matching items
+## .map() — transform each item
 
-{/* TODO: filter examples */}
+`.map()` creates a **new array** by transforming every item. Use it when you need to convert data from one shape to another.
 
-## .find() - Get first match
+```javascript
+const prices = [10, 20, 30, 40];
+const withTax = prices.map(price => price * 1.08);
+console.log(withTax); // [10.8, 21.6, 32.4, 43.2]
 
-{/* TODO: find examples */}
+const names = ["sarah", "john", "alice"];
+const capitalized = names.map(name => name.charAt(0).toUpperCase() + name.slice(1));
+console.log(capitalized); // ["Sarah", "John", "Alice"]
+```
 
-## .forEach() - Do something with each item
+### Real-world: formatting API data
 
-{/* TODO: forEach examples */}
+```javascript
+const apiUsers = [
+  { id: 1, first_name: "Sarah", last_name: "Chen" },
+  { id: 2, first_name: "John", last_name: "Smith" },
+];
 
-## .includes() - Check if item exists
+const displayNames = apiUsers.map(user => ({
+  id: user.id,
+  fullName: `${user.first_name} ${user.last_name}`,
+}));
 
-{/* TODO: includes examples */}
+console.log(displayNames);
+// [{ id: 1, fullName: "Sarah Chen" }, { id: 2, fullName: "John Smith" }]
+```
 
-## .reduce() - Combine into single value
+In React, you'll use `.map()` to render lists:
 
-{/* TODO: reduce examples */}
+```jsx
+{users.map(user => (
+  <li key={user.id}>{user.fullName}</li>
+))}
+```
+
+<Tip>
+`.map()` always returns a new array with the same number of items. It never modifies the original. This is exactly what React needs for rendering lists.
+</Tip>
+
+## .filter() — keep matching items
+
+`.filter()` creates a **new array** with only the items that pass a test. The callback must return `true` or `false`.
+
+```javascript
+const numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+
+const evens = numbers.filter(n => n % 2 === 0);
+console.log(evens); // [2, 4, 6, 8, 10]
+
+const bigNumbers = numbers.filter(n => n > 5);
+console.log(bigNumbers); // [6, 7, 8, 9, 10]
+```
+
+### Real-world: filtering a user list
+
+```javascript
+const users = [
+  { name: "Sarah", role: "admin", active: true },
+  { name: "John", role: "editor", active: false },
+  { name: "Alice", role: "admin", active: true },
+  { name: "Bob", role: "viewer", active: true },
+];
+
+const activeAdmins = users.filter(user => user.role === "admin" && user.active);
+console.log(activeAdmins);
+// [{ name: "Sarah", role: "admin", active: true }, { name: "Alice", role: "admin", active: true }]
+```
+
+<Info>
+`.filter()` can return fewer items, the same number, or even an empty array. It never modifies the original.
+</Info>
+
+## .find() — get the first match
+
+`.find()` returns the **first item** that matches. Unlike `.filter()`, it returns a single item (or `undefined` if nothing matches).
+
+```javascript
+const users = [
+  { id: 1, name: "Sarah", role: "admin" },
+  { id: 2, name: "John", role: "editor" },
+  { id: 3, name: "Alice", role: "viewer" },
+];
+
+const admin = users.find(user => user.role === "admin");
+console.log(admin); // { id: 1, name: "Sarah", role: "admin" }
+
+const manager = users.find(user => user.role === "manager");
+console.log(manager); // undefined
+```
+
+Use `.find()` when you need one specific item — looking up a user by ID, finding a product by slug, getting the current route.
+
+```javascript
+// Common pattern: find by ID
+const userId = 2;
+const user = users.find(u => u.id === userId);
+```
+
+<Warning>
+`.find()` returns `undefined` if no item matches — not `null`, not an error. Always handle the "not found" case.
+</Warning>
+
+## .forEach() — do something with each item
+
+`.forEach()` runs a function for each item but **doesn't return anything**. Use it for side effects like logging or DOM manipulation.
+
+```javascript
+const tasks = ["Buy groceries", "Write code", "Walk the dog"];
+
+tasks.forEach(task => {
+  console.log(`- ${task}`);
+});
+// - Buy groceries
+// - Write code
+// - Walk the dog
+```
+
+```javascript
+// With index
+const scores = [85, 92, 78, 95];
+scores.forEach((score, index) => {
+  console.log(`Student ${index + 1}: ${score}`);
+});
+```
+
+<Tip>
+If you need a new array, use `.map()`. If you need to do something with each item (log, send, update DOM), use `.forEach()`. The rule: `.map()` transforms, `.forEach()` performs actions.
+</Tip>
+
+## .includes() — check if item exists
+
+```javascript
+const permissions = ["read", "write", "delete"];
+
+console.log(permissions.includes("write"));  // true
+console.log(permissions.includes("admin"));  // false
+
+// Use in conditionals
+if (permissions.includes("delete")) {
+  console.log("User can delete items");
+}
+```
+
+Simple and readable. Works great for checking roles, features, or any "is this in the list?" question.
+
+## .reduce() — combine into a single value
+
+`.reduce()` takes an array and reduces it down to a single value — a total, an object, a string, whatever you need.
+
+```javascript
+const prices = [29.99, 49.99, 9.99, 79.99];
+
+const total = prices.reduce((sum, price) => sum + price, 0);
+console.log(total); // 169.96
+```
+
+The callback takes two arguments:
+1. **Accumulator** (`sum`) — the running result
+2. **Current item** (`price`) — the current array element
+
+The second argument to `.reduce()` (`0`) is the initial value of the accumulator.
+
+### More reduce examples
+
+```javascript
+// Count occurrences
+const votes = ["yes", "no", "yes", "yes", "no", "yes"];
+const tally = votes.reduce((counts, vote) => {
+  counts[vote] = (counts[vote] || 0) + 1;
+  return counts;
+}, {});
+console.log(tally); // { yes: 4, no: 2 }
+
+// Find the maximum
+const scores = [72, 95, 88, 61, 93];
+const highest = scores.reduce((max, score) => score > max ? score : max, 0);
+console.log(highest); // 95
+```
+
+<Info>
+`.reduce()` is powerful but can be hard to read. If a `.map()` + `.filter()` combination does the job, prefer that over `.reduce()`. Readability matters more than cleverness.
+</Info>
+
+## Chaining methods
+
+Array methods return arrays, so you can chain them:
+
+```javascript
+const products = [
+  { name: "Laptop", price: 999, inStock: true },
+  { name: "Phone", price: 699, inStock: false },
+  { name: "Tablet", price: 499, inStock: true },
+  { name: "Watch", price: 299, inStock: true },
+];
+
+// Get names of in-stock products under $500
+const affordable = products
+  .filter(p => p.inStock)
+  .filter(p => p.price < 500)
+  .map(p => p.name);
+
+console.log(affordable); // ["Tablet", "Watch"]
+```
+
+Read chains top to bottom: start with all products → keep only in-stock → keep only under $500 → extract names.
 
 ## Common mistakes
 
-{/* TODO: Forgetting to return in map/filter */}
+<AccordionGroup>
+<Accordion title="Forgetting to return in .map()">
+```javascript
+// ❌ Wrong: Curly braces but no return
+const doubled = [1, 2, 3].map(n => {
+  n * 2; // Computes but doesn't return
+});
+console.log(doubled); // [undefined, undefined, undefined]
+
+// ✅ Correct: Add return with curly braces
+const doubled = [1, 2, 3].map(n => {
+  return n * 2;
+});
+
+// ✅ Or use implicit return (no curly braces)
+const doubled = [1, 2, 3].map(n => n * 2);
+```
+
+<Warning>
+This is the same arrow function gotcha from earlier. With curly braces, you need `return`. Without curly braces, the return is implicit. This mistake causes arrays of `undefined`.
+</Warning>
+</Accordion>
+
+<Accordion title="Using .map() when you need .forEach()">
+```javascript
+// ❌ Wrong: Using map for side effects (the returned array is wasted)
+users.map(user => {
+  console.log(user.name);
+});
+
+// ✅ Correct: Use forEach for side effects
+users.forEach(user => {
+  console.log(user.name);
+});
+```
+
+<Warning>
+`.map()` creates and returns a new array. If you don't need that array, use `.forEach()` instead. Using `.map()` for side effects is wasteful and signals to other developers that you intended to transform data.
+</Warning>
+</Accordion>
+
+<Accordion title="Mutating the original array by mistake">
+```javascript
+// ❌ Wrong: .sort() mutates the original array
+const scores = [85, 92, 78, 95];
+const sorted = scores.sort((a, b) => a - b);
+console.log(scores); // [78, 85, 92, 95] — original is modified!
+
+// ✅ Correct: Copy first, then sort
+const sorted = [...scores].sort((a, b) => a - b);
+console.log(scores); // [85, 92, 78, 95] — original unchanged
+```
+
+<Warning>
+`.sort()`, `.reverse()`, `.splice()`, `.push()`, and `.pop()` all mutate the original array. If you need the original intact, spread it into a new array first: `[...arr].sort()`.
+</Warning>
+</Accordion>
+</AccordionGroup>
 
 ## What's next?
 
-{/* TODO: Card linking to objects */}
+Arrays handle lists. Now let's learn about objects — JavaScript's key-value data structure for representing entities like users, products, and API responses.
+
+<Card title="Objects" icon="cube" href="/working-with-data/objects">
+Store data as key-value pairs
+</Card>

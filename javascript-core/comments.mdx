@@ -3,20 +3,121 @@ title: "Comments"
 description: "Add notes and documentation to your JavaScript code"
 ---
 
-{/* TODO: Write comments content */}
+## Why comments?
+
+Comments are notes in your code that JavaScript ignores. Use them to explain *why* something works a certain way — not *what* the code does (the code itself should be clear enough for that).
 
 ## Single-line comments
 
-{/* TODO: Single-line comment syntax */}
+```javascript
+// This is a single-line comment
+const API_URL = "http://localhost:8000"; // Inline comment after code
+
+// Calculate total with tax
+const subtotal = 99.99;
+const tax = subtotal * 0.08;
+const total = subtotal + tax;
+```
+
+Two slashes `//` start a single-line comment. Everything after `//` on that line is ignored.
+
+<Tabs>
+<Tab title="JavaScript">
+```javascript
+// Single-line comment
+const name = "Sarah"; // Inline comment
+```
+</Tab>
+
+<Tab title="Python">
+```python
+# Single-line comment
+name = "Sarah"  # Inline comment
+```
+</Tab>
+</Tabs>
+
+Same idea, different character. `//` instead of `#`.
 
 ## Multi-line comments
 
-{/* TODO: Block comment syntax */}
+```javascript
+/*
+  This function fetches users from the API.
+  It handles errors and returns an empty array
+  if the request fails.
+*/
+async function getUsers() {
+  // ...
+}
+```
+
+Wrap longer comments in `/* */`. Use these for explaining complex logic or temporarily disabling blocks of code.
+
+```javascript
+// Temporarily disable a block of code:
+/*
+const debugData = fetchDebugInfo();
+console.log(debugData);
+processDebugData(debugData);
+*/
+```
+
+<Tip>
+In VS Code, select multiple lines and press `Cmd+/` (Mac) or `Ctrl+/` (Windows) to toggle comments on and off. This works for single-line comments — much faster than typing `//` on each line.
+</Tip>
 
 ## JSDoc comments
 
-{/* TODO: Documentation comment syntax */}
+JSDoc comments start with `/**` and describe functions, parameters, and return values. Your editor reads them and shows helpful tooltips.
+
+```javascript
+/**
+ * Calculate the total price with tax.
+ * @param {number} subtotal - The price before tax
+ * @param {number} taxRate - The tax rate as a decimal (e.g., 0.08 for 8%)
+ * @returns {number} The total price including tax
+ */
+function calculateTotal(subtotal, taxRate) {
+  return subtotal + (subtotal * taxRate);
+}
+```
+
+When you hover over `calculateTotal` anywhere in your code, VS Code shows the description, parameter types, and return type. This is especially valuable when working on a team.
+
+<Info>
+JSDoc comments are optional but helpful. You don't need to add them to every function — focus on public functions and anything with non-obvious parameters. When you later move to TypeScript, the type annotations handle much of what JSDoc does.
+</Info>
+
+## When to comment (and when not to)
+
+```javascript
+// ❌ Bad: States the obvious
+const age = 25; // Set age to 25
+
+// ❌ Bad: Describes what the code does
+// Loop through users and print names
+for (const user of users) {
+  console.log(user.name);
+}
+
+// ✅ Good: Explains WHY
+// API returns dates as strings, need to convert for comparison
+const createdAt = new Date(user.createdAt);
+
+// ✅ Good: Warns about non-obvious behavior
+// response.ok is false for 404/500 but fetch doesn't throw
+if (!response.ok) {
+  throw new Error(`HTTP error: ${response.status}`);
+}
+```
+
+Good comments explain intent, warn about gotchas, or provide context that the code alone can't convey.
 
 ## What's next?
 
-{/* TODO: Card linking to functions-basics */}
+You've covered the fundamentals — variables, data types, strings, and comments. Now let's make your code reusable with functions.
+
+<Card title="Functions basics" icon="code" href="/javascript-core/functions-basics">
+Write reusable blocks of code
+</Card>

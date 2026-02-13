@@ -3,16 +3,150 @@ title: "What is React"
 description: "Understand what React is, why it exists, and how it helps you build web apps"
 ---
 
-{/* TODO: Write React intro content */}
+## The problem React solves
 
-## Component-based UI
+In the DOM section, you learned how to build interactive pages with vanilla JavaScript — selecting elements, updating text, creating nodes, attaching event listeners. It works, but it doesn't scale.
 
-{/* TODO: What components are */}
+```javascript
+// Vanilla JavaScript — update a user card
+function updateUser(user) {
+  document.querySelector(".name").textContent = user.name;
+  document.querySelector(".email").textContent = user.email;
+  document.querySelector(".role").textContent = user.role;
+  document.querySelector(".avatar").src = user.avatar;
+  if (user.isAdmin) {
+    document.querySelector(".badge").classList.remove("hidden");
+  } else {
+    document.querySelector(".badge").classList.add("hidden");
+  }
+}
+```
 
-## Virtual DOM
+For one component, this is manageable. For a page with 50 interactive elements, each affecting each other, it becomes a nightmare. You're manually tracking what changed and telling the browser exactly what to update.
 
-{/* TODO: How React updates the page efficiently */}
+**React flips this.** You describe what the UI should look like for any given state, and React figures out what needs to change in the DOM.
 
-## Why React for web apps
+```jsx
+// React — describe the UI as a function of data
+function UserCard({ user }) {
+  return (
+    <div className="user-card">
+      <img src={user.avatar} alt={user.name} />
+      <h3>{user.name}</h3>
+      <p>{user.email}</p>
+      <p>{user.role}</p>
+      {user.isAdmin && <span className="badge">Admin</span>}
+    </div>
+  );
+}
+```
 
-{/* TODO: Practical reasons to use React */}
+When `user` changes, React automatically updates only the parts of the DOM that need to change. You never touch `document.querySelector` again.
+
+## Components: the building blocks
+
+React apps are made of **components** — reusable, self-contained pieces of UI. Each component is a JavaScript function that returns what should appear on screen.
+
+```
+Your App
+├── Navbar
+│   ├── Logo
+│   ├── NavLinks
+│   └── UserMenu
+├── Sidebar
+│   ├── FilterPanel
+│   └── CategoryList
+└── MainContent
+    ├── SearchBar
+    ├── UserList
+    │   ├── UserCard
+    │   ├── UserCard
+    │   └── UserCard
+    └── Pagination
+```
+
+Every piece of your page is a component. Components can contain other components. This composability is what makes React scale — you build small, focused pieces and combine them.
+
+<Info>
+If you've used Python classes, think of components like classes with a `render` method (though React components are actually just functions). Each one manages its own piece of the UI.
+</Info>
+
+## How React updates the page
+
+React uses a **Virtual DOM** — a lightweight copy of the real DOM that lives in memory.
+
+1. Your component renders and returns JSX (a description of the UI)
+2. React creates a Virtual DOM from that JSX
+3. When state changes, React re-renders the component and creates a new Virtual DOM
+4. React **diffs** the old and new Virtual DOMs
+5. React applies only the minimal changes to the real DOM
+
+```jsx
+// When count changes from 3 to 4...
+function Counter() {
+  const [count, setCount] = useState(3);
+
+  return (
+    <div>
+      <h1>Counter</h1>           {/* Unchanged — React skips this */}
+      <p>Count: {count}</p>       {/* Changed — React updates only this text */}
+      <button onClick={...}>+</button> {/* Unchanged — React skips this */}
+    </div>
+  );
+}
+```
+
+React only touches the single text node that changed — not the entire component. This is why React apps feel fast even with complex UIs.
+
+<Tip>
+You don't need to understand the Virtual DOM in detail. The key insight is: **you describe what the UI should look like, React handles updating the DOM efficiently.** That's the whole deal.
+</Tip>
+
+## Why React (specifically)
+
+There are other frameworks (Vue, Angular, Svelte), but React dominates because:
+
+- **Massive ecosystem** — solutions exist for almost every problem
+- **Job market** — the most in-demand frontend skill
+- **Stability** — backed by Meta, used by millions of apps
+- **React Native** — the same concepts work for mobile apps
+- **Community** — Stack Overflow, tutorials, and libraries everywhere
+
+For connecting a React frontend to your FastAPI backend — which is what this course prepares you for — React is the most practical choice.
+
+## The mental model shift
+
+| Vanilla JavaScript | React |
+|---|---|
+| **Imperative**: Tell the browser *how* to update | **Declarative**: Tell React *what* the UI should be |
+| You manage DOM updates manually | React manages DOM updates for you |
+| State scattered across DOM elements | State lives in component variables |
+| Event listeners attached manually | Event handlers passed as props |
+| Hard to keep UI in sync with data | UI always reflects current state |
+
+The biggest shift: **stop thinking in terms of DOM manipulation and start thinking in terms of data.** Your UI is a function of your data. When the data changes, the UI updates automatically.
+
+## What you need to know
+
+Here's the truth about React that nobody tells beginners: **90% of React development uses just a handful of concepts.**
+
+The essentials you'll learn in this section:
+
+1. **Components & JSX** — building blocks of the UI
+2. **Props** — passing data into components
+3. **useState** — managing data that changes
+4. **useEffect** — fetching data and side effects
+5. **Conditional rendering** — showing/hiding UI based on state
+6. **List rendering** — displaying arrays of data
+7. **Forms** — handling user input
+8. **Component composition** — organizing your app
+
+That's it. Master these, and you can build any standard web application. Everything else (context, reducers, suspense, server components) is situational — learn it when you need it.
+
+## What's next?
+
+Let's get a React project running on your machine. In under 2 minutes you'll have a live development server with hot reload.
+
+<Card title="Setting up a React project" icon="rocket" href="/react-essentials/setup-react-project">
+Create a new React project with Vite
+</Card>

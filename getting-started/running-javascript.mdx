@@ -3,16 +3,87 @@ title: "Running JavaScript"
 description: "Different ways to run JavaScript code during development"
 ---
 
-{/* TODO: Write content about running JS */}
+## Three ways to run JavaScript
+
+You'll use three environments during this course. Each one is useful for different things.
 
 ## Node.js in the terminal
 
-{/* TODO: Running files with node */}
+Run any `.js` file from your terminal:
+
+```bash
+node myfile.js
+```
+
+This is what you'll use for most of the learning sections (JavaScript Core, Working with Data, Async & APIs). It's the closest thing to running `python myfile.py`.
+
+```javascript practice.js
+const prices = [29.99, 49.99, 9.99, 79.99];
+const total = prices.reduce((sum, price) => sum + price, 0);
+console.log(`Total: $${total.toFixed(2)}`); // "Total: $169.96"
+```
+
+```bash
+node practice.js
+# Total: $169.96
+```
+
+<Tip>
+Create a `practice.js` file in your `js-practice` folder. Use it as a scratch pad — edit it, run it, edit it again. You don't need a new file for every experiment.
+</Tip>
 
 ## Browser console
 
-{/* TODO: Quick testing in browser */}
+Open any browser, press `F12`, and use the Console tab for quick experiments.
+
+```javascript
+// Good for: testing one-liners, checking syntax, quick math
+"hello".toUpperCase()  // "HELLO"
+[1, 2, 3].includes(2)  // true
+typeof null  // "object" (yes, really)
+```
+
+The browser console is interactive — it evaluates each line and shows the result. No `console.log()` needed for simple expressions.
+
+<Warning>
+The browser console has access to web APIs (like `document` and `window`) that Node.js doesn't have. If you're testing pure JavaScript logic, either environment works. If you're testing DOM or browser features, use the browser console.
+</Warning>
 
 ## VS Code integrated terminal
 
-{/* TODO: Running from VS Code */}
+The integrated terminal in VS Code (`` Ctrl+` ``) runs Node.js commands without leaving your editor. This is where you'll spend most of your time:
+
+1. Write code in the editor panel
+2. Switch to the terminal (`` Ctrl+` ``)
+3. Run `node filename.js`
+4. See the output
+5. Edit and repeat
+
+```bash
+# Your typical workflow:
+node hello.js
+# (see output, make changes, run again)
+node hello.js
+```
+
+<Info>
+Later in the course, when you work with React, you'll run `npm run dev` in this terminal to start a development server. The server watches for file changes and refreshes your browser automatically.
+</Info>
+
+## Which one should I use?
+
+| Environment | Best for |
+|---|---|
+| **Node.js** (`node file.js`) | Writing and running JavaScript files, course exercises |
+| **Browser console** (`F12`) | Quick experiments, testing one-liners, DOM/browser APIs |
+| **VS Code terminal** | Everything — it runs Node.js from within your editor |
+
+For this course, you'll mostly use VS Code's integrated terminal to run Node.js. The browser console is there for quick checks.
+
+## What's next?
+
+You can write and run JavaScript. Before we dive into the language itself, let's understand npm — the tool that manages JavaScript packages and dependencies.
+
+<Card title="Understanding npm" icon="cube" href="/getting-started/understanding-npm">
+How JavaScript manages packages and dependencies
+</Card>

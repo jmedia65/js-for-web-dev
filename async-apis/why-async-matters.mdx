@@ -3,20 +3,129 @@ title: "Why async matters"
 description: "Understand why JavaScript handles tasks asynchronously and what that means for your code"
 ---
 
-{/* TODO: Write async intro content */}
+## The problem with waiting
 
-## Synchronous vs asynchronous
+In Python, code runs line by line. Each line finishes before the next one starts. When you call `requests.get()`, your program stops and waits until the response comes back.
 
-{/* TODO: Blocking vs non-blocking */}
+```python
+# Python — synchronous (blocking)
+import requests
 
-## Real-world analogy
+print("Fetching users...")
+response = requests.get("http://localhost:8000/api/users")  # Program stops here
+users = response.json()                                      # Waits until above finishes
+print(f"Got {len(users)} users")                            # Then continues
+```
 
-{/* TODO: Restaurant analogy or similar */}
+This works fine for a script. But in a browser, **blocking means the entire page freezes**. No scrolling, no clicking, no animations — nothing until the request finishes. That's a terrible user experience.
 
-## Why you can't just "wait" in JavaScript
+## JavaScript is single-threaded
 
-{/* TODO: Single-threaded event loop basics */}
+JavaScript runs on a single thread — one line of code at a time. If a network request takes 3 seconds and JavaScript just waited, your entire page would be frozen for 3 seconds.
+
+```javascript
+// ❌ If JavaScript worked synchronously (it doesn't)
+console.log("Fetching users...");
+const response = fetch("http://localhost:8000/api/users"); // Imagine this blocks for 3 seconds
+const users = response.json();                              // Page frozen the whole time
+console.log(`Got ${users.length} users`);
+```
+
+JavaScript solves this with **asynchronous execution**. Instead of waiting for slow operations, JavaScript says "start this task, and I'll come back to it when it's done." Meanwhile, the page stays interactive.
+
+## How async actually works
+
+Think of it like ordering at a restaurant:
+
+**Synchronous (Python script)**: You order food, stand at the counter staring at the kitchen, and don't do anything else until your food arrives.
+
+**Asynchronous (JavaScript)**: You order food, get a **ticket number** (a Promise), and sit down. You can check your phone, talk to friends — the restaurant will call your number when the food is ready.
+
+```javascript
+// JavaScript — asynchronous (non-blocking)
+console.log("1. Fetching users...");
+
+fetch("http://localhost:8000/api/users")
+  .then(response => response.json())
+  .then(users => {
+    console.log(`3. Got ${users.length} users`);
+  });
+
+console.log("2. This runs while waiting!");
+```
+
+Output:
+```
+1. Fetching users...
+2. This runs while waiting!
+3. Got 5 users           ← arrives later
+```
+
+<Warning>
+Notice the order: line "2" runs before line "3" even though it comes after the fetch in the code. This is the fundamental concept of async JavaScript. Code doesn't necessarily run in the order it appears.
+</Warning>
+
+## The event loop (simplified)
+
+You don't need to understand every detail of the event loop, but here's the key idea:
+
+1. JavaScript runs your code line by line on the **main thread**
+2. When it hits an async operation (network request, timer, etc.), it hands it off to the browser
+3. The browser handles the operation in the background
+4. When the operation completes, the result goes into a **queue**
+5. JavaScript picks up results from the queue when it's done with the current code
+
+```javascript
+console.log("Start");
+
+setTimeout(() => {
+  console.log("Timer done"); // Runs after current code finishes
+}, 0); // Even with 0ms delay!
+
+console.log("End");
+
+// Output:
+// Start
+// End
+// Timer done   ← even 0ms setTimeout runs after current code
+```
+
+<Info>
+`setTimeout` with `0` milliseconds doesn't run immediately — it runs after the current code finishes. This proves that async callbacks always wait for the main thread to be free.
+</Info>
+
+## What operations are async?
+
+Not everything in JavaScript is async. Only operations that take an unpredictable amount of time:
+
+| Async (takes time) | Sync (instant) |
+|---|---|
+| `fetch()` — network requests | Math operations |
+| `setTimeout()` / `setInterval()` | String manipulation |
+| Reading files (in Node.js) | Array methods (`.map()`, `.filter()`) |
+| Database queries | Object operations |
+| User input events | Variable assignment |
+
+In web development, the most common async operation is **fetching data from your backend**.
+
+## Why this matters for you
+
+As a Python developer, async is the biggest mental shift. In Python, you can mostly ignore async unless you're using `asyncio`. In JavaScript, **you'll deal with async in almost every component** that fetches data.
+
+The good news: JavaScript has clean syntax for handling async code. Over the next few lessons, you'll learn the evolution:
+
+1. **Callbacks** — the original approach (messy)
+2. **Promises** — a better abstraction (cleaner)
+3. **async/await** — modern syntax (cleanest, what you'll actually use)
+
+<Tip>
+Don't try to fight async or make everything synchronous. Embrace it. Once you understand the pattern, it becomes second nature — and it's what makes web apps feel fast and responsive.
+</Tip>
 
 ## What's next?
 
-{/* TODO: Card linking to callbacks */}
+Let's start with the original async pattern — callbacks. Understanding callbacks helps you appreciate why Promises and async/await exist.
+
+<Card title="Callbacks" icon="phone-arrow-right" href="/async-apis/callbacks">
+The original async pattern and why we moved on
+</Card>

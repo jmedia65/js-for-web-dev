@@ -3,16 +3,99 @@ title: "Installing Node.js"
 description: "Set up Node.js on your machine so you can run JavaScript outside the browser"
 ---
 
-{/* TODO: Write Node.js installation content */}
+## What is Node.js?
 
-## What is Node.js and why you need it
+Node.js lets you run JavaScript outside of a web browser. Without it, JavaScript can only run inside a browser tab. With it, you can run JavaScript files from your terminal, use build tools, and install packages.
 
-{/* TODO: Brief explanation of Node.js */}
+You need Node.js for two things in this course:
+1. Running JavaScript files during the learning sections
+2. Running React's development server when you build UIs
+
+<Info>
+Node.js also comes with **npm** (Node Package Manager), which you'll use to install libraries like React. You get both when you install Node.js.
+</Info>
 
 ## Installation
 
-{/* TODO: Platform-specific install instructions using Tabs */}
+<Tabs>
+<Tab title="macOS">
+The easiest way is with Homebrew:
+
+```bash
+brew install node
+```
+
+If you don't have Homebrew, install it first from [brew.sh](https://brew.sh), or download the installer directly from [nodejs.org](https://nodejs.org).
+</Tab>
+
+<Tab title="Windows">
+Download the LTS installer from [nodejs.org](https://nodejs.org) and run it. Accept all the default options.
+
+Alternatively, if you use Chocolatey:
+
+```powershell
+choco install nodejs-lts
+```
+</Tab>
+
+<Tab title="Linux">
+Using your package manager:
+
+```bash
+# Ubuntu/Debian
+sudo apt update
+sudo apt install nodejs npm
+
+# Fedora
+sudo dnf install nodejs
+```
+
+For the latest version, use [NodeSource](https://github.com/nodesource/distributions):
+
+```bash
+curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+sudo apt install -y nodejs
+```
+</Tab>
+</Tabs>
+
+<Tip>
+Always install the **LTS** (Long Term Support) version. It's the stable release that won't surprise you with breaking changes.
+</Tip>
 
 ## Verifying installation
 
-{/* TODO: node -v, npm -v commands */}
+Open your terminal and run these two commands:
+
+```bash
+node -v
+# v20.11.0 (or similar)
+
+npm -v
+# 10.2.4 (or similar)
+```
+
+If both commands print a version number, you're good to go. The exact version numbers don't matter as long as Node.js is version 18 or higher.
+
+<Warning>
+If you get "command not found," your terminal might not see the installation yet. Try closing and reopening your terminal. On Windows, you may need to restart your computer.
+</Warning>
+
+## Quick test
+
+Let's make sure Node.js actually works. Type this directly in your terminal:
+
+```bash
+node -e "console.log('Node.js is working!')"
+# Node.js is working!
+```
+
+The `-e` flag lets you run a one-line JavaScript command without creating a file. You'll create proper files in the next lessons.
+
+## What's next?
+
+Node.js is installed. Now let's set up VS Code with the right extensions for JavaScript development.
+
+<Card title="Setting up VS Code" icon="code" href="/getting-started/vscode-setup">
+Configure your editor for JavaScript
+</Card>

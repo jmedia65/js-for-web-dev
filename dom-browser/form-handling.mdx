@@ -3,20 +3,297 @@ title: "Form handling"
 description: "Get form values, validate input, and handle form submissions"
 ---
 
-{/* TODO: Write form handling content */}
+## Forms are everywhere
+
+Every web app has forms — login, signup, search, settings, creating content. In vanilla JavaScript, you handle forms by listening for the `submit` event, reading input values, and sending data to your backend.
 
 ## Getting form values
 
-{/* TODO: Accessing input values */}
+### Individual input values
 
-## Preventing default submission
+```javascript
+// HTML: <input id="username" value="sarah_chen">
+const input = document.querySelector("#username");
+console.log(input.value); // "sarah_chen"
+```
 
-{/* TODO: event.preventDefault() */}
+### Different input types
+
+```javascript
+// Text input
+const name = document.querySelector("#name").value; // "Sarah Chen"
+
+// Number input
+const age = Number(document.querySelector("#age").value); // 28
+
+// Checkbox
+const agreed = document.querySelector("#terms").checked; // true or false
+
+// Radio buttons
+const selected = document.querySelector('input[name="plan"]:checked');
+const plan = selected ? selected.value : null; // "pro"
+
+// Select dropdown
+const role = document.querySelector("#role").value; // "admin"
+
+// Textarea
+const bio = document.querySelector("#bio").value; // "Full-stack developer..."
+```
+
+<Info>
+Input values are always **strings**, even from `<input type="number">`. Convert them with `Number()` when you need a number. The `checked` property on checkboxes is a boolean.
+</Info>
+
+### FormData — read all values at once
+
+`FormData` collects all named inputs in a form into a single object:
+
+```html
+<form id="user-form">
+  <input name="name" value="Sarah Chen">
+  <input name="email" value="sarah@example.com">
+  <select name="role">
+    <option value="admin" selected>Admin</option>
+  </select>
+</form>
+```
+
+```javascript
+const form = document.querySelector("#user-form");
+const formData = new FormData(form);
+
+// Read individual values
+console.log(formData.get("name"));  // "Sarah Chen"
+console.log(formData.get("email")); // "sarah@example.com"
+console.log(formData.get("role"));  // "admin"
+
+// Convert to a plain object
+const data = Object.fromEntries(formData);
+console.log(data);
+// { name: "Sarah Chen", email: "sarah@example.com", role: "admin" }
+```
+
+<Tip>
+`Object.fromEntries(new FormData(form))` is the cleanest way to get all form values as a plain object. It requires each input to have a `name` attribute.
+</Tip>
+
+## Handling form submission
+
+The standard pattern: listen for `submit`, prevent the default page reload, read values, and send to your API.
+
+```javascript
+const form = document.querySelector("#create-user-form");
+
+form.addEventListener("submit", async (e) => {
+  e.preventDefault(); // Don't reload the page!
+
+  const formData = new FormData(form);
+  const userData = Object.fromEntries(formData);
+
+  try {
+    const response = await fetch("/api/users", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(userData),
+    });
+
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const newUser = await response.json();
+    console.log("Created:", newUser);
+    form.reset(); // Clear the form
+  } catch (error) {
+    console.error("Failed to create user:", error);
+  }
+});
+```
+
+<Warning>
+`e.preventDefault()` is required. Without it, the browser submits the form the old-fashioned way — a full page reload with form data in the URL. You'll lose your application state. This is the most common form handling mistake.
+</Warning>
+
+## Real-time input handling
+
+### The `input` event — fires on every keystroke
+
+```javascript
+const searchInput = document.querySelector("#search");
+const resultsList = document.querySelector("#results");
+
+searchInput.addEventListener("input", (e) => {
+  const query = e.target.value.toLowerCase();
+
+  // Filter and display results as the user types
+  const filtered = users.filter(u =>
+    u.name.toLowerCase().includes(query)
+  );
+
+  resultsList.innerHTML = filtered
+    .map(u => `<li>${u.name}</li>`)
+    .join("");
+});
+```
+
+### The `change` event — fires when input loses focus
+
+```javascript
+const select = document.querySelector("#theme-select");
+
+select.addEventListener("change", (e) => {
+  document.body.className = e.target.value; // "light" or "dark"
+});
+```
+
+| Event | Fires when | Best for |
+|---|---|---|
+| `input` | Every keystroke / change | Search, live preview, character counts |
+| `change` | Input loses focus (or select changes) | Dropdowns, radio buttons, checkboxes |
 
 ## Basic validation
 
-{/* TODO: Checking required fields */}
+### HTML validation attributes
+
+The browser has built-in validation. Use HTML attributes first:
+
+```html
+<form id="signup-form">
+  <input name="name" required minlength="2" maxlength="50">
+  <input name="email" type="email" required>
+  <input name="age" type="number" min="13" max="120">
+  <input name="website" type="url">
+  <button type="submit">Sign Up</button>
+</form>
+```
+
+The browser shows error messages automatically. The form won't submit until all validations pass.
+
+### JavaScript validation
+
+For more complex rules, validate in your submit handler:
+
+```javascript
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const data = Object.fromEntries(new FormData(form));
+  const errors = [];
+
+  // Custom validation
+  if (data.name.trim().length < 2) {
+    errors.push("Name must be at least 2 characters");
+  }
+  if (!data.email.includes("@")) {
+    errors.push("Please enter a valid email");
+  }
+  if (data.password.length < 8) {
+    errors.push("Password must be at least 8 characters");
+  }
+  if (data.password !== data.confirmPassword) {
+    errors.push("Passwords don't match");
+  }
+
+  if (errors.length > 0) {
+    showErrors(errors);
+    return; // Don't submit
+  }
+
+  // Validation passed — submit to API
+  await submitForm(data);
+});
+
+function showErrors(errors) {
+  const errorContainer = document.querySelector("#form-errors");
+  errorContainer.innerHTML = errors
+    .map(err => `<p class="error">${err}</p>`)
+    .join("");
+}
+```
+
+### Disabling the submit button
+
+```javascript
+const submitBtn = form.querySelector('button[type="submit"]');
+
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  submitBtn.disabled = true;
+  submitBtn.textContent = "Saving...";
+
+  try {
+    await submitToAPI();
+    form.reset();
+  } catch (error) {
+    showError(error.message);
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = "Save";
+  }
+});
+```
 
 ## Common mistakes
 
-{/* TODO: Forgetting preventDefault on forms */}
+<AccordionGroup>
+<Accordion title="Forgetting preventDefault on form submit">
+```javascript
+// ❌ Page reloads — data is lost
+form.addEventListener("submit", (e) => {
+  const data = Object.fromEntries(new FormData(form));
+  fetch("/api/users", { method: "POST", body: JSON.stringify(data) });
+  // Page reloads before fetch completes!
+});
+
+// ✅ Prevent default first
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const data = Object.fromEntries(new FormData(form));
+  await fetch("/api/users", { method: "POST", body: JSON.stringify(data) });
+});
+```
+
+<Warning>
+Without `e.preventDefault()`, the browser handles the form submission itself — reloading the page and appending form data to the URL. Your JavaScript fetch never completes.
+</Warning>
+</Accordion>
+
+<Accordion title="Reading values at load time instead of submit time">
+```javascript
+// ❌ Wrong: reads value when page loads (empty)
+const nameInput = document.querySelector("#name");
+const name = nameInput.value; // "" — user hasn't typed yet
+
+form.addEventListener("submit", (e) => {
+  e.preventDefault();
+  console.log(name); // Always "" — captured the initial empty value
+});
+
+// ✅ Correct: read value when form is submitted
+form.addEventListener("submit", (e) => {
+  e.preventDefault();
+  const name = document.querySelector("#name").value; // Current value
+  console.log(name); // "Sarah Chen" — whatever the user typed
+});
+```
+</Accordion>
+
+<Accordion title="Missing name attributes on inputs">
+```html
+<!-- ❌ FormData can't read inputs without name attributes -->
+<input id="username" type="text">
+
+<!-- ✅ Add name attribute -->
+<input id="username" name="username" type="text">
+```
+
+<Warning>
+`FormData` uses the `name` attribute, not `id`. If your inputs don't have `name`, `Object.fromEntries(new FormData(form))` will return an empty object.
+</Warning>
+</Accordion>
+</AccordionGroup>
+
+## What's next?
+
+You can handle forms and user input. Let's wrap up the DOM & Browser section with localStorage — persisting data between page loads.
+
+<Card title="Local storage" icon="floppy-disk" href="/dom-browser/local-storage">
+Persist data in the browser between page loads
+</Card>

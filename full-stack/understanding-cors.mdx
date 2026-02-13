@@ -3,20 +3,165 @@ title: "Understanding CORS"
 description: "Fix cross-origin errors when your React frontend talks to your FastAPI backend"
 ---
 
-{/* TODO: Write CORS content */}
+## The error you'll definitely see
 
-## What is CORS
+The first time your React frontend tries to call your FastAPI backend, you'll see this in the browser console:
 
-{/* TODO: Cross-Origin Resource Sharing explained */}
+```
+Access to fetch at 'http://localhost:8000/api/users' from origin
+'http://localhost:5173' has been blocked by CORS policy: No
+'Access-Control-Allow-Origin' header is present on the requested resource.
+```
 
-## Why CORS errors happen
+This is the most common error in full-stack development. It looks scary, but the fix is simple.
 
-{/* TODO: Same-origin policy */}
+## What is CORS?
 
-## FastAPI CORS setup
+**CORS** (Cross-Origin Resource Sharing) is a browser security feature. It prevents a website from making requests to a different domain/port unless that server explicitly allows it.
 
-{/* TODO: CORSMiddleware configuration */}
+An **origin** is a combination of protocol + domain + port:
 
-## Allowed origins
+| URL | Origin |
+|---|---|
+| `http://localhost:5173` | `http://localhost:5173` |
+| `http://localhost:8000` | `http://localhost:8000` |
+| `https://myapp.com` | `https://myapp.com` |
+| `https://api.myapp.com` | `https://api.myapp.com` |
 
-{/* TODO: Development vs production origins */}
+Your React frontend (`localhost:5173`) and your FastAPI backend (`localhost:8000`) have **different origins** because they're on different ports. The browser blocks the request by default.
+
+<Info>
+CORS is a browser-only security feature. It doesn't affect Postman, curl, or server-to-server requests. That's why your API works fine in FastAPI's Swagger UI (`/docs`) or when you test with curl, but breaks when called from React.
+</Info>
+
+## Why CORS exists
+
+Without CORS, any website could make requests to any other site using your credentials. Imagine visiting a malicious site that silently makes requests to your bank's API using cookies your browser already has stored. CORS prevents this by requiring servers to opt in to receiving requests from other origins.
+
+## The fix: FastAPI CORS middleware
+
+Tell FastAPI to accept requests from your React frontend:
+
+```python
+# backend/main.py
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+app = FastAPI()
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],  # React dev server
+    allow_credentials=True,
+    allow_methods=["*"],     # Allow all HTTP methods
+    allow_headers=["*"],     # Allow all headers
+)
+
+# ... your routes below
+```
+
+That's it. Add these 7 lines and the CORS error disappears.
+
+### What each option does
+
+| Option | Value | Meaning |
+|---|---|---|
+| `allow_origins` | `["http://localhost:5173"]` | Which frontends can make requests |
+| `allow_credentials` | `True` | Allow cookies and auth headers |
+| `allow_methods` | `["*"]` | Allow GET, POST, PUT, DELETE, etc. |
+| `allow_headers` | `["*"]` | Allow Content-Type, Authorization, etc. |
+
+## Development vs production origins
+
+In development, your frontend runs at `localhost:5173`. In production, it runs at your actual domain. Handle both:
+
+```python
+import os
+
+# Read from environment variable
+ALLOWED_ORIGINS = os.getenv(
+    "ALLOWED_ORIGINS",
+    "http://localhost:5173"
+).split(",")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=ALLOWED_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+```
+
+```bash
+# backend/.env (development)
+ALLOWED_ORIGINS=http://localhost:5173
+
+# backend/.env (production)
+ALLOWED_ORIGINS=https://myapp.com,https://www.myapp.com
+```
+
+<Warning>
+Never use `allow_origins=["*"]` in production. This allows any website to call your API — the exact thing CORS was designed to prevent. Always list your specific frontend URL(s).
+</Warning>
+
+## How CORS actually works
+
+When your browser makes a cross-origin request, it adds an `Origin` header:
+
+```
+GET /api/users HTTP/1.1
+Origin: http://localhost:5173
+```
+
+The server responds with an `Access-Control-Allow-Origin` header:
+
+```
+HTTP/1.1 200 OK
+Access-Control-Allow-Origin: http://localhost:5173
+```
+
+If the origin matches, the browser allows the response through. If not, it blocks it.
+
+For "complex" requests (POST with JSON, PUT, DELETE), the browser first sends a **preflight request** — an OPTIONS request to check if the actual request is allowed:
+
+```
+1. Browser sends OPTIONS /api/users (preflight)
+2. Server responds with allowed methods/headers
+3. Browser sends actual POST /api/users
+4. Server responds with data
+```
+
+The CORS middleware handles all of this automatically. You don't need to think about preflight requests.
+
+## Debugging CORS errors
+
+If you still see CORS errors after adding the middleware:
+
+<Steps>
+<Step title="Check the origin matches exactly">
+`http://localhost:5173` is not the same as `http://localhost:5173/` (trailing slash) or `http://127.0.0.1:5173` (IP vs hostname).
+</Step>
+<Step title="Make sure middleware is added before routes">
+The CORS middleware must be added before your route definitions. FastAPI processes middleware in order.
+</Step>
+<Step title="Check the Network tab">
+Open DevTools → Network tab. Look at the failing request. Check the Response Headers for `Access-Control-Allow-Origin`. If it's missing, the middleware isn't configured correctly.
+</Step>
+<Step title="Restart your backend">
+Environment variable changes require restarting the server. `uvicorn --reload` only watches for file changes, not `.env` changes.
+</Step>
+</Steps>
+
+<Tip>
+CORS errors always appear in the browser console, never in the backend terminal. If your backend terminal shows no errors but the browser does, it's almost certainly CORS.
+</Tip>
+
+## What's next?
+
+Your frontend can talk to your backend. But right now, `fetch()` calls are scattered throughout your components. Let's organize them into a dedicated API client layer.
+
+<Card title="API client layer" icon="layer-group" href="/full-stack/api-client-layer">
+Separate API calls from components for cleaner, more maintainable code
+</Card>

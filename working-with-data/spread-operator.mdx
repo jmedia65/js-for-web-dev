@@ -3,20 +3,202 @@ title: "Spread operator"
 description: "Copy, merge, and expand arrays and objects with the spread syntax"
 ---
 
-{/* TODO: Write spread operator content */}
+## What is the spread operator?
+
+The spread operator `...` expands an array or object into its individual elements. It's how you copy, merge, and build new data structures without mutating the originals.
+
+```javascript
+const numbers = [1, 2, 3];
+const moreNumbers = [...numbers, 4, 5, 6];
+
+console.log(moreNumbers); // [1, 2, 3, 4, 5, 6]
+console.log(numbers);     // [1, 2, 3] — original unchanged
+```
+
+You'll use the spread operator constantly in React, where you need to create new arrays and objects instead of mutating state.
 
 ## Array spreading
 
-{/* TODO: [...arr1, ...arr2] */}
+### Copying an array
+
+```javascript
+const original = [1, 2, 3];
+const copy = [...original];
+
+copy.push(4);
+console.log(original); // [1, 2, 3] — unaffected
+console.log(copy);     // [1, 2, 3, 4]
+```
+
+### Merging arrays
+
+```javascript
+const frontend = ["React", "Vue", "Angular"];
+const backend = ["Node", "Django", "FastAPI"];
+
+const allFrameworks = [...frontend, ...backend];
+console.log(allFrameworks);
+// ["React", "Vue", "Angular", "Node", "Django", "FastAPI"]
+```
+
+### Adding items without mutation
+
+```javascript
+const colors = ["red", "green", "blue"];
+
+// Add to the end
+const withYellow = [...colors, "yellow"];
+// ["red", "green", "blue", "yellow"]
+
+// Add to the beginning
+const withWhite = ["white", ...colors];
+// ["white", "red", "green", "blue"]
+
+// Insert in the middle
+const withOrange = [...colors.slice(0, 2), "orange", ...colors.slice(2)];
+// ["red", "green", "orange", "blue"]
+```
+
+<Tip>
+In React, never use `.push()` or `.pop()` on state arrays. Instead, use spread to create new arrays: `setItems([...items, newItem])`. This tells React that the data changed and it needs to re-render.
+</Tip>
 
 ## Object spreading
 
-{/* TODO: { ...obj, newProp } */}
+### Copying an object
+
+```javascript
+const user = { name: "Sarah", age: 28, role: "admin" };
+const copy = { ...user };
+
+copy.age = 29;
+console.log(user.age); // 28 — original unchanged
+console.log(copy.age); // 29
+```
+
+### Merging objects
+
+```javascript
+const defaults = { theme: "light", language: "en", fontSize: 14 };
+const userPrefs = { theme: "dark", fontSize: 16 };
+
+const settings = { ...defaults, ...userPrefs };
+console.log(settings);
+// { theme: "dark", language: "en", fontSize: 16 }
+```
+
+Properties from later objects override earlier ones. `userPrefs.theme` ("dark") overrides `defaults.theme` ("light").
+
+### Updating a property without mutation
+
+```javascript
+const user = { name: "Sarah", age: 28, role: "admin" };
+
+// Create a new object with one property changed
+const updatedUser = { ...user, age: 29 };
+
+console.log(user);        // { name: "Sarah", age: 28, role: "admin" }
+console.log(updatedUser); // { name: "Sarah", age: 29, role: "admin" }
+```
+
+This is the pattern you'll use in React state updates:
+
+```jsx
+const [user, setUser] = useState({ name: "Sarah", age: 28 });
+
+// Update age without mutating
+setUser({ ...user, age: 29 });
+```
+
+<Warning>
+Spread creates a **shallow copy**. If your object contains nested objects, the inner objects are still shared references. For deep nested updates, spread each level: `{ ...user, address: { ...user.address, city: "Seattle" } }`.
+</Warning>
 
 ## Practical patterns
 
-{/* TODO: Copying, merging, overriding */}
+### Building API request bodies
+
+```javascript
+function createUserPayload(formData) {
+  return {
+    ...formData,
+    createdAt: new Date().toISOString(),
+    status: "active",
+  };
+}
+
+const payload = createUserPayload({ name: "Sarah", email: "sarah@example.com" });
+// { name: "Sarah", email: "sarah@example.com", createdAt: "2024-01-15T...", status: "active" }
+```
+
+### Removing a property (rest + spread)
+
+```javascript
+const user = { name: "Sarah", password: "secret123", role: "admin" };
+
+// Remove password, keep everything else
+const { password, ...safeUser } = user;
+console.log(safeUser); // { name: "Sarah", role: "admin" }
+```
+
+This combines destructuring (to grab `password`) with rest syntax (`...safeUser` to collect everything else). It's a clean way to strip sensitive fields.
+
+### Conditional properties
+
+```javascript
+const isAdmin = true;
+
+const user = {
+  name: "Sarah",
+  email: "sarah@example.com",
+  ...(isAdmin && { role: "admin", permissions: ["read", "write", "delete"] }),
+};
+
+console.log(user);
+// { name: "Sarah", email: "sarah@example.com", role: "admin", permissions: [...] }
+```
+
+<Info>
+The `...(condition && { props })` pattern conditionally includes properties. If the condition is false, `false` is spread (which adds nothing). You'll see this when building request bodies with optional fields.
+</Info>
+
+## Comparing to Python
+
+<Tabs>
+<Tab title="JavaScript">
+```javascript
+// Spread arrays
+const combined = [...arr1, ...arr2];
+
+// Spread objects
+const merged = { ...obj1, ...obj2 };
+
+// Copy + update
+const updated = { ...user, age: 29 };
+```
+</Tab>
+
+<Tab title="Python">
+```python
+# Unpack lists
+combined = [*list1, *list2]
+
+# Merge dicts (3.9+)
+merged = {**dict1, **dict2}
+# or: merged = dict1 | dict2
+
+# Copy + update
+updated = {**user, "age": 29}
+```
+</Tab>
+</Tabs>
+
+JavaScript's `...` is like Python's `*` for lists and `**` for dicts. Same concept, same patterns.
 
 ## What's next?
 
-{/* TODO: Card linking to json-basics */}
+You can work with arrays and objects. Now let's learn about JSON — the format your frontend and backend use to exchange data.
+
+<Card title="JSON basics" icon="brackets-curly" href="/working-with-data/json-basics">
+Convert between JSON strings and JavaScript objects
+</Card>

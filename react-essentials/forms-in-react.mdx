@@ -3,20 +3,385 @@ title: "Forms in React"
 description: "Build controlled forms that sync input values with React state"
 ---
 
-{/* TODO: Write React forms content */}
-
 ## Controlled components
 
-{/* TODO: value + onChange pattern */}
+In vanilla JavaScript, form inputs manage their own values. In React, **you** manage the values with state. This is called a controlled component — React state is the single source of truth.
+
+```jsx
+import { useState } from 'react';
+
+function SearchBar() {
+  const [query, setQuery] = useState("");
+
+  return (
+    <input
+      type="text"
+      value={query}
+      onChange={e => setQuery(e.target.value)}
+      placeholder="Search..."
+    />
+  );
+}
+```
+
+Two things make an input "controlled":
+1. **`value`** — set from state (React controls what's displayed)
+2. **`onChange`** — updates state when the user types
+
+Without both, the input either won't display the right value or won't respond to typing.
+
+<Warning>
+If you set `value` without `onChange`, the input becomes read-only — the user can't type in it. React will warn you about this in the console. Always pair `value` with `onChange`.
+</Warning>
+
+## All input types
+
+The `value` + `onChange` pattern works the same way for every input type:
+
+```jsx
+function AllInputTypes() {
+  const [name, setName] = useState("");
+  const [age, setAge] = useState("");
+  const [bio, setBio] = useState("");
+  const [agreed, setAgreed] = useState(false);
+  const [role, setRole] = useState("viewer");
+  const [plan, setPlan] = useState("free");
+
+  return (
+    <form>
+      {/* Text input */}
+      <input
+        type="text"
+        value={name}
+        onChange={e => setName(e.target.value)}
+      />
+
+      {/* Number input */}
+      <input
+        type="number"
+        value={age}
+        onChange={e => setAge(e.target.value)}
+      />
+
+      {/* Textarea */}
+      <textarea
+        value={bio}
+        onChange={e => setBio(e.target.value)}
+      />
+
+      {/* Checkbox — uses checked, not value */}
+      <label>
+        <input
+          type="checkbox"
+          checked={agreed}
+          onChange={e => setAgreed(e.target.checked)}
+        />
+        I agree to the terms
+      </label>
+
+      {/* Select dropdown */}
+      <select value={role} onChange={e => setRole(e.target.value)}>
+        <option value="viewer">Viewer</option>
+        <option value="editor">Editor</option>
+        <option value="admin">Admin</option>
+      </select>
+
+      {/* Radio buttons — same state, different values */}
+      <label>
+        <input
+          type="radio"
+          name="plan"
+          value="free"
+          checked={plan === "free"}
+          onChange={e => setPlan(e.target.value)}
+        />
+        Free
+      </label>
+      <label>
+        <input
+          type="radio"
+          name="plan"
+          value="pro"
+          checked={plan === "pro"}
+          onChange={e => setPlan(e.target.value)}
+        />
+        Pro
+      </label>
+    </form>
+  );
+}
+```
+
+<Info>
+Checkboxes use `checked` and `e.target.checked`. Everything else uses `value` and `e.target.value`. This is the one difference to remember.
+</Info>
 
 ## Handling form submission
 
-{/* TODO: onSubmit with preventDefault */}
+Use `onSubmit` on the `<form>` element, not `onClick` on the button:
 
-## Validation
+```jsx
+function CreateUserForm() {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-{/* TODO: Basic form validation */}
+  async function handleSubmit(e) {
+    e.preventDefault(); // Stop the page from reloading
+
+    setSubmitting(true);
+    try {
+      const response = await fetch("/api/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email }),
+      });
+
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+      const newUser = await response.json();
+      console.log("Created:", newUser);
+
+      // Clear the form
+      setName("");
+      setEmail("");
+    } catch (err) {
+      console.error("Failed to create user:", err);
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input
+        type="text"
+        value={name}
+        onChange={e => setName(e.target.value)}
+        placeholder="Name"
+        required
+      />
+      <input
+        type="email"
+        value={email}
+        onChange={e => setEmail(e.target.value)}
+        placeholder="Email"
+        required
+      />
+      <button type="submit" disabled={submitting}>
+        {submitting ? "Creating..." : "Create User"}
+      </button>
+    </form>
+  );
+}
+```
+
+<Tip>
+Always use `e.preventDefault()` in your submit handler. Without it, the browser reloads the page (the default HTML form behavior), which destroys your React app state. Use `onSubmit` on the form, not `onClick` on the button — this way pressing Enter also submits.
+</Tip>
+
+## Managing multiple fields with one state object
+
+When forms have many fields, use a single state object instead of separate `useState` calls:
+
+```jsx
+function RegistrationForm() {
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+    role: "viewer",
+  });
+
+  function handleChange(e) {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value,
+    }));
+  }
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    console.log("Submitting:", formData);
+    // POST to API...
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input
+        name="name"
+        type="text"
+        value={formData.name}
+        onChange={handleChange}
+        placeholder="Name"
+      />
+      <input
+        name="email"
+        type="email"
+        value={formData.email}
+        onChange={handleChange}
+        placeholder="Email"
+      />
+      <input
+        name="password"
+        type="password"
+        value={formData.password}
+        onChange={handleChange}
+        placeholder="Password"
+      />
+      <select name="role" value={formData.role} onChange={handleChange}>
+        <option value="viewer">Viewer</option>
+        <option value="editor">Editor</option>
+        <option value="admin">Admin</option>
+      </select>
+      <button type="submit">Register</button>
+    </form>
+  );
+}
+```
+
+The key trick is `[name]: value` — a computed property name. The input's `name` attribute matches the key in state, so one `handleChange` function works for all fields.
+
+<Info>
+Every input needs a `name` attribute that matches the state key. `handleChange` reads `e.target.name` to know which field to update. This is the standard pattern for multi-field forms in React.
+</Info>
+
+## Basic validation
+
+Show errors per field and validate on submit:
+
+```jsx
+function LoginForm() {
+  const [formData, setFormData] = useState({ email: "", password: "" });
+  const [errors, setErrors] = useState({});
+
+  function handleChange(e) {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: null }));
+    }
+  }
+
+  function validate() {
+    const newErrors = {};
+
+    if (!formData.email) {
+      newErrors.email = "Email is required";
+    } else if (!formData.email.includes("@")) {
+      newErrors.email = "Invalid email address";
+    }
+
+    if (!formData.password) {
+      newErrors.password = "Password is required";
+    } else if (formData.password.length < 8) {
+      newErrors.password = "Password must be at least 8 characters";
+    }
+
+    return newErrors;
+  }
+
+  function handleSubmit(e) {
+    e.preventDefault();
+
+    const newErrors = validate();
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return; // Don't submit
+    }
+
+    console.log("Valid! Submitting:", formData);
+    // POST to API...
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <div>
+        <input
+          name="email"
+          type="email"
+          value={formData.email}
+          onChange={handleChange}
+          placeholder="Email"
+        />
+        {errors.email && <p className="error">{errors.email}</p>}
+      </div>
+
+      <div>
+        <input
+          name="password"
+          type="password"
+          value={formData.password}
+          onChange={handleChange}
+          placeholder="Password"
+        />
+        {errors.password && <p className="error">{errors.password}</p>}
+      </div>
+
+      <button type="submit">Log In</button>
+    </form>
+  );
+}
+```
+
+The pattern: validate on submit, show errors with `&&`, clear errors when the user starts fixing them.
+
+<Tip>
+For production apps, consider a form library like React Hook Form. But this manual pattern teaches you exactly what's happening and works well for simple forms. Understand this pattern first, then add libraries when you need them.
+</Tip>
+
+## Edit forms — pre-populated from data
+
+Edit forms start with existing data passed via props:
+
+```jsx
+function EditUserForm({ user, onSave }) {
+  const [formData, setFormData] = useState({
+    name: user.name,
+    email: user.email,
+    bio: user.bio || "",
+  });
+
+  function handleChange(e) {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+
+    const response = await fetch(`/api/users/${user.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(formData),
+    });
+
+    if (response.ok) {
+      const updated = await response.json();
+      onSave(updated); // Notify parent
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input name="name" value={formData.name} onChange={handleChange} />
+      <input name="email" value={formData.email} onChange={handleChange} />
+      <textarea name="bio" value={formData.bio} onChange={handleChange} />
+      <button type="submit">Save Changes</button>
+    </form>
+  );
+}
+```
+
+Initialize state from props for edit forms. The `onSave` callback lets the parent component know the data was updated — this is the child-to-parent communication pattern you'll learn in the next lesson.
 
 ## What's next?
 
-{/* TODO: Card linking to component-composition */}
+You can build forms and handle user input. The last piece: how to structure your components together — which components own the data, which ones just display it, and how they communicate.
+
+<Card title="Component composition" icon="sitemap" href="/react-essentials/component-composition">
+Structure your React app with smart and presentational components
+</Card>

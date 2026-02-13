@@ -3,24 +3,256 @@ title: "The essential 20 percent"
 description: "A quick reference of the JavaScript concepts you'll use 80% of the time"
 ---
 
-{/* TODO: Write essential 20% cheat sheet */}
+## Your cheat sheet
 
-## Variables and data types
+This is the 20% of JavaScript you'll use 80% of the time. Bookmark this page. Come back to it when you forget a syntax. Everything here was covered in the course — this is just the concentrated version.
 
-{/* TODO: Quick reference */}
+## Variables
+
+```jsx
+const name = "Sarah Chen";   // Can't reassign — use for most things
+let count = 0;                // Can reassign — use for values that change
+// Forget var exists
+```
+
+## Template literals
+
+```jsx
+const greeting = `Hello, ${name}! You have ${count} items.`;
+
+// Multi-line
+const html = `
+  <div>
+    <h1>${title}</h1>
+    <p>${description}</p>
+  </div>
+`;
+```
 
 ## Functions
 
-{/* TODO: Quick reference */}
+```jsx
+// Arrow function (use this 90% of the time)
+const add = (a, b) => a + b;
 
-## Arrays and objects
+// Arrow with body
+const greet = (name) => {
+  const message = `Hello, ${name}!`;
+  return message;
+};
 
-{/* TODO: Quick reference */}
+// Default parameters
+const createUser = (name, role = "viewer") => ({ name, role });
 
-## Async/await and fetch
+// Destructuring parameters
+const renderUser = ({ name, email }) => `${name} (${email})`;
+```
 
-{/* TODO: Quick reference */}
+## Arrays
 
-## React patterns
+```jsx
+const users = ["Sarah", "John", "Maria"];
 
-{/* TODO: Quick reference */}
+// The essential methods
+users.map(u => u.toUpperCase())      // Transform: ["SARAH", "JOHN", "MARIA"]
+users.filter(u => u !== "John")      // Filter:    ["Sarah", "Maria"]
+users.find(u => u === "Sarah")       // Find one:  "Sarah"
+users.includes("Maria")             // Check:     true
+users.forEach(u => console.log(u))   // Loop (no return value)
+
+// Spread
+const withNew = [...users, "Alex"];  // ["Sarah", "John", "Maria", "Alex"]
+```
+
+## Objects
+
+```jsx
+const user = { name: "Sarah Chen", email: "sarah@example.com", role: "admin" };
+
+// Access
+user.name                     // "Sarah Chen"
+user["name"]                  // "Sarah Chen" (dynamic access)
+
+// Destructuring
+const { name, email } = user; // name = "Sarah Chen", email = "sarah@example.com"
+
+// Spread (copy + override)
+const updated = { ...user, role: "viewer" };
+```
+
+## Conditionals
+
+```jsx
+// Ternary — choose between two values
+const label = isActive ? "Active" : "Inactive";
+
+// && — show or nothing
+const badge = isAdmin && <span>Admin</span>;
+
+// Nullish coalescing — default for null/undefined
+const displayName = user.nickname ?? "Anonymous";
+```
+
+## Async / await
+
+```jsx
+async function fetchUsers() {
+  try {
+    const response = await fetch("/api/users");
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const data = await response.json();
+    return data;
+  } catch (err) {
+    console.error("Failed:", err.message);
+    throw err;
+  }
+}
+```
+
+## Fetch — all HTTP methods
+
+```jsx
+// GET
+const response = await fetch("/api/users");
+const users = await response.json();
+
+// POST
+const response = await fetch("/api/users", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ name: "Sarah", email: "sarah@example.com" }),
+});
+
+// PUT
+await fetch(`/api/users/${id}`, {
+  method: "PUT",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify(updatedData),
+});
+
+// DELETE
+await fetch(`/api/users/${id}`, { method: "DELETE" });
+```
+
+## React — components and JSX
+
+```jsx
+// Component = function that returns JSX
+function UserCard({ name, email, isAdmin }) {
+  return (
+    <div className="card">
+      <h2>{name}</h2>
+      <p>{email}</p>
+      {isAdmin && <span className="badge">Admin</span>}
+    </div>
+  );
+}
+
+// Use it
+<UserCard name="Sarah Chen" email="sarah@example.com" isAdmin={true} />
+```
+
+## React — state
+
+```jsx
+import { useState } from 'react';
+
+function Counter() {
+  const [count, setCount] = useState(0);
+
+  return (
+    <button onClick={() => setCount(prev => prev + 1)}>
+      Clicked {count} times
+    </button>
+  );
+}
+```
+
+## React — effects (data fetching)
+
+```jsx
+import { useState, useEffect } from 'react';
+
+function UserList() {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetch("/api/users")
+      .then(r => r.json())
+      .then(data => setUsers(data))
+      .catch(err => setError(err.message))
+      .finally(() => setLoading(false));
+  }, []); // Empty array = run once on mount
+
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>Error: {error}</p>;
+
+  return (
+    <ul>
+      {users.map(user => (
+        <li key={user.id}>{user.name}</li>
+      ))}
+    </ul>
+  );
+}
+```
+
+## React — controlled forms
+
+```jsx
+function CreateForm({ onSubmit }) {
+  const [formData, setFormData] = useState({ name: "", email: "" });
+
+  function handleChange(e) {
+    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  }
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    onSubmit(formData);
+    setFormData({ name: "", email: "" });
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input name="name" value={formData.name} onChange={handleChange} />
+      <input name="email" value={formData.email} onChange={handleChange} />
+      <button type="submit">Create</button>
+    </form>
+  );
+}
+```
+
+## React — CRUD state updates
+
+```jsx
+// CREATE
+setUsers(prev => [...prev, newUser]);
+
+// UPDATE
+setUsers(prev => prev.map(u => u.id === updated.id ? updated : u));
+
+// DELETE
+setUsers(prev => prev.filter(u => u.id !== userId));
+```
+
+## Import / export
+
+```jsx
+// Named exports (multiple per file)
+export function getUsers() { ... }
+export function createUser(data) { ... }
+import { getUsers, createUser } from './api/users';
+
+// Default export (one per file)
+export default function UserCard() { ... }
+import UserCard from './components/UserCard';
+```
+
+That's the 20%. Everything else you need, you can look up when you need it.
+
+<Card title="Recommended resources" icon="book" href="/next-steps/recommended-resources">
+Continue learning with curated resources for JavaScript and React
+</Card>

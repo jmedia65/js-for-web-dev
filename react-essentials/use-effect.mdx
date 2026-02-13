@@ -3,32 +3,315 @@ title: "Side effects with useEffect"
 description: "Fetch data, set up subscriptions, and run code when your component mounts"
 ---
 
-{/* TODO: Write useEffect content */}
+## What are side effects?
 
-## What are side effects
+React components have one job: return JSX based on props and state. Anything else — fetching data, updating the document title, setting up a timer — is a **side effect**. It's something that happens *outside* the render cycle.
 
-{/* TODO: Things outside React's render cycle */}
+```jsx
+function UserList() {
+  const [users, setUsers] = useState([]);
+
+  // This is a side effect — fetching data from an API
+  // Where does it go? useEffect.
+}
+```
+
+`useEffect` is the hook for running side effects. You'll use it primarily for one thing: **fetching data when a component loads.**
 
 ## Basic useEffect
 
-{/* TODO: Running code on mount */}
+```jsx
+import { useState, useEffect } from 'react';
 
-## Dependency array
+function UserList() {
+  const [users, setUsers] = useState([]);
 
-{/* TODO: When to re-run the effect */}
+  useEffect(() => {
+    // This runs after the component renders
+    console.log("Component mounted!");
+  }, []); // Empty array = run once on mount
+
+  return <ul>{users.map(u => <li key={u.id}>{u.name}</li>)}</ul>;
+}
+```
+
+`useEffect` takes two arguments:
+1. A **function** — the code to run (the effect)
+2. A **dependency array** — when to re-run it
+
+## The dependency array
+
+The dependency array controls when the effect runs:
+
+```jsx
+// Runs once — when the component mounts
+useEffect(() => {
+  fetchUsers();
+}, []);
+
+// Runs when userId changes
+useEffect(() => {
+  fetchUser(userId);
+}, [userId]);
+
+// Runs when either userId or role changes
+useEffect(() => {
+  fetchUserData(userId, role);
+}, [userId, role]);
+
+// ⚠️ Runs on EVERY render (usually a mistake)
+useEffect(() => {
+  console.log("Rendered!");
+}); // No array at all
+```
+
+| Dependency array | When it runs |
+|---|---|
+| `[]` | Once, when component mounts |
+| `[userId]` | On mount + whenever `userId` changes |
+| `[a, b]` | On mount + whenever `a` or `b` changes |
+| *(omitted)* | Every single render (rarely wanted) |
+
+<Warning>
+The empty `[]` dependency array is what you'll use 90% of the time. It means "run this effect once when the component first appears." Omitting the array entirely causes the effect to run on every render, which almost always creates bugs or performance problems.
+</Warning>
 
 ## Fetching data on mount
 
-{/* TODO: Practical API call example */}
+This is the pattern you'll use most often — load data when a component first appears:
+
+```jsx
+import { useState, useEffect } from 'react';
+
+function UserList() {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    async function loadUsers() {
+      try {
+        const response = await fetch("http://localhost:8000/api/users");
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        setUsers(data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadUsers();
+  }, []); // Empty array = fetch once on mount
+
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>Error: {error}</p>;
+
+  return (
+    <ul>
+      {users.map(user => (
+        <li key={user.id}>{user.name} — {user.email}</li>
+      ))}
+    </ul>
+  );
+}
+```
+
+<Info>
+Notice the async function is defined *inside* the useEffect callback, not as the callback itself. This is because useEffect callbacks can't be async directly — they need to return either nothing or a cleanup function.
+</Info>
+
+### Fetching based on a prop or state value
+
+When the data depends on a value (like a user ID from the URL), include it in the dependency array:
+
+```jsx
+function UserProfile({ userId }) {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadUser() {
+      setLoading(true);
+      try {
+        const response = await fetch(`/api/users/${userId}`);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        setUser(await response.json());
+      } catch (err) {
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadUser();
+  }, [userId]); // Re-fetch when userId changes
+
+  if (loading) return <p>Loading...</p>;
+  if (!user) return <p>User not found</p>;
+
+  return (
+    <div>
+      <h2>{user.name}</h2>
+      <p>{user.email}</p>
+    </div>
+  );
+}
+```
+
+When `userId` changes (e.g., navigating from one user profile to another), the effect runs again and fetches the new user.
+
+## Other common side effects
+
+### Updating the document title
+
+```jsx
+function ProductPage({ product }) {
+  useEffect(() => {
+    document.title = `${product.name} — My Store`;
+  }, [product.name]);
+
+  return <h1>{product.name}</h1>;
+}
+```
+
+### Setting up a timer
+
+```jsx
+function Timer() {
+  const [seconds, setSeconds] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setSeconds(prev => prev + 1);
+    }, 1000);
+
+    // Cleanup: clear the interval when component unmounts
+    return () => clearInterval(interval);
+  }, []);
+
+  return <p>Elapsed: {seconds}s</p>;
+}
+```
 
 ## Cleanup function
 
-{/* TODO: Cleaning up subscriptions */}
+The function you return from useEffect runs when the component **unmounts** (disappears) or before the effect re-runs:
+
+```jsx
+useEffect(() => {
+  // Setup: runs when component mounts (or dependencies change)
+  const subscription = connectToWebSocket(userId);
+
+  // Cleanup: runs when component unmounts (or before next run)
+  return () => {
+    subscription.close();
+  };
+}, [userId]);
+```
+
+Cleanup prevents memory leaks and stale data. Common cleanup tasks:
+- Clearing timers (`clearInterval`, `clearTimeout`)
+- Closing WebSocket connections
+- Cancelling pending requests
+- Removing event listeners
+
+<Tip>
+You won't need cleanup for most fetch calls. Cleanup is mainly for subscriptions, timers, and event listeners. React will warn you in development (StrictMode) if a cleanup issue exists.
+</Tip>
 
 ## Common mistakes
 
-{/* TODO: Missing dependencies, infinite loops */}
+<AccordionGroup>
+<Accordion title="Missing dependency array — infinite loop">
+```jsx
+// ❌ Infinite loop: fetches on every render
+useEffect(() => {
+  fetch("/api/users")
+    .then(r => r.json())
+    .then(data => setUsers(data)); // setUsers triggers re-render → effect runs again → ...
+});
+
+// ✅ Add empty dependency array
+useEffect(() => {
+  fetch("/api/users")
+    .then(r => r.json())
+    .then(data => setUsers(data));
+}, []); // Only runs once
+```
+
+<Warning>
+Forgetting the dependency array creates an infinite loop: render → effect → state update → re-render → effect → ... Your browser tab will freeze and your API will get hammered.
+</Warning>
+</Accordion>
+
+<Accordion title="Making useEffect callback async directly">
+```jsx
+// ❌ Wrong: useEffect callback can't be async
+useEffect(async () => {
+  const response = await fetch("/api/users");
+  const data = await response.json();
+  setUsers(data);
+}, []);
+
+// ✅ Correct: define async function inside, then call it
+useEffect(() => {
+  async function loadUsers() {
+    const response = await fetch("/api/users");
+    const data = await response.json();
+    setUsers(data);
+  }
+
+  loadUsers();
+}, []);
+```
+
+<Warning>
+`useEffect` callbacks must return either nothing or a cleanup function. An async function returns a Promise, which React doesn't know how to handle. Define the async function inside the effect and call it immediately.
+</Warning>
+</Accordion>
+
+<Accordion title="Object or array as dependency (re-runs every render)">
+```jsx
+// ❌ Runs on every render because {} !== {}
+const options = { page: 1, limit: 10 };
+useEffect(() => {
+  fetchUsers(options);
+}, [options]); // New object every render!
+
+// ✅ Use primitive values as dependencies
+useEffect(() => {
+  fetchUsers({ page, limit });
+}, [page, limit]); // Primitives are compared by value
+```
+
+<Warning>
+Objects and arrays are compared by **reference**, not by value. `{a: 1} !== {a: 1}`. Use primitive values (strings, numbers, booleans) in the dependency array whenever possible.
+</Warning>
+</Accordion>
+</AccordionGroup>
+
+## The useEffect mental model
+
+Think of useEffect in terms of **synchronization**, not lifecycle:
+
+```
+"Keep this side effect synchronized with these values"
+```
+
+- `useEffect(fn, [])` — synchronize with nothing (run once)
+- `useEffect(fn, [userId])` — synchronize with userId (re-run when it changes)
+- `useEffect(fn, [a, b])` — synchronize with a and b
+
+<Tip>
+If you're coming from Python or other frameworks, resist thinking in "component lifecycle" terms (mount, update, unmount). Think instead: "this effect should run when these values change." The dependency array is the key to understanding useEffect.
+</Tip>
 
 ## What's next?
 
-{/* TODO: Card linking to conditional-rendering */}
+You can fetch data and manage side effects. Now let's learn how to conditionally show different UI based on that data — loading spinners, error messages, and content.
+
+<Card title="Conditional rendering" icon="code-branch" href="/react-essentials/conditional-rendering">
+Show different UI based on state and conditions
+</Card>

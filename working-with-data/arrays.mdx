@@ -3,24 +3,169 @@ title: "Arrays"
 description: "Store and access ordered collections of data with JavaScript arrays"
 ---
 
-{/* TODO: Write arrays content */}
+## What are arrays?
 
-## Creating arrays
+Arrays store multiple values in a single variable. You'll use them constantly — lists of users, product catalogs, API responses, form options, navigation items. Any time you have a collection of things, that's an array.
 
-{/* TODO: Array literal syntax */}
+```javascript
+const fruits = ["Apple", "Banana", "Cherry"];
+const prices = [29.99, 49.99, 9.99];
+const mixed = ["Sarah", 28, true, null]; // Can mix types (but usually don't)
+```
+
+<Tabs>
+<Tab title="JavaScript">
+```javascript
+const users = ["Sarah", "John", "Alice"];
+console.log(users); // ["Sarah", "John", "Alice"]
+```
+</Tab>
+
+<Tab title="Python">
+```python
+users = ["Sarah", "John", "Alice"]
+print(users)  # ["Sarah", "John", "Alice"]
+```
+</Tab>
+</Tabs>
+
+JavaScript arrays are Python lists. Same square bracket syntax, same zero-based indexing, same idea.
 
 ## Accessing items
 
-{/* TODO: Zero-based indexing */}
+```javascript
+const users = ["Sarah", "John", "Alice", "Bob"];
+
+console.log(users[0]); // "Sarah"  (first item)
+console.log(users[1]); // "John"   (second item)
+console.log(users[3]); // "Bob"    (last item)
+console.log(users[4]); // undefined (out of bounds — no error!)
+```
+
+<Warning>
+Accessing an index that doesn't exist returns `undefined` instead of throwing an error. This is different from Python, which raises an `IndexError`. It can lead to silent bugs if you're not careful.
+</Warning>
+
+### Getting the last item
+
+```javascript
+const users = ["Sarah", "John", "Alice"];
+
+// Classic way
+console.log(users[users.length - 1]); // "Alice"
+
+// Modern way (ES2022)
+console.log(users.at(-1)); // "Alice"
+console.log(users.at(-2)); // "John"
+```
+
+<Tip>
+`.at()` supports negative indices just like Python. Use `.at(-1)` to get the last item instead of the awkward `arr[arr.length - 1]`.
+</Tip>
 
 ## Array length
 
-{/* TODO: .length property */}
+```javascript
+const users = ["Sarah", "John", "Alice"];
+console.log(users.length); // 3
 
-## Comparing to Python lists
+// Check if array is empty
+if (users.length === 0) {
+  console.log("No users found");
+}
 
-{/* TODO: Tabs component with JS vs Python */}
+// Common pattern: check before accessing
+const firstUser = users.length > 0 ? users[0] : "No users";
+```
+
+Note: `.length` is a property, not a method. No parentheses needed.
+
+## Modifying arrays
+
+```javascript
+const colors = ["red", "green", "blue"];
+
+// Add to the end
+colors.push("yellow");
+console.log(colors); // ["red", "green", "blue", "yellow"]
+
+// Remove from the end
+const last = colors.pop();
+console.log(last);   // "yellow"
+console.log(colors); // ["red", "green", "blue"]
+
+// Add to the beginning
+colors.unshift("white");
+console.log(colors); // ["white", "red", "green", "blue"]
+
+// Remove from the beginning
+const first = colors.shift();
+console.log(first);  // "white"
+console.log(colors); // ["red", "green", "blue"]
+```
+
+| Method | What it does | Returns |
+|---|---|---|
+| `.push(item)` | Add to end | New length |
+| `.pop()` | Remove from end | Removed item |
+| `.unshift(item)` | Add to beginning | New length |
+| `.shift()` | Remove from beginning | Removed item |
+
+<Warning>
+These methods **mutate** the original array. In React, you'll avoid them and use non-mutating patterns instead (spread operator, `.filter()`, `.map()`). More on that when you learn React state.
+</Warning>
+
+## Checking if something is in an array
+
+```javascript
+const roles = ["admin", "editor", "viewer"];
+
+console.log(roles.includes("admin"));   // true
+console.log(roles.includes("manager")); // false
+
+// Find the position of an item
+console.log(roles.indexOf("editor")); // 1
+console.log(roles.indexOf("manager")); // -1 (not found)
+```
+
+<Tabs>
+<Tab title="JavaScript">
+```javascript
+const roles = ["admin", "editor", "viewer"];
+roles.includes("admin"); // true
+roles.indexOf("admin");  // 0
+```
+</Tab>
+
+<Tab title="Python">
+```python
+roles = ["admin", "editor", "viewer"]
+"admin" in roles  # True
+roles.index("admin")  # 0
+```
+</Tab>
+</Tabs>
+
+JavaScript uses `.includes()` where Python uses `in`. Both check for existence.
+
+## Slicing arrays
+
+```javascript
+const numbers = [10, 20, 30, 40, 50];
+
+// .slice(start, end) — end is exclusive
+console.log(numbers.slice(1, 3));  // [20, 30]
+console.log(numbers.slice(2));     // [30, 40, 50]
+console.log(numbers.slice(-2));    // [40, 50]
+console.log(numbers.slice());      // [10, 20, 30, 40, 50] (shallow copy)
+```
+
+`.slice()` returns a new array without modifying the original. Same behavior as Python's `list[1:3]`, just with method syntax instead of bracket notation.
 
 ## What's next?
 
-{/* TODO: Card linking to array-methods */}
+You can create and access arrays. Now let's learn the methods that make arrays truly powerful — `.map()`, `.filter()`, `.find()`, and more.
+
+<Card title="Array methods" icon="wand-magic-sparkles" href="/working-with-data/array-methods">
+Transform, filter, and search arrays
+</Card>

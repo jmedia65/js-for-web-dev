@@ -3,20 +3,365 @@ title: "Full example walkthrough"
 description: "See a complete CRUD application with React and FastAPI working together"
 ---
 
-{/* TODO: Write full example walkthrough */}
-
 ## The complete app
 
-{/* TODO: Overview of the example project */}
+Let's put everything together. This is a complete user management app — the same patterns you've learned across the last several lessons, wired together into one working application.
 
-## Frontend code walkthrough
+```
+my-fullstack-app/
+├── backend/
+│   └── main.py              # FastAPI — all endpoints
+├── frontend/
+│   └── src/
+│       ├── api/
+│       │   ├── client.js     # Shared fetch helper
+│       │   └── users.js      # User CRUD functions
+│       ├── components/
+│       │   ├── CreateUserForm.jsx
+│       │   ├── EditUserForm.jsx
+│       │   └── UserCard.jsx
+│       ├── App.jsx           # Main page component
+│       └── main.jsx          # Entry point
+```
 
-{/* TODO: Key React components explained */}
+## Backend — the full API
 
-## Backend code walkthrough
+```python
+# backend/main.py
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+import os
 
-{/* TODO: Key FastAPI endpoints explained */}
+app = FastAPI()
 
-## How they connect
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173").split(",")
 
-{/* TODO: The full request/response cycle */}
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=ALLOWED_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# ── Models ──────────────────────────────────────
+
+class UserCreate(BaseModel):
+    name: str
+    email: str
+
+class UserUpdate(BaseModel):
+    name: str | None = None
+    email: str | None = None
+
+# ── In-memory storage (use a real DB in production) ──
+
+users = [
+    {"id": 1, "name": "Sarah Chen", "email": "sarah@example.com"},
+    {"id": 2, "name": "John Park", "email": "john@example.com"},
+]
+next_id = 3
+
+def find_user(user_id: int):
+    return next((u for u in users if u["id"] == user_id), None)
+
+# ── Endpoints ───────────────────────────────────
+
+@app.get("/api/users")
+def get_users():
+    return users
+
+@app.get("/api/users/{user_id}")
+def get_user(user_id: int):
+    user = find_user(user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
+
+@app.post("/api/users", status_code=201)
+def create_user(data: UserCreate):
+    global next_id
+    new_user = {"id": next_id, "name": data.name, "email": data.email}
+    users.append(new_user)
+    next_id += 1
+    return new_user
+
+@app.put("/api/users/{user_id}")
+def update_user(user_id: int, data: UserUpdate):
+    user = find_user(user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    if data.name is not None:
+        user["name"] = data.name
+    if data.email is not None:
+        user["email"] = data.email
+    return user
+
+@app.delete("/api/users/{user_id}", status_code=204)
+def delete_user(user_id: int):
+    user = find_user(user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    users.remove(user)
+```
+
+Five endpoints. Five HTTP methods. That's the entire backend for a CRUD app.
+
+## Frontend — the API client
+
+```jsx
+// frontend/src/api/client.js
+const API_URL = import.meta.env.VITE_API_URL;
+
+export async function apiClient(endpoint, options = {}) {
+  const response = await fetch(`${API_URL}${endpoint}`, {
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+    ...options,
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.detail || `HTTP ${response.status}`);
+  }
+
+  if (response.status === 204) return null;
+  return response.json();
+}
+```
+
+```jsx
+// frontend/src/api/users.js
+import { apiClient } from './client';
+
+export const getUsers    = ()         => apiClient("/api/users");
+export const getUser     = (id)       => apiClient(`/api/users/${id}`);
+export const createUser  = (data)     => apiClient("/api/users", { method: "POST", body: JSON.stringify(data) });
+export const updateUser  = (id, data) => apiClient(`/api/users/${id}`, { method: "PUT", body: JSON.stringify(data) });
+export const deleteUser  = (id)       => apiClient(`/api/users/${id}`, { method: "DELETE" });
+```
+
+## Frontend — the components
+
+```jsx
+// frontend/src/components/CreateUserForm.jsx
+import { useState } from 'react';
+
+export default function CreateUserForm({ onSubmit }) {
+  const [formData, setFormData] = useState({ name: "", email: "" });
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState(null);
+
+  function handleChange(e) {
+    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setSubmitting(true);
+    setError(null);
+    try {
+      await onSubmit(formData);
+      setFormData({ name: "", email: "" });
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input name="name" value={formData.name} onChange={handleChange} placeholder="Name" required />
+      <input name="email" type="email" value={formData.email} onChange={handleChange} placeholder="Email" required />
+      {error && <p className="error">{error}</p>}
+      <button disabled={submitting}>{submitting ? "Adding..." : "Add User"}</button>
+    </form>
+  );
+}
+```
+
+```jsx
+// frontend/src/components/EditUserForm.jsx
+import { useState } from 'react';
+
+export default function EditUserForm({ user, onSave, onCancel }) {
+  const [formData, setFormData] = useState({ name: user.name, email: user.email });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
+
+  function handleChange(e) {
+    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setSaving(true);
+    setError(null);
+    try {
+      await onSave(formData);
+    } catch (err) {
+      setError(err.message);
+      setSaving(false);
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input name="name" value={formData.name} onChange={handleChange} required />
+      <input name="email" type="email" value={formData.email} onChange={handleChange} required />
+      {error && <p className="error">{error}</p>}
+      <button disabled={saving}>{saving ? "Saving..." : "Save"}</button>
+      <button type="button" onClick={onCancel}>Cancel</button>
+    </form>
+  );
+}
+```
+
+```jsx
+// frontend/src/components/UserCard.jsx
+import { useState } from 'react';
+import EditUserForm from './EditUserForm';
+
+export default function UserCard({ user, onUpdate, onDelete }) {
+  const [editing, setEditing] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  async function handleSave(formData) {
+    const updated = await onUpdate(user.id, formData);
+    setEditing(false);
+    return updated;
+  }
+
+  async function handleDelete() {
+    if (!window.confirm(`Delete ${user.name}?`)) return;
+    setDeleting(true);
+    try {
+      await onDelete(user.id);
+    } catch {
+      setDeleting(false);
+    }
+  }
+
+  if (editing) {
+    return <EditUserForm user={user} onSave={handleSave} onCancel={() => setEditing(false)} />;
+  }
+
+  return (
+    <div className="user-card">
+      <strong>{user.name}</strong> — {user.email}
+      <button onClick={() => setEditing(true)}>Edit</button>
+      <button onClick={handleDelete} disabled={deleting}>
+        {deleting ? "..." : "Delete"}
+      </button>
+    </div>
+  );
+}
+```
+
+## Frontend — the main page
+
+```jsx
+// frontend/src/App.jsx
+import { useState, useEffect } from 'react';
+import { getUsers, createUser, updateUser, deleteUser } from './api/users';
+import CreateUserForm from './components/CreateUserForm';
+import UserCard from './components/UserCard';
+
+export default function App() {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    getUsers()
+      .then(data => setUsers(data))
+      .catch(err => setError(err.message))
+      .finally(() => setLoading(false));
+  }, []);
+
+  async function handleCreate(formData) {
+    const newUser = await createUser(formData);
+    setUsers(prev => [...prev, newUser]);
+  }
+
+  async function handleUpdate(userId, formData) {
+    const updated = await updateUser(userId, formData);
+    setUsers(prev => prev.map(u => u.id === userId ? updated : u));
+    return updated;
+  }
+
+  async function handleDelete(userId) {
+    await deleteUser(userId);
+    setUsers(prev => prev.filter(u => u.id !== userId));
+  }
+
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>Error: {error}</p>;
+
+  return (
+    <div>
+      <h1>User Management</h1>
+
+      <h2>Add User</h2>
+      <CreateUserForm onSubmit={handleCreate} />
+
+      <h2>Users ({users.length})</h2>
+      {users.length === 0 ? (
+        <p>No users yet. Add one above!</p>
+      ) : (
+        users.map(user => (
+          <UserCard
+            key={user.id}
+            user={user}
+            onUpdate={handleUpdate}
+            onDelete={handleDelete}
+          />
+        ))
+      )}
+    </div>
+  );
+}
+```
+
+## Tracing the data flow
+
+Let's trace what happens when a user clicks "Add User":
+
+<Steps>
+<Step title="User fills form and submits">
+`CreateUserForm` calls `onSubmit({ name: "Maria Lopez", email: "maria@example.com" })`
+</Step>
+<Step title="App.jsx handles the create">
+`handleCreate` calls `createUser(formData)` from the API client
+</Step>
+<Step title="API client sends the request">
+`fetch("http://localhost:8000/api/users", { method: "POST", body: ... })`
+</Step>
+<Step title="FastAPI receives and validates">
+Pydantic validates the data. If valid, creates the user and returns `{ id: 3, name: "Maria Lopez", email: "maria@example.com" }` with status 201
+</Step>
+<Step title="API client parses the response">
+`response.json()` returns the new user object back to `handleCreate`
+</Step>
+<Step title="State updates, React re-renders">
+`setUsers(prev => [...prev, newUser])` adds the user. React re-renders the list. Maria appears on screen.
+</Step>
+</Steps>
+
+Every CRUD operation follows this same flow: Component → API client → `fetch()` → FastAPI → response → state update → re-render.
+
+<Tip>
+When debugging, trace the flow step by step. Add `console.log` at each stage to see where data gets lost or transformed incorrectly. The Network tab in DevTools shows the actual HTTP requests and responses.
+</Tip>
+
+## What's next?
+
+You've seen the complete app. Now let's polish it — handling errors gracefully across the entire stack.
+
+<Card title="Error handling across the stack" icon="triangle-exclamation" href="/full-stack/error-handling-stack">
+Handle errors consistently from FastAPI to React for a great user experience
+</Card>

@@ -3,16 +3,219 @@ title: "Creating elements"
 description: "Dynamically add new HTML elements to the page with JavaScript"
 ---
 
-{/* TODO: Write creating elements content */}
+## Building the page with JavaScript
+
+So far you've modified existing elements. But often you need to create new ones — render a list of users from an API, add a notification, or build a table from data. This is where `document.createElement()` comes in.
 
 ## document.createElement()
 
-{/* TODO: Creating new elements */}
+Create a new element, configure it, then add it to the page:
 
-## Setting content and attributes
+```javascript
+// 1. Create the element
+const card = document.createElement("div");
 
-{/* TODO: Configuring the element */}
+// 2. Configure it
+card.className = "user-card";
+card.textContent = "Sarah Chen — Admin";
 
-## Appending to the DOM
+// 3. Add it to the page
+document.querySelector("#user-list").appendChild(card);
+```
 
-{/* TODO: appendChild, append, prepend */}
+The element doesn't appear on the page until you add it to the DOM with `appendChild` or similar methods.
+
+### A more complete example
+
+```javascript
+// Create a user card with multiple child elements
+const card = document.createElement("div");
+card.className = "user-card";
+
+const name = document.createElement("h3");
+name.textContent = "Sarah Chen";
+
+const email = document.createElement("p");
+email.textContent = "sarah@example.com";
+email.className = "email";
+
+const deleteBtn = document.createElement("button");
+deleteBtn.textContent = "Delete";
+deleteBtn.className = "btn-danger";
+
+// Build the tree
+card.appendChild(name);
+card.appendChild(email);
+card.appendChild(deleteBtn);
+
+// Add to the page
+document.querySelector("#user-list").appendChild(card);
+```
+
+This produces:
+```html
+<div class="user-card">
+  <h3>Sarah Chen</h3>
+  <p class="email">sarah@example.com</p>
+  <button class="btn-danger">Delete</button>
+</div>
+```
+
+## Adding elements to the page
+
+Several methods for inserting elements, each with a different position:
+
+```javascript
+const parent = document.querySelector("#container");
+const newElement = document.createElement("p");
+newElement.textContent = "New paragraph";
+
+// Add to the end (most common)
+parent.appendChild(newElement);
+
+// Add to the beginning
+parent.prepend(newElement);
+
+// Add to the end (modern alternative to appendChild)
+parent.append(newElement);
+
+// Insert before a specific child
+const reference = document.querySelector("#reference-element");
+parent.insertBefore(newElement, reference);
+
+// Insert relative to an element
+reference.before(newElement);   // Before the reference
+reference.after(newElement);    // After the reference
+```
+
+| Method | Position | Returns |
+|---|---|---|
+| `parent.appendChild(el)` | End of parent | The appended element |
+| `parent.append(el)` | End of parent | `undefined` |
+| `parent.prepend(el)` | Start of parent | `undefined` |
+| `el.before(newEl)` | Before `el` | `undefined` |
+| `el.after(newEl)` | After `el` | `undefined` |
+
+<Tip>
+`append()` and `prepend()` are the modern alternatives. They also accept strings: `parent.append("Hello")` adds a text node. `appendChild` only accepts elements.
+</Tip>
+
+## Removing elements
+
+```javascript
+// Modern — call .remove() on the element
+const card = document.querySelector(".user-card");
+card.remove();
+
+// Older — remove through parent
+const parent = card.parentElement;
+parent.removeChild(card);
+
+// Remove all children
+const container = document.querySelector("#container");
+container.innerHTML = ""; // Quick way to clear everything
+```
+
+## Rendering a list from data
+
+This is the most common use case — take data (from an API, for example) and build the DOM:
+
+```javascript
+const users = [
+  { id: 1, name: "Sarah Chen", role: "Admin" },
+  { id: 2, name: "John Park", role: "Editor" },
+  { id: 3, name: "Alice Rivera", role: "Viewer" },
+];
+
+const list = document.querySelector("#user-list");
+
+users.forEach(user => {
+  const li = document.createElement("li");
+  li.textContent = `${user.name} — ${user.role}`;
+  li.dataset.userId = user.id;
+  list.appendChild(li);
+});
+```
+
+### With innerHTML (simpler for complex HTML)
+
+```javascript
+const users = [
+  { id: 1, name: "Sarah Chen", role: "Admin" },
+  { id: 2, name: "John Park", role: "Editor" },
+  { id: 3, name: "Alice Rivera", role: "Viewer" },
+];
+
+const list = document.querySelector("#user-list");
+
+list.innerHTML = users.map(user => `
+  <li data-user-id="${user.id}">
+    <strong>${user.name}</strong>
+    <span class="role">${user.role}</span>
+  </li>
+`).join("");
+```
+
+<Warning>
+`innerHTML` with template literals is convenient but vulnerable to XSS if the data contains user input. For data from your own API, it's fine. For user-generated content, use `createElement` + `textContent`.
+</Warning>
+
+## Document fragments (batch insertions)
+
+When adding many elements, each `appendChild` triggers a page repaint. Use a `DocumentFragment` to batch insertions:
+
+```javascript
+const users = await fetch("/api/users").then(r => r.json());
+const fragment = document.createDocumentFragment();
+
+users.forEach(user => {
+  const li = document.createElement("li");
+  li.textContent = user.name;
+  fragment.appendChild(li); // Add to fragment (no repaint)
+});
+
+document.querySelector("#user-list").appendChild(fragment);
+// Single repaint when the fragment is added to the DOM
+```
+
+<Info>
+For small lists (under 100 items), the performance difference is negligible. Use fragments when rendering large datasets or when you notice visible flickering during rendering.
+</Info>
+
+## How React replaces this
+
+Everything in this lesson — `createElement`, `appendChild`, `innerHTML` — is what React automates. Compare:
+
+```javascript
+// Vanilla JavaScript
+const users = [{ name: "Sarah" }, { name: "John" }];
+const list = document.querySelector("#user-list");
+list.innerHTML = users.map(u => `<li>${u.name}</li>`).join("");
+```
+
+```jsx
+// React — same result, declarative approach
+function UserList({ users }) {
+  return (
+    <ul>
+      {users.map(user => (
+        <li key={user.id}>{user.name}</li>
+      ))}
+    </ul>
+  );
+}
+```
+
+React handles creating, updating, and removing DOM elements for you. You describe *what* the UI should look like; React figures out *how* to make it happen.
+
+<Tip>
+Understanding `createElement` helps you appreciate what React does under the hood. You won't use manual DOM creation in React projects, but you'll understand error messages and debugging better.
+</Tip>
+
+## What's next?
+
+You can create and add elements to the page. Now let's make them interactive — responding to clicks, typing, and other user actions.
+
+<Card title="Event listeners" icon="bell" href="/dom-browser/event-listeners">
+Respond to user interactions like clicks and keyboard input
+</Card>

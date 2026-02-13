@@ -3,16 +3,133 @@ title: "What is the DOM"
 description: "Understand how browsers represent web pages as a tree of objects you can manipulate"
 ---
 
-{/* TODO: Write DOM intro content */}
+## The page is a tree of objects
 
-## Document Object Model explained
+When a browser loads an HTML file, it doesn't just display text. It parses the HTML and builds an in-memory tree of objects called the **Document Object Model** (DOM). Every HTML element becomes a JavaScript object you can read, modify, and delete.
 
-{/* TODO: What the DOM is */}
+```html
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>My App</title>
+  </head>
+  <body>
+    <h1>Hello</h1>
+    <p>Welcome to my app</p>
+  </body>
+</html>
+```
 
-## The document object
+The browser turns this into a tree:
 
-{/* TODO: document as entry point */}
+```
+document
+└── html
+    ├── head
+    │   └── title
+    │       └── "My App"
+    └── body
+        ├── h1
+        │   └── "Hello"
+        └── p
+            └── "Welcome to my app"
+```
 
-## DOM tree structure
+Every box in this tree is a **node**. Elements, text, and even comments are nodes. JavaScript can access and change any of them.
 
-{/* TODO: Visual representation */}
+## The `document` object
+
+`document` is your entry point to the DOM. It's a global object available in any browser JavaScript — you don't need to import anything.
+
+```javascript
+// The whole page
+console.log(document);
+
+// The <html> element
+console.log(document.documentElement);
+
+// The <head> element
+console.log(document.head);
+
+// The <body> element
+console.log(document.body);
+
+// The page title
+console.log(document.title); // "My App"
+document.title = "New Title"; // Changes the browser tab title
+```
+
+<Info>
+`document` is only available in the browser. If you try to use it in Node.js, you'll get `ReferenceError: document is not defined`. This is a browser-only API.
+</Info>
+
+## What can you do with the DOM?
+
+The DOM lets JavaScript interact with the page:
+
+| Action | Example |
+|---|---|
+| **Find** elements | `document.querySelector(".user-card")` |
+| **Read** content | `element.textContent` |
+| **Change** content | `element.textContent = "New text"` |
+| **Change** styles | `element.style.color = "red"` |
+| **Add** elements | `parent.appendChild(newElement)` |
+| **Remove** elements | `element.remove()` |
+| **Listen** for events | `button.addEventListener("click", handler)` |
+
+This is how JavaScript makes web pages interactive. Without the DOM, a page would be static HTML — no clicking, no updating, no fetching data and displaying it.
+
+## How this connects to React
+
+Here's the key insight: **React is a DOM manipulation library**. Everything React does — rendering components, updating the UI, handling events — ultimately translates to DOM operations.
+
+```javascript
+// Vanilla JavaScript (what we'll learn in this section)
+const heading = document.querySelector("h1");
+heading.textContent = "Hello, Sarah!";
+
+// React (what you'll learn later) — does the same thing under the hood
+function Greeting() {
+  return <h1>Hello, Sarah!</h1>;
+}
+```
+
+React abstracts away manual DOM manipulation so you don't have to do it yourself. But understanding the DOM helps you:
+
+- Debug React applications (the Elements panel shows the real DOM)
+- Understand why React re-renders
+- Work with libraries that touch the DOM directly
+- Handle edge cases React can't cover
+
+<Tip>
+You don't need to master manual DOM manipulation to use React. But understanding what's happening underneath makes you a better React developer. Think of this section as learning what your car engine does — you don't need to rebuild it, but knowing how it works helps when something goes wrong.
+</Tip>
+
+## DOM vs HTML
+
+The DOM is not your HTML file. The browser builds the DOM *from* your HTML, but they can differ:
+
+```html
+<!-- Your HTML file -->
+<div id="app"></div>
+```
+
+```javascript
+// JavaScript adds content that wasn't in the original HTML
+const app = document.querySelector("#app");
+app.innerHTML = "<h1>Hello!</h1><p>This wasn't in the HTML file</p>";
+```
+
+After this JavaScript runs, the DOM has an `h1` and `p` inside `#app`, but the HTML file still just says `<div id="app"></div>`. The DOM is the **live, current state** of the page.
+
+<Info>
+When you "View Source" in the browser, you see the original HTML. When you inspect with DevTools, you see the current DOM. They're often different because JavaScript modifies the DOM after the page loads.
+</Info>
+
+## What's next?
+
+Now that you know what the DOM is, let's learn the tool you'll use every day to inspect and debug it — browser DevTools.
+
+<Card title="Browser DevTools" icon="wrench" href="/dom-browser/dev-tools">
+Inspect, debug, and test your JavaScript in the browser
+</Card>

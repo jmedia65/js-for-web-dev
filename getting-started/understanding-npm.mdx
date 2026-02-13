@@ -3,16 +3,111 @@ title: "Understanding npm"
 description: "Learn how npm manages packages and dependencies for JavaScript projects"
 ---
 
-{/* TODO: Write npm content */}
+## What is npm?
 
-## What is npm
+npm (Node Package Manager) is JavaScript's package manager. It installs libraries, manages dependencies, and runs project scripts. It came bundled with Node.js when you installed it.
 
-{/* TODO: Package manager explanation */}
+If you've used `pip` in Python, npm is the same idea:
+
+| Python | JavaScript |
+|---|---|
+| `pip install requests` | `npm install axios` |
+| `requirements.txt` | `package.json` |
+| `pip freeze` | `npm list` |
+| `venv/` | `node_modules/` |
 
 ## package.json
 
-{/* TODO: What it is and what it contains */}
+Every JavaScript project has a `package.json` file. It describes your project and lists its dependencies — like a `requirements.txt` with extra features.
+
+```json package.json
+{
+  "name": "my-project",
+  "version": "1.0.0",
+  "description": "A practice JavaScript project",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "dependencies": {
+    "axios": "^1.6.0"
+  },
+  "devDependencies": {
+    "prettier": "^3.1.0"
+  }
+}
+```
+
+The key sections:
+- **name** and **version** — project identity
+- **scripts** — commands you can run with `npm run <name>`
+- **dependencies** — packages your app needs to run
+- **devDependencies** — packages you only need during development (linters, formatters, test tools)
 
 ## Installing packages
 
-{/* TODO: npm install, dev dependencies */}
+```bash
+# Install a package and add to dependencies
+npm install axios
+
+# Install a package as a dev dependency
+npm install --save-dev prettier
+
+# Install all dependencies listed in package.json
+npm install
+```
+
+When you run `npm install`, two things happen:
+1. The package code downloads into a `node_modules/` folder
+2. The package name and version are added to `package.json`
+
+<Warning>
+Never commit `node_modules/` to git. It can contain hundreds of megabytes of files. Add it to `.gitignore` and let each developer run `npm install` to download their own copy.
+</Warning>
+
+## Running scripts
+
+The `scripts` section in `package.json` lets you define shortcut commands:
+
+```json
+{
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js",
+    "format": "prettier --write ."
+  }
+}
+```
+
+```bash
+# Run a script
+npm run dev
+npm run format
+
+# "start" and "test" are special — no "run" needed
+npm start
+npm test
+```
+
+<Tip>
+When you see instructions like "run `npm run dev`" in a project's README, they're referring to a script defined in `package.json`. Check the `scripts` section to see what command it actually runs.
+</Tip>
+
+## package-lock.json
+
+When you install packages, npm also creates a `package-lock.json` file. This locks the exact versions of every package and sub-dependency so that everyone on your team gets identical installs.
+
+- **Do** commit `package-lock.json` to git
+- **Don't** edit it manually — npm manages it for you
+
+<Info>
+`package-lock.json` is like a more detailed version of `pip freeze > requirements.txt`. It ensures reproducible installs across different machines.
+</Info>
+
+## What's next?
+
+You know how npm works. Let's put it all together and set up a proper JavaScript project from scratch.
+
+<Card title="Project setup" icon="folder" href="/getting-started/project-setup">
+Initialize a JavaScript project and configure the basics
+</Card>

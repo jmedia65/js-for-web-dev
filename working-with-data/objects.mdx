@@ -3,28 +3,247 @@ title: "Objects"
 description: "Store data as key-value pairs with JavaScript objects"
 ---
 
-{/* TODO: Write objects content */}
+## What are objects?
 
-## Creating objects
+Objects store data as key-value pairs. They represent *things* — a user, a product, an API response, a configuration. If arrays are ordered lists, objects are labeled containers.
 
-{/* TODO: Object literal syntax */}
+```javascript
+const user = {
+  name: "Sarah Chen",
+  email: "sarah@example.com",
+  age: 28,
+  isAdmin: true,
+};
+
+console.log(user.name);  // "Sarah Chen"
+console.log(user.email); // "sarah@example.com"
+```
+
+<Tabs>
+<Tab title="JavaScript">
+```javascript
+const user = {
+  name: "Sarah",
+  age: 28,
+  role: "admin",
+};
+```
+</Tab>
+
+<Tab title="Python">
+```python
+user = {
+    "name": "Sarah",
+    "age": 28,
+    "role": "admin",
+}
+```
+</Tab>
+</Tabs>
+
+JavaScript objects are like Python dictionaries, but keys don't need quotes (unless they contain special characters or spaces).
 
 ## Accessing properties
 
-{/* TODO: Dot notation and bracket notation */}
+Two ways to access object properties:
+
+```javascript
+const user = { name: "Sarah", age: 28, role: "admin" };
+
+// Dot notation — use when you know the property name
+console.log(user.name); // "Sarah"
+console.log(user.age);  // 28
+
+// Bracket notation — use with variables or special characters
+console.log(user["role"]); // "admin"
+
+const field = "name";
+console.log(user[field]); // "Sarah" — dynamic access
+```
+
+<Tip>
+Use dot notation by default — it's cleaner and easier to read. Use bracket notation when the property name is stored in a variable or contains characters like hyphens or spaces.
+</Tip>
+
+### Accessing nested properties
+
+```javascript
+const order = {
+  id: "ORD-001",
+  customer: {
+    name: "Sarah Chen",
+    address: {
+      city: "Portland",
+      state: "OR",
+    },
+  },
+  items: [
+    { name: "Laptop", price: 999 },
+    { name: "Mouse", price: 29 },
+  ],
+};
+
+console.log(order.customer.name);           // "Sarah Chen"
+console.log(order.customer.address.city);   // "Portland"
+console.log(order.items[0].name);           // "Laptop"
+console.log(order.items.length);            // 2
+```
+
+### Optional chaining
+
+When you're not sure a nested property exists, use `?.` to avoid errors:
+
+```javascript
+const user = { name: "Sarah", address: null };
+
+// ❌ Without optional chaining — crashes
+console.log(user.address.city); // TypeError: Cannot read properties of null
+
+// ✅ With optional chaining — returns undefined
+console.log(user.address?.city); // undefined
+console.log(user.preferences?.theme); // undefined
+```
+
+<Warning>
+API responses often have missing or null fields. Use optional chaining `?.` whenever you access nested properties from external data. It prevents "Cannot read properties of undefined" — one of the most common JavaScript errors.
+</Warning>
 
 ## Adding and updating properties
 
-{/* TODO: Dynamic property access */}
+```javascript
+const user = { name: "Sarah", age: 28 };
 
-## Methods
+// Update existing property
+user.age = 29;
 
-{/* TODO: Functions as object properties */}
+// Add new properties
+user.email = "sarah@example.com";
+user.role = "admin";
 
-## Comparing to Python dicts
+console.log(user);
+// { name: "Sarah", age: 29, email: "sarah@example.com", role: "admin" }
+```
 
-{/* TODO: Tabs component with JS vs Python */}
+```javascript
+// Delete a property
+delete user.role;
+console.log(user.role); // undefined
+```
+
+<Info>
+Remember: even though `user` is declared with `const`, you can still modify its properties. `const` prevents reassigning the variable itself (`user = something`), not modifying the object's contents. We covered this in the [Variables](/javascript-core/variables) lesson.
+</Info>
+
+## Checking if a property exists
+
+```javascript
+const user = { name: "Sarah", email: "sarah@example.com", age: undefined };
+
+// "in" operator — checks if the key exists (even if value is undefined)
+console.log("name" in user);    // true
+console.log("role" in user);    // false
+console.log("age" in user);     // true (key exists, value is undefined)
+
+// Comparing to undefined — can't distinguish "missing" from "set to undefined"
+console.log(user.role !== undefined); // false
+console.log(user.age !== undefined);  // false (misleading!)
+```
+
+<Tip>
+Use the `in` operator when you need to know if a key exists, regardless of its value. Use direct comparison when you just care about whether the value is usable.
+</Tip>
+
+## Iterating over objects
+
+```javascript
+const user = { name: "Sarah", age: 28, role: "admin" };
+
+// Get all keys
+console.log(Object.keys(user));   // ["name", "age", "role"]
+
+// Get all values
+console.log(Object.values(user)); // ["Sarah", 28, "admin"]
+
+// Get key-value pairs
+console.log(Object.entries(user)); // [["name", "Sarah"], ["age", 28], ["role", "admin"]]
+
+// Loop through entries
+for (const [key, value] of Object.entries(user)) {
+  console.log(`${key}: ${value}`);
+}
+// name: Sarah
+// age: 28
+// role: admin
+```
+
+<Tabs>
+<Tab title="JavaScript">
+```javascript
+for (const [key, value] of Object.entries(user)) {
+  console.log(`${key}: ${value}`);
+}
+```
+</Tab>
+
+<Tab title="Python">
+```python
+for key, value in user.items():
+    print(f"{key}: {value}")
+```
+</Tab>
+</Tabs>
+
+`Object.entries()` is JavaScript's equivalent of Python's `.items()`.
+
+## Shorthand property names
+
+When a variable name matches the property name, you can use a shorthand:
+
+```javascript
+const name = "Sarah";
+const age = 28;
+const role = "admin";
+
+// ❌ Long form
+const user = { name: name, age: age, role: role };
+
+// ✅ Shorthand — same result
+const user = { name, age, role };
+
+console.log(user); // { name: "Sarah", age: 28, role: "admin" }
+```
+
+You'll see this pattern everywhere — especially when returning data from functions or building objects from variables.
+
+## Methods (functions on objects)
+
+Objects can contain functions. When a function is on an object, it's called a method:
+
+```javascript
+const calculator = {
+  add(a, b) {
+    return a + b;
+  },
+  subtract(a, b) {
+    return a - b;
+  },
+  multiply(a, b) {
+    return a * b;
+  },
+};
+
+console.log(calculator.add(5, 3));      // 8
+console.log(calculator.multiply(4, 7)); // 28
+```
+
+<Info>
+In this course, you won't write many object methods yourself. React components use functions and hooks instead. But you'll see methods on built-in objects (`Math.round()`, `JSON.parse()`, `console.log()`) and on API response objects.
+</Info>
 
 ## What's next?
 
-{/* TODO: Card linking to destructuring */}
+You can create and work with objects. Now let's learn destructuring — a cleaner way to extract values from objects and arrays.
+
+<Card title="Destructuring" icon="scissors" href="/working-with-data/destructuring">
+Extract values into individual variables
+</Card>

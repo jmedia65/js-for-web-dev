@@ -3,20 +3,170 @@ title: "Callbacks"
 description: "Understand the original async pattern in JavaScript and why we moved on"
 ---
 
-{/* TODO: Write callbacks content */}
+## What is a callback?
 
-## What are callbacks
+A callback is a function you pass to another function, to be called later when something finishes. You've already used them — `.map()`, `.filter()`, and `.forEach()` all take callbacks.
 
-{/* TODO: Functions passed as arguments */}
+```javascript
+// You already know callbacks
+const numbers = [1, 2, 3];
+numbers.forEach(function(num) {  // This function is a callback
+  console.log(num);
+});
+
+// Arrow function version (same thing)
+numbers.forEach(num => console.log(num));
+```
+
+For async operations, callbacks work the same way: "When this async task finishes, call this function with the result."
+
+```javascript
+// setTimeout uses a callback
+console.log("Starting timer...");
+
+setTimeout(() => {
+  console.log("Timer finished!"); // Called after 2 seconds
+}, 2000);
+
+console.log("Timer is running in the background...");
+
+// Output:
+// Starting timer...
+// Timer is running in the background...
+// Timer finished!               ← 2 seconds later
+```
+
+## Callbacks for async operations
+
+Before `fetch`, JavaScript used `XMLHttpRequest` with callbacks. Here's what async code looked like with callbacks:
+
+```javascript
+// Simulating async API calls with callbacks
+function getUser(userId, callback) {
+  setTimeout(() => {
+    const user = { id: userId, name: "Sarah Chen", role: "admin" };
+    callback(user); // Call the callback with the result
+  }, 1000);
+}
+
+// Usage
+getUser(1, function(user) {
+  console.log(user.name); // "Sarah Chen" — runs after 1 second
+});
+```
+
+The pattern: pass a function that receives the result. The async operation calls your function when it's done.
+
+## The error-first callback pattern
+
+Node.js standardized a pattern: the first argument to a callback is always the error (or `null` if no error).
+
+```javascript
+function getUser(userId, callback) {
+  setTimeout(() => {
+    if (userId <= 0) {
+      callback(new Error("Invalid user ID"), null);
+      return;
+    }
+    const user = { id: userId, name: "Sarah Chen" };
+    callback(null, user); // null = no error
+  }, 1000);
+}
+
+// Usage
+getUser(1, function(error, user) {
+  if (error) {
+    console.error("Failed:", error.message);
+    return;
+  }
+  console.log(user.name); // "Sarah Chen"
+});
+```
+
+<Info>
+The error-first pattern (`callback(error, result)`) is a convention, not a language feature. Node.js APIs follow this pattern, but browser APIs like `fetch` use Promises instead.
+</Info>
 
 ## Callback hell
 
-{/* TODO: Nested callbacks problem */}
+The real problem shows up when you need multiple async operations that depend on each other — get a user, then get their orders, then get the order details:
 
-## Why we moved on
+```javascript
+// ❌ Callback hell — nested callbacks
+getUser(1, function(error, user) {
+  if (error) {
+    console.error(error);
+    return;
+  }
+  getOrders(user.id, function(error, orders) {
+    if (error) {
+      console.error(error);
+      return;
+    }
+    getOrderDetails(orders[0].id, function(error, details) {
+      if (error) {
+        console.error(error);
+        return;
+      }
+      console.log(details);
+      // Need more? Keep nesting...
+    });
+  });
+});
+```
 
-{/* TODO: Transition to promises */}
+This is called **callback hell** or the "pyramid of doom." Every dependent async operation adds another level of nesting. It's:
+
+- Hard to read
+- Hard to debug
+- Hard to handle errors properly
+- Easy to make mistakes
+
+Compare the same logic with the modern approach you'll learn soon:
+
+```javascript
+// ✅ async/await — flat, readable
+try {
+  const user = await getUser(1);
+  const orders = await getOrders(user.id);
+  const details = await getOrderDetails(orders[0].id);
+  console.log(details);
+} catch (error) {
+  console.error(error);
+}
+```
+
+Same logic, no nesting, clean error handling. This is where we're headed.
+
+## Where you'll still see callbacks
+
+Callbacks aren't dead. You'll use them for:
+
+```javascript
+// Event listeners
+button.addEventListener("click", () => {
+  console.log("Button clicked!");
+});
+
+// Array methods
+const names = users.map(user => user.name);
+
+// setTimeout / setInterval
+setTimeout(() => {
+  console.log("Delayed action");
+}, 1000);
+```
+
+These are fine because they're not being nested. The problem was using callbacks for **sequential async operations**.
+
+<Tip>
+You don't need to master callbacks for async work. The point of this lesson is to understand *why* Promises and async/await were created. For actual async code, you'll use async/await.
+</Tip>
 
 ## What's next?
 
-{/* TODO: Card linking to promises */}
+Promises were invented to solve callback hell. They give async operations a cleaner interface and let you chain operations without nesting.
+
+<Card title="Promises" icon="handshake" href="/async-apis/promises">
+Handle async operations with a cleaner pattern
+</Card>

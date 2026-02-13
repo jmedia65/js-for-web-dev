@@ -3,16 +3,187 @@ title: "Delete operation"
 description: "Remove records with confirmation and proper error handling"
 ---
 
-{/* TODO: Write delete operation content */}
+## Always confirm first
 
-## Confirmation pattern
+Deletion is the one operation you can't undo. Always ask the user to confirm before deleting.
 
-{/* TODO: Are you sure? dialog */}
+<Tabs>
+<Tab title="Backend (Python)">
+```python
+@app.delete("/api/users/{user_id}", status_code=204)
+def delete_user(user_id: int):
+    user = find_user(user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    users.remove(user)
+    # Returns nothing (204 No Content)
+```
+</Tab>
+<Tab title="API Client (JS)">
+```jsx
+export async function deleteUser(id) {
+  const response = await fetch(`${API_URL}/api/users/${id}`, {
+    method: "DELETE",
+  });
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+}
+```
+</Tab>
+</Tabs>
 
-## Sending the delete request
+## Simple confirmation with window.confirm
 
-{/* TODO: DELETE request with fetch */}
+The quickest approach — a browser-native confirmation dialog:
 
-## Updating the UI after deletion
+```jsx
+function UserCard({ user, onDelete }) {
+  const [deleting, setDeleting] = useState(false);
 
-{/* TODO: Removing item from state */}
+  async function handleDelete() {
+    if (!window.confirm(`Delete ${user.name}? This can't be undone.`)) {
+      return; // User clicked Cancel
+    }
+
+    setDeleting(true);
+    try {
+      await deleteUser(user.id);
+      onDelete(user.id);
+    } catch (err) {
+      alert(`Failed to delete: ${err.message}`);
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  return (
+    <div className="user-card">
+      <h3>{user.name}</h3>
+      <p>{user.email}</p>
+      <button onClick={handleDelete} disabled={deleting}>
+        {deleting ? "Deleting..." : "Delete"}
+      </button>
+    </div>
+  );
+}
+```
+
+`window.confirm()` is perfectly fine for admin tools and internal apps. It's ugly but it works.
+
+## Custom confirmation UI
+
+For a better user experience, build your own confirmation:
+
+```jsx
+function UserCard({ user, onDelete }) {
+  const [confirming, setConfirming] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [error, setError] = useState(null);
+
+  async function handleConfirmedDelete() {
+    setDeleting(true);
+    setError(null);
+
+    try {
+      await deleteUser(user.id);
+      onDelete(user.id);
+    } catch (err) {
+      setError(err.message);
+      setConfirming(false);
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  return (
+    <div className="user-card">
+      <h3>{user.name}</h3>
+      <p>{user.email}</p>
+
+      {error && <p className="error">{error}</p>}
+
+      {confirming ? (
+        <div className="confirm-delete">
+          <p>Delete {user.name}?</p>
+          <button
+            onClick={handleConfirmedDelete}
+            disabled={deleting}
+            className="btn-danger"
+          >
+            {deleting ? "Deleting..." : "Yes, delete"}
+          </button>
+          <button onClick={() => setConfirming(false)}>
+            Cancel
+          </button>
+        </div>
+      ) : (
+        <button onClick={() => setConfirming(true)}>
+          Delete
+        </button>
+      )}
+    </div>
+  );
+}
+```
+
+Two states: `confirming` (are we showing the confirmation?) and `deleting` (is the API call in progress?). The user clicks Delete → sees "Yes, delete" / "Cancel" → confirms → item is removed.
+
+## Updating the parent's state
+
+The parent removes the deleted item from its list:
+
+```jsx
+function UserDashboard() {
+  const [users, setUsers] = useState([]);
+
+  function handleDelete(userId) {
+    setUsers(prev => prev.filter(u => u.id !== userId));
+  }
+
+  return (
+    <div>
+      {users.map(user => (
+        <UserCard
+          key={user.id}
+          user={user}
+          onDelete={handleDelete}
+        />
+      ))}
+    </div>
+  );
+}
+```
+
+`.filter()` creates a new array without the deleted item. This is the standard pattern for removing items from a list in React.
+
+<Info>
+`prev.filter(u => u.id !== userId)` keeps every user whose ID does NOT match the deleted one. Simple, immutable, and correct. You'll use this pattern alongside `.map()` for updates and `[...prev, newItem]` for creates.
+</Info>
+
+## The three state update patterns
+
+You now have all the CRUD state updates:
+
+```jsx
+// CREATE — add to the end
+setUsers(prev => [...prev, newUser]);
+
+// UPDATE — replace the matching item
+setUsers(prev => prev.map(u => u.id === updated.id ? updated : u));
+
+// DELETE — remove the matching item
+setUsers(prev => prev.filter(u => u.id !== userId));
+```
+
+These three lines are the entire state management for a CRUD application. Memorize them — you'll write them in every project.
+
+<Tip>
+All three patterns create new arrays instead of modifying the existing one. This is immutable state updates — React requires this to detect changes and re-render. Never use `.push()`, `.splice()`, or direct assignment on state arrays.
+</Tip>
+
+## What's next?
+
+You've built all four CRUD operations. Now let's see the complete picture — a full example with everything wired together from backend to frontend.
+
+<Card title="Full example walkthrough" icon="code" href="/full-stack/full-example-walkthrough">
+See a complete CRUD application with React and FastAPI working together
+</Card>

@@ -3,24 +3,262 @@ title: "Props"
 description: "Pass data between React components using props"
 ---
 
-{/* TODO: Write props content */}
+## Components need data
 
-## Passing data to components
+A `UserCard` that always shows "Sarah Chen" isn't useful. Props let you pass different data to the same component, making it reusable.
 
-{/* TODO: Props as function parameters */}
+```jsx
+// Without props — hardcoded, not reusable
+function UserCard() {
+  return <h2>Sarah Chen</h2>;
+}
 
-## Destructuring props
+// With props — dynamic, reusable
+function UserCard({ name, email }) {
+  return (
+    <div>
+      <h2>{name}</h2>
+      <p>{email}</p>
+    </div>
+  );
+}
 
-{/* TODO: { name, email } pattern */}
+// Use it with different data
+<UserCard name="Sarah Chen" email="sarah@example.com" />
+<UserCard name="John Park" email="john@example.com" />
+```
 
-## Children prop
+Props are to React components what arguments are to functions. Same component, different data, different output.
 
-{/* TODO: Wrapping content */}
+## How props work
+
+Props are passed as attributes in JSX and received as an object parameter:
+
+```jsx
+// Parent passes props
+<UserCard name="Sarah Chen" age={28} isAdmin={true} />
+
+// Child receives props as an object
+function UserCard(props) {
+  return (
+    <div>
+      <h2>{props.name}</h2>
+      <p>Age: {props.age}</p>
+      {props.isAdmin && <span>Admin</span>}
+    </div>
+  );
+}
+```
+
+### Destructuring props (preferred)
+
+Instead of `props.name`, `props.age`, destructure in the parameter:
+
+```jsx
+// ✅ Cleaner — destructure in the parameter
+function UserCard({ name, age, isAdmin }) {
+  return (
+    <div>
+      <h2>{name}</h2>
+      <p>Age: {age}</p>
+      {isAdmin && <span>Admin</span>}
+    </div>
+  );
+}
+```
+
+This is the standard pattern in React. You'll see it in almost every component.
+
+## What you can pass as props
+
+Anything that's a valid JavaScript value:
+
+```jsx
+// Strings
+<UserCard name="Sarah Chen" />
+
+// Numbers
+<UserCard age={28} />
+
+// Booleans
+<UserCard isAdmin={true} />
+<UserCard isAdmin />        {/* shorthand for isAdmin={true} */}
+
+// Arrays
+<TagList tags={["react", "javascript", "python"]} />
+
+// Objects
+<UserCard user={{ name: "Sarah", email: "sarah@example.com" }} />
+
+// Functions
+<Button onClick={() => console.log("clicked")} />
+
+// Components
+<Layout header={<Navbar />} />
+```
+
+<Info>
+Strings use quotes: `name="Sarah"`. Everything else uses curly braces: `age={28}`, `isAdmin={true}`, `items={[1,2,3]}`. This is because `{}` is how you embed JavaScript in JSX.
+</Info>
 
 ## Default props
 
-{/* TODO: Default parameter values */}
+Use default parameter values for props that are optional:
+
+```jsx
+function Button({ label = "Click me", variant = "primary", size = "md" }) {
+  return (
+    <button className={`btn btn-${variant} btn-${size}`}>
+      {label}
+    </button>
+  );
+}
+
+// All props optional with defaults
+<Button />                              // "Click me", primary, md
+<Button label="Save" />                 // "Save", primary, md
+<Button label="Delete" variant="danger" /> // "Delete", danger, md
+```
+
+## The children prop
+
+Content between opening and closing tags becomes the `children` prop:
+
+```jsx
+function Card({ children, title }) {
+  return (
+    <div className="card">
+      <h3>{title}</h3>
+      <div className="card-body">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+// Usage — anything between tags is children
+<Card title="User Profile">
+  <p>Name: Sarah Chen</p>
+  <p>Role: Admin</p>
+  <button>Edit Profile</button>
+</Card>
+```
+
+`children` is how you build wrapper/layout components. The parent decides the structure, the child provides the content.
+
+### Common layout pattern
+
+```jsx
+function PageLayout({ children }) {
+  return (
+    <div className="page">
+      <Navbar />
+      <main className="content">
+        {children}
+      </main>
+      <Footer />
+    </div>
+  );
+}
+
+// Usage
+<PageLayout>
+  <h1>Dashboard</h1>
+  <UserList />
+</PageLayout>
+```
+
+## Props are read-only
+
+Components must never modify their props. Props flow **down** from parent to child. A child can read them but not change them.
+
+```jsx
+// ❌ Never do this
+function UserCard({ name }) {
+  name = "Modified"; // Don't modify props!
+  return <h2>{name}</h2>;
+}
+
+// ✅ If you need to change data, use state (next lesson)
+function UserCard({ name }) {
+  const [displayName, setDisplayName] = useState(name);
+  return <h2>{displayName}</h2>;
+}
+```
+
+<Warning>
+Props are **read-only**. If a component needs to change data, it should use state (with `useState`). Props are for passing data down; state is for managing data that changes.
+</Warning>
+
+## Props vs state
+
+| | Props | State |
+|---|---|---|
+| **Defined by** | Parent component | The component itself |
+| **Can change?** | No (read-only) | Yes (via setter function) |
+| **Triggers re-render?** | Yes (when parent passes new values) | Yes (when setter is called) |
+| **Purpose** | Configure a component from outside | Manage data that changes over time |
+
+Think of it like a function: props are the arguments passed in, state is the local variables inside.
+
+## Passing props down multiple levels
+
+Props flow from parent → child → grandchild:
+
+```jsx
+function App() {
+  const user = { name: "Sarah Chen", role: "Admin" };
+  return <Dashboard user={user} />;
+}
+
+function Dashboard({ user }) {
+  return (
+    <div>
+      <h1>Dashboard</h1>
+      <UserCard name={user.name} role={user.role} />
+    </div>
+  );
+}
+
+function UserCard({ name, role }) {
+  return (
+    <div>
+      <h2>{name}</h2>
+      <span>{role}</span>
+    </div>
+  );
+}
+```
+
+<Tip>
+If you find yourself passing props through many levels (prop drilling), it's a sign you might need to restructure your components or use React Context. For now, 2-3 levels of prop passing is perfectly fine.
+</Tip>
+
+## Spreading props
+
+When you need to pass many props, spread them:
+
+```jsx
+const userProps = {
+  name: "Sarah Chen",
+  email: "sarah@example.com",
+  role: "Admin",
+  isActive: true,
+};
+
+// Instead of listing each one
+<UserCard name={userProps.name} email={userProps.email} role={userProps.role} isActive={userProps.isActive} />
+
+// Spread them
+<UserCard {...userProps} />
+```
+
+Useful when passing API data directly to a component.
 
 ## What's next?
 
-{/* TODO: Card linking to use-state */}
+Props let you pass data *into* components. But what about data that changes over time — form inputs, toggle states, fetched data? That's what state is for.
+
+<Card title="Managing state with useState" icon="database" href="/react-essentials/use-state">
+Add interactive, dynamic data to your components
+</Card>

@@ -3,24 +3,190 @@ title: "JSON basics"
 description: "Understand JSON format and how to convert between JSON and JavaScript objects"
 ---
 
-{/* TODO: Write JSON content */}
+## What is JSON?
 
-## What is JSON
+JSON (JavaScript Object Notation) is a text format for exchanging data between systems. When your React frontend talks to your FastAPI backend, the data travels as JSON strings over HTTP.
 
-{/* TODO: Data interchange format */}
+```json
+{
+  "name": "Sarah Chen",
+  "email": "sarah@example.com",
+  "age": 28,
+  "roles": ["admin", "editor"],
+  "active": true
+}
+```
 
-## JSON.stringify()
+JSON looks like a JavaScript object, but it's a **string**. Every key must be in double quotes. No trailing commas, no comments, no functions — just data.
 
-{/* TODO: Object to JSON string */}
+<Info>
+JSON is language-independent. Python uses `json.dumps()` and `json.loads()`. JavaScript uses `JSON.stringify()` and `JSON.parse()`. FastAPI automatically converts Pydantic models to JSON responses.
+</Info>
 
-## JSON.parse()
+## JSON.stringify() — object to string
 
-{/* TODO: JSON string to object */}
+Convert a JavaScript object into a JSON string. You do this when **sending** data to an API.
+
+```javascript
+const user = {
+  name: "Sarah Chen",
+  age: 28,
+  isAdmin: true,
+  tags: ["developer", "admin"],
+};
+
+const jsonString = JSON.stringify(user);
+console.log(jsonString);
+// '{"name":"Sarah Chen","age":28,"isAdmin":true,"tags":["developer","admin"]}'
+
+console.log(typeof jsonString); // "string"
+```
+
+### Pretty printing
+
+```javascript
+// Readable format with 2-space indentation
+const pretty = JSON.stringify(user, null, 2);
+console.log(pretty);
+// {
+//   "name": "Sarah Chen",
+//   "age": 28,
+//   "isAdmin": true,
+//   "tags": [
+//     "developer",
+//     "admin"
+//   ]
+// }
+```
+
+The third argument controls indentation. Useful for debugging and logging.
+
+### Where you'll use it
+
+```javascript
+// Sending data to your FastAPI backend
+const response = await fetch("http://localhost:8000/api/users", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ name: "Sarah", email: "sarah@example.com" }),
+});
+```
+
+The `body` of a fetch request must be a string. `JSON.stringify()` converts your object to the JSON string the server expects.
+
+## JSON.parse() — string to object
+
+Convert a JSON string back into a JavaScript object. You do this when **receiving** data from an API.
+
+```javascript
+const jsonString = '{"name":"Sarah Chen","age":28,"isAdmin":true}';
+
+const user = JSON.parse(jsonString);
+console.log(user.name);    // "Sarah Chen"
+console.log(user.age);     // 28
+console.log(user.isAdmin); // true
+console.log(typeof user);  // "object"
+```
+
+### Where you'll use it
+
+```javascript
+// Reading data from your FastAPI backend
+const response = await fetch("http://localhost:8000/api/users");
+const users = await response.json(); // This calls JSON.parse() internally
+
+console.log(users); // Array of user objects
+```
+
+<Tip>
+You rarely call `JSON.parse()` directly. The `response.json()` method from `fetch` does it for you. But you'll use `JSON.parse()` when reading from localStorage or processing raw JSON strings.
+</Tip>
+
+## JSON and localStorage
+
+`localStorage` can only store strings. Use `JSON.stringify()` and `JSON.parse()` to save and load objects:
+
+```javascript
+// Save to localStorage
+const settings = { theme: "dark", fontSize: 16 };
+localStorage.setItem("settings", JSON.stringify(settings));
+
+// Load from localStorage
+const saved = localStorage.getItem("settings");
+const loadedSettings = JSON.parse(saved);
+console.log(loadedSettings.theme); // "dark"
+```
+
+## What JSON can't store
+
+JSON only supports a subset of JavaScript data types:
+
+| Supported | Not supported |
+|---|---|
+| Strings, numbers, booleans | `undefined` |
+| `null` | Functions |
+| Arrays | `Date` objects (become strings) |
+| Plain objects | `Map`, `Set` |
+
+```javascript
+const data = {
+  name: "Sarah",
+  callback: function() {},  // Dropped
+  date: new Date(),          // Becomes a string
+  nothing: undefined,        // Dropped
+};
+
+console.log(JSON.stringify(data));
+// '{"name":"Sarah","date":"2024-01-15T12:00:00.000Z"}'
+```
+
+<Warning>
+`undefined` and functions are silently dropped during `JSON.stringify()`. Dates become ISO strings. If you `JSON.parse()` a date string, you get a string back — not a Date object. Convert it manually with `new Date(dateString)`.
+</Warning>
 
 ## Common mistakes
 
-{/* TODO: Forgetting to parse API responses */}
+<AccordionGroup>
+<Accordion title="Parsing a value that's already an object">
+```javascript
+// ❌ Wrong: response.json() already parsed it
+const response = await fetch("/api/users");
+const data = await response.json();
+const users = JSON.parse(data); // Error! data is already an object
+
+// ✅ Correct: response.json() handles the parsing
+const response = await fetch("/api/users");
+const users = await response.json(); // Already an object
+```
+
+<Warning>
+`response.json()` calls `JSON.parse()` internally. Don't double-parse. If you have an object, you don't need `JSON.parse()`. If you have a string, you do.
+</Warning>
+</Accordion>
+
+<Accordion title="Forgetting to stringify when saving to localStorage">
+```javascript
+// ❌ Wrong: Saving object directly
+const user = { name: "Sarah", age: 28 };
+localStorage.setItem("user", user);
+console.log(localStorage.getItem("user")); // "[object Object]" — useless
+
+// ✅ Correct: Stringify first
+localStorage.setItem("user", JSON.stringify(user));
+const loaded = JSON.parse(localStorage.getItem("user"));
+console.log(loaded.name); // "Sarah"
+```
+
+<Warning>
+localStorage only stores strings. If you pass an object, JavaScript calls `.toString()` on it, which gives you the useless string `"[object Object]"`. Always stringify.
+</Warning>
+</Accordion>
+</AccordionGroup>
 
 ## What's next?
 
-{/* TODO: Card linking to conditionals */}
+You can convert data between JavaScript objects and JSON strings. Now let's learn how to make decisions in your code with conditionals.
+
+<Card title="Conditionals" icon="code-branch" href="/working-with-data/conditionals">
+if/else, ternary operators, and logical operators
+</Card>

@@ -3,20 +3,225 @@ title: "Conditional rendering"
 description: "Show different UI based on state and conditions"
 ---
 
-{/* TODO: Write conditional rendering content */}
+## Showing the right thing at the right time
 
-## If/else with && and ternary
+React apps constantly need to show different UI based on conditions: a spinner while loading, an error message if something failed, a login button if the user isn't authenticated. This is conditional rendering.
 
-{/* TODO: Inline conditional patterns */}
+You already know the JavaScript for this — ternary operators, `&&`, and if/else from the conditionals lesson. In React, you use the same patterns inside JSX.
 
-## Showing/hiding components
+## && — show something or nothing
 
-{/* TODO: Conditional display */}
+The most common pattern. Show an element if a condition is true, nothing if false:
 
-## Showing loading states
+```jsx
+function UserCard({ user }) {
+  return (
+    <div className="user-card">
+      <h2>{user.name}</h2>
+      <p>{user.email}</p>
+      {user.isAdmin && <span className="badge">Admin</span>}
+      {user.bio && <p className="bio">{user.bio}</p>}
+    </div>
+  );
+}
+```
 
-{/* TODO: isLoading pattern */}
+`&&` is perfect when you want to either show something or show nothing. If the left side is truthy, the right side renders. If falsy, nothing renders.
+
+<Warning>
+Watch out for `0 && <Component />`. Because `0` is falsy, React renders the number `0` on the page instead of nothing. Use `count > 0 && <Component />` instead of `count && <Component />`.
+</Warning>
+
+## Ternary — show one thing or another
+
+When you need to choose between two different outputs:
+
+```jsx
+function UserGreeting({ user }) {
+  return (
+    <div>
+      {user ? (
+        <h1>Welcome back, {user.name}!</h1>
+      ) : (
+        <h1>Please log in</h1>
+      )}
+    </div>
+  );
+}
+```
+
+```jsx
+// Inline ternary for simple cases
+<button className={isActive ? "btn-primary" : "btn-secondary"}>
+  {isActive ? "Active" : "Inactive"}
+</button>
+
+// Conditional styles
+<div style={{ color: error ? "red" : "green" }}>
+  {error ? error : "All good!"}
+</div>
+```
+
+<Tip>
+Use `&&` when you have a show/hide situation. Use ternary when you have an either/or situation. Keep ternaries simple — if the logic gets complex, extract it to a variable or use early returns.
+</Tip>
+
+## Early returns — the cleanest pattern
+
+For loading, error, and empty states, use early returns at the top of your component:
+
+```jsx
+function UserList() {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // ... useEffect to fetch data ...
+
+  // Early returns — check each state
+  if (loading) return <Spinner />;
+  if (error) return <ErrorMessage message={error} />;
+  if (users.length === 0) return <p>No users found.</p>;
+
+  // Main render — only reached when we have data
+  return (
+    <ul>
+      {users.map(user => (
+        <li key={user.id}>{user.name}</li>
+      ))}
+    </ul>
+  );
+}
+```
+
+This is the standard pattern for data-fetching components. Check states in order of priority: loading → error → empty → data.
+
+## The loading / error / data pattern
+
+You'll write this in almost every component that fetches data:
+
+```jsx
+function ProductPage({ productId }) {
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    async function loadProduct() {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await fetch(`/api/products/${productId}`);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        setProduct(await response.json());
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadProduct();
+  }, [productId]);
+
+  if (loading) return <p>Loading product...</p>;
+  if (error) return <p>Error: {error}</p>;
+  if (!product) return <p>Product not found</p>;
+
+  return (
+    <div>
+      <h1>{product.name}</h1>
+      <p>${product.price}</p>
+      <p>{product.description}</p>
+      {product.inStock ? (
+        <button>Add to Cart</button>
+      ) : (
+        <p className="out-of-stock">Out of Stock</p>
+      )}
+    </div>
+  );
+}
+```
+
+## Conditional CSS classes
+
+```jsx
+// Toggle a class
+<div className={`card ${isSelected ? "selected" : ""}`}>
+
+// Multiple conditional classes
+<button className={[
+  "btn",
+  variant === "primary" ? "btn-primary" : "btn-secondary",
+  size === "lg" ? "btn-lg" : "",
+  disabled ? "btn-disabled" : "",
+].filter(Boolean).join(" ")}>
+  {label}
+</button>
+```
+
+<Tip>
+For complex class logic, consider a utility like `clsx` or `classnames`: `className={clsx("btn", isPrimary && "btn-primary", isLarge && "btn-lg")}`. It's cleaner than manual string concatenation.
+</Tip>
+
+## Conditional rendering with variables
+
+For more complex conditions, compute the JSX before the return:
+
+```jsx
+function StatusBadge({ status }) {
+  let badge;
+
+  if (status === "active") {
+    badge = <span className="badge green">Active</span>;
+  } else if (status === "pending") {
+    badge = <span className="badge yellow">Pending</span>;
+  } else if (status === "inactive") {
+    badge = <span className="badge red">Inactive</span>;
+  } else {
+    badge = <span className="badge gray">Unknown</span>;
+  }
+
+  return <div className="status">{badge}</div>;
+}
+```
+
+Or with an object lookup (cleaner for many cases):
+
+```jsx
+function StatusBadge({ status }) {
+  const badges = {
+    active: { className: "green", label: "Active" },
+    pending: { className: "yellow", label: "Pending" },
+    inactive: { className: "red", label: "Inactive" },
+  };
+
+  const badge = badges[status] || { className: "gray", label: "Unknown" };
+
+  return (
+    <span className={`badge ${badge.className}`}>
+      {badge.label}
+    </span>
+  );
+}
+```
+
+## Preventing rendering with null
+
+Return `null` to render nothing:
+
+```jsx
+function Notification({ message }) {
+  if (!message) return null; // Don't render at all
+
+  return <div className="notification">{message}</div>;
+}
+```
 
 ## What's next?
 
-{/* TODO: Card linking to list-rendering */}
+You can show and hide UI based on conditions. Now let's learn how to render lists of data — the most common thing you'll do with API responses.
+
+<Card title="List rendering" icon="list" href="/react-essentials/list-rendering">
+Render arrays of data as lists of components
+</Card>

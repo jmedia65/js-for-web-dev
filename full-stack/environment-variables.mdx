@@ -3,16 +3,162 @@ title: "Environment variables"
 description: "Manage configuration and secrets across development and production"
 ---
 
-{/* TODO: Write environment variables content */}
+## Don't hardcode URLs
+
+In the previous lesson, the frontend had `http://localhost:8000` hardcoded. This breaks the moment you deploy — your production API isn't at localhost. Environment variables let you configure these values per environment.
+
+```jsx
+// ❌ Hardcoded — only works locally
+fetch("http://localhost:8000/api/users")
+
+// ✅ Environment variable — works everywhere
+fetch(`${import.meta.env.VITE_API_URL}/api/users`)
+```
 
 ## .env files
 
-{/* TODO: Creating and using .env */}
+An `.env` file stores key-value pairs that your application reads at startup:
 
-## Vite environment variables
+```bash
+# frontend/.env
+VITE_API_URL=http://localhost:8000
+```
 
-{/* TODO: VITE_ prefix requirement */}
+```bash
+# backend/.env
+DATABASE_URL=postgresql://user:pass@localhost:5432/mydb
+SECRET_KEY=your-secret-key-here
+```
 
-## .env.example template
+Each line is `KEY=VALUE`. No spaces around the `=`. No quotes needed (unless the value contains spaces).
 
-{/* TODO: Documenting required variables */}
+<Warning>
+Never commit `.env` files to Git. They contain secrets like database passwords and API keys. Add `.env` to your `.gitignore` file. Always.
+</Warning>
+
+## Vite environment variables (frontend)
+
+Vite has one important rule: **frontend environment variables must start with `VITE_`**.
+
+```bash
+# frontend/.env
+VITE_API_URL=http://localhost:8000
+VITE_APP_NAME=My App
+
+# ❌ This WON'T be available in your React code
+SECRET_KEY=abc123
+```
+
+Access them in your React code with `import.meta.env`:
+
+```jsx
+// ✅ Available — starts with VITE_
+console.log(import.meta.env.VITE_API_URL);
+// "http://localhost:8000"
+
+// ❌ Undefined — doesn't start with VITE_
+console.log(import.meta.env.SECRET_KEY);
+// undefined
+```
+
+<Info>
+The `VITE_` prefix is a security feature. Your React code gets bundled and sent to the user's browser — anyone can read it. The prefix prevents you from accidentally exposing secrets like `DATABASE_URL` or `SECRET_KEY` in your frontend bundle. Only variables you explicitly mark with `VITE_` are included.
+</Info>
+
+## Using environment variables in React
+
+```jsx
+// frontend/src/api/users.js
+const API_URL = import.meta.env.VITE_API_URL;
+
+export async function getUsers() {
+  const response = await fetch(`${API_URL}/api/users`);
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  return response.json();
+}
+
+export async function createUser(userData) {
+  const response = await fetch(`${API_URL}/api/users`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(userData),
+  });
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  return response.json();
+}
+```
+
+Define the URL once, use it everywhere. When you deploy, just change the environment variable — no code changes needed.
+
+## Python environment variables (backend)
+
+In Python, you already know this pattern. Use `python-dotenv` or Pydantic's `BaseSettings`:
+
+```python
+# backend/.env
+DATABASE_URL=postgresql://user:pass@localhost:5432/mydb
+SECRET_KEY=your-secret-key-here
+ALLOWED_ORIGINS=http://localhost:5173
+```
+
+```python
+# backend/config.py
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+DATABASE_URL = os.getenv("DATABASE_URL")
+SECRET_KEY = os.getenv("SECRET_KEY")
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173").split(",")
+```
+
+## .env.example — document what's needed
+
+Create a `.env.example` file that shows what variables are required, without the actual values:
+
+```bash
+# frontend/.env.example
+VITE_API_URL=http://localhost:8000
+```
+
+```bash
+# backend/.env.example
+DATABASE_URL=postgresql://user:pass@localhost:5432/mydb
+SECRET_KEY=change-me-to-a-random-string
+ALLOWED_ORIGINS=http://localhost:5173
+```
+
+Commit `.env.example` to Git. When a new developer clones the project, they copy it to `.env` and fill in their values:
+
+```bash
+cp .env.example .env
+```
+
+<Tip>
+This is a universal pattern across all frameworks and languages. Every professional project has `.env.example` committed and `.env` in `.gitignore`. It documents what configuration a project needs without exposing secrets.
+</Tip>
+
+## Multiple environments
+
+You can have different `.env` files for different situations:
+
+```bash
+# frontend/.env                 # Default (development)
+VITE_API_URL=http://localhost:8000
+
+# frontend/.env.production      # Used when building for production
+VITE_API_URL=https://api.myapp.com
+```
+
+Vite automatically loads the right file:
+- `npm run dev` → reads `.env`
+- `npm run build` → reads `.env.production` (if it exists)
+
+## What's next?
+
+Your URLs are configurable. But when your React frontend at `localhost:5173` tries to call your FastAPI backend at `localhost:8000`, the browser blocks the request. This is CORS — and it's the most common error when connecting frontend to backend.
+
+<Card title="Understanding CORS" icon="shield" href="/full-stack/understanding-cors">
+Fix cross-origin errors when your React frontend talks to your FastAPI backend
+</Card>

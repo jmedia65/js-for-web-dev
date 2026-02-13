@@ -3,24 +3,205 @@ title: "Understanding scope"
 description: "Learn how JavaScript determines where variables are accessible"
 ---
 
-{/* TODO: Write scope content */}
+## What is scope?
+
+Scope is the set of rules that determines where a variable can be accessed. When you declare a variable, it's only visible within a certain region of your code. Try to use it outside that region and you'll get an error.
+
+```javascript
+function processOrder() {
+  const orderId = "ORD-001";
+  console.log(orderId); // ✅ Works — same scope
+}
+
+processOrder();
+console.log(orderId); // ❌ ReferenceError: orderId is not defined
+```
+
+`orderId` exists inside `processOrder` and nowhere else. This is a good thing — it means variables don't leak into places they shouldn't be.
 
 ## Block scope
 
-{/* TODO: let and const scoping */}
+Variables declared with `const` and `let` are **block-scoped**. They exist only within the nearest set of curly braces `{}`.
+
+```javascript
+if (true) {
+  const message = "Inside the block";
+  let count = 42;
+  console.log(message); // ✅ "Inside the block"
+  console.log(count);   // ✅ 42
+}
+
+console.log(message); // ❌ ReferenceError
+console.log(count);   // ❌ ReferenceError
+```
+
+Every `if`, `for`, `while`, and function body creates a new block scope:
+
+```javascript
+for (let i = 0; i < 3; i++) {
+  const item = `Item ${i}`;
+  console.log(item); // ✅ Works inside the loop
+}
+
+console.log(i);    // ❌ ReferenceError
+console.log(item); // ❌ ReferenceError
+```
+
+<Tabs>
+<Tab title="JavaScript">
+```javascript
+// Block-scoped — each block is its own world
+if (true) {
+  const x = 10;
+}
+console.log(x); // ReferenceError
+```
+</Tab>
+
+<Tab title="Python">
+```python
+# Python doesn't have block scope for if/for
+if True:
+    x = 10
+print(x)  # 10 — still accessible!
+```
+</Tab>
+</Tabs>
+
+This is a real difference from Python. In Python, `if` and `for` blocks don't create their own scope — variables leak out. In JavaScript, they don't.
+
+<Warning>
+If you're used to Python, this will trip you up. Variables declared inside `if`, `for`, or `while` blocks in JavaScript are **not** accessible outside those blocks. This is actually safer — it prevents accidental name collisions.
+</Warning>
 
 ## Function scope
 
-{/* TODO: Variables inside functions */}
+Functions create their own scope. Variables declared inside a function are invisible outside it.
+
+```javascript
+function calculateDiscount(price) {
+  const discountRate = 0.15;
+  const discount = price * discountRate;
+  return price - discount;
+}
+
+console.log(calculateDiscount(100)); // 85
+console.log(discountRate); // ❌ ReferenceError
+console.log(discount);     // ❌ ReferenceError
+```
+
+Nested functions can access variables from their parent function:
+
+```javascript
+function outer() {
+  const outerVar = "I'm from outer";
+
+  function inner() {
+    const innerVar = "I'm from inner";
+    console.log(outerVar); // ✅ Can see parent's variables
+    console.log(innerVar); // ✅ Can see own variables
+  }
+
+  inner();
+  console.log(innerVar); // ❌ Can't see child's variables
+}
+```
+
+This is called **lexical scoping** — inner functions can look "up" to their parent's scope, but parents can't look "down" into children.
 
 ## Global scope
 
-{/* TODO: Top-level variables */}
+Variables declared outside any function or block are in the **global scope**. They're accessible everywhere.
+
+```javascript
+const API_URL = "http://localhost:8000"; // Global
+
+function fetchData() {
+  console.log(API_URL); // ✅ Works — global is visible everywhere
+}
+
+function sendData() {
+  console.log(API_URL); // ✅ Also works
+}
+```
+
+<Tip>
+Keep global variables to a minimum. Use them for true constants like API URLs and configuration values. Everything else should live in the smallest scope possible.
+</Tip>
+
+## Scope chain
+
+When JavaScript encounters a variable, it searches from the current scope outward:
+
+```javascript
+const color = "blue"; // Global
+
+function paintRoom() {
+  const color = "green"; // Function scope — shadows the global
+
+  if (true) {
+    const color = "red"; // Block scope — shadows the function scope
+    console.log(color);  // "red"
+  }
+
+  console.log(color); // "green"
+}
+
+paintRoom();
+console.log(color); // "blue"
+```
+
+Each `color` is a different variable in a different scope. The inner-most scope wins. This is called **variable shadowing**.
+
+<Info>
+Variable shadowing is legal but can be confusing. Avoid reusing the same variable name in nested scopes. ESLint can warn you about this with the `no-shadow` rule.
+</Info>
 
 ## Common mistakes
 
-{/* TODO: Variable hoisting confusion */}
+<AccordionGroup>
+<Accordion title="Accessing a block-scoped variable outside its block">
+```javascript
+// ❌ Wrong: Variable only exists inside the if block
+if (userIsLoggedIn) {
+  const welcomeMessage = `Welcome back, ${userName}!`;
+}
+console.log(welcomeMessage); // ReferenceError
+
+// ✅ Correct: Declare it in the outer scope
+let welcomeMessage = "";
+if (userIsLoggedIn) {
+  welcomeMessage = `Welcome back, ${userName}!`;
+}
+console.log(welcomeMessage); // Works
+```
+
+<Warning>
+If you need a variable after a block ends, declare it before the block with `let`. You can assign the value inside the block.
+</Warning>
+</Accordion>
+
+<Accordion title="Hoisting confusion with var">
+```javascript
+// var is hoisted and function-scoped — avoid it
+console.log(name); // undefined (not an error!)
+var name = "Sarah";
+
+// const and let are NOT hoisted the same way
+console.log(name); // ReferenceError: Cannot access before initialization
+const name = "Sarah";
+```
+
+<Warning>
+`var` has confusing hoisting behavior — it exists before its declaration but with the value `undefined`. This is one of the main reasons the JavaScript community moved to `const` and `let`. Stick with `const` and `let` and you'll never deal with hoisting issues.
+</Warning>
+</Accordion>
+</AccordionGroup>
 
 ## What's next?
 
-{/* TODO: Card linking to closures */}
+You understand how scope works — variables live inside blocks and functions, and inner scopes can see outer scopes. This leads directly to one of JavaScript's most useful features: closures.
+
+<Card title="Closures" icon="lock" href="/javascript-core/closures">
+How functions remember their surrounding variables
+</Card>

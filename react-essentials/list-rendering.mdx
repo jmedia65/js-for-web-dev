@@ -3,20 +3,286 @@ title: "List rendering"
 description: "Render arrays of data as lists of components"
 ---
 
-{/* TODO: Write list rendering content */}
+## Arrays become lists
 
-## .map() in JSX
+Most real-world React is rendering lists — users, products, messages, notifications. You already know `.map()` from the array methods lesson. In React, `.map()` turns an array of data into an array of JSX elements.
 
-{/* TODO: Rendering arrays */}
+```jsx
+function UserList() {
+  const users = [
+    { id: 1, name: "Sarah Chen", email: "sarah@example.com" },
+    { id: 2, name: "John Park", email: "john@example.com" },
+    { id: 3, name: "Maria Lopez", email: "maria@example.com" },
+  ];
+
+  return (
+    <ul>
+      {users.map(user => (
+        <li key={user.id}>
+          {user.name} — {user.email}
+        </li>
+      ))}
+    </ul>
+  );
+}
+```
+
+That's the entire pattern: `.map()` over an array, return JSX for each item, add a `key` prop. You'll use this in virtually every React component.
 
 ## The key prop
 
-{/* TODO: Why keys matter */}
+Every item in a list needs a unique `key` prop. React uses keys to track which items changed, were added, or were removed.
+
+```jsx
+// ✅ Use a unique, stable identifier
+{users.map(user => (
+  <li key={user.id}>{user.name}</li>
+))}
+
+// ✅ Any unique string works
+{emails.map(email => (
+  <li key={email}>{email}</li>
+))}
+```
+
+### What makes a good key?
+
+| Key source | Good? | Why |
+|---|---|---|
+| Database ID (`user.id`) | Best | Unique and stable across re-renders |
+| Unique field (`user.email`) | Good | Unique, but may change |
+| Array index | Last resort | Changes when items are reordered/deleted |
+| `Math.random()` | Never | Different every render, breaks everything |
+
+```jsx
+// ❌ Avoid index as key when items can be reordered or deleted
+{users.map((user, index) => (
+  <li key={index}>{user.name}</li>
+))}
+
+// ✅ Use the item's unique identifier
+{users.map(user => (
+  <li key={user.id}>{user.name}</li>
+))}
+```
+
+<Warning>
+If you don't provide a `key`, React will warn you in the console. If you use array index as a key and items get reordered, React will mix up which component goes with which data — causing subtle, hard-to-debug UI bugs.
+</Warning>
+
+## Rendering components from a list
+
+Usually you render a component for each item, not raw HTML:
+
+```jsx
+function UserCard({ name, email, role }) {
+  return (
+    <div className="user-card">
+      <h3>{name}</h3>
+      <p>{email}</p>
+      <span className="badge">{role}</span>
+    </div>
+  );
+}
+
+function UserList({ users }) {
+  return (
+    <div className="user-list">
+      {users.map(user => (
+        <UserCard
+          key={user.id}
+          name={user.name}
+          email={user.email}
+          role={user.role}
+        />
+      ))}
+    </div>
+  );
+}
+```
+
+<Info>
+The `key` goes on the outermost element in the `.map()` — which is the `<UserCard>` component, not any element inside it. React needs the key on the mapped element, not on a child within it.
+</Info>
+
+## Filtering and transforming before rendering
+
+Process your data before the return statement. Don't try to do complex logic inside JSX:
+
+```jsx
+function UserList({ users, searchTerm }) {
+  // Filter first, then render
+  const filteredUsers = users.filter(user =>
+    user.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  if (filteredUsers.length === 0) {
+    return <p>No users match "{searchTerm}"</p>;
+  }
+
+  return (
+    <ul>
+      {filteredUsers.map(user => (
+        <li key={user.id}>{user.name}</li>
+      ))}
+    </ul>
+  );
+}
+```
+
+```jsx
+// Sort, filter, transform — all before the return
+function ProductList({ products }) {
+  const availableProducts = products
+    .filter(p => p.inStock)
+    .sort((a, b) => a.price - b.price);
+
+  return (
+    <div>
+      <h2>Available Products ({availableProducts.length})</h2>
+      {availableProducts.map(product => (
+        <div key={product.id}>
+          <span>{product.name}</span>
+          <span>${product.price}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+```
+
+<Tip>
+Do filtering, sorting, and transforming *above* the return statement, not inside JSX. It keeps your JSX clean and readable, and you can handle the empty state separately.
+</Tip>
+
+## A searchable list — putting it together
+
+This combines state, effects, list rendering, and conditional rendering:
+
+```jsx
+import { useState, useEffect } from 'react';
+
+function SearchableUserList() {
+  const [users, setUsers] = useState([]);
+  const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    async function loadUsers() {
+      try {
+        const response = await fetch("/api/users");
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        setUsers(await response.json());
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadUsers();
+  }, []);
+
+  if (loading) return <p>Loading users...</p>;
+  if (error) return <p>Error: {error}</p>;
+
+  const filtered = users.filter(user =>
+    user.name.toLowerCase().includes(search.toLowerCase())
+  );
+
+  return (
+    <div>
+      <input
+        type="text"
+        placeholder="Search users..."
+        value={search}
+        onChange={e => setSearch(e.target.value)}
+      />
+
+      {filtered.length === 0 ? (
+        <p>No users match "{search}"</p>
+      ) : (
+        <ul>
+          {filtered.map(user => (
+            <li key={user.id}>
+              {user.name} — {user.email}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+```
+
+This is a realistic component. Fetch data, let the user search it, render the filtered results. This pattern appears everywhere in production React apps.
 
 ## Common mistakes
 
-{/* TODO: Using index as key */}
+<AccordionGroup>
+<Accordion title="Forgetting the key prop">
+```jsx
+// ❌ Missing key — React warns in console
+{users.map(user => (
+  <li>{user.name}</li>
+))}
+
+// ✅ Always provide a key
+{users.map(user => (
+  <li key={user.id}>{user.name}</li>
+))}
+```
+
+React needs keys to efficiently update lists. Without them, React re-renders every item even when only one changed.
+</Accordion>
+
+<Accordion title="Putting key on the wrong element">
+```jsx
+// ❌ Key is on <li> inside the component, not on the mapped element
+{users.map(user => (
+  <UserCard user={user} />  // Missing key here!
+))}
+
+function UserCard({ user }) {
+  return <li key={user.id}>{user.name}</li>; // Key here does nothing
+}
+
+// ✅ Key goes on the element returned by .map()
+{users.map(user => (
+  <UserCard key={user.id} user={user} />
+))}
+```
+</Accordion>
+
+<Accordion title="Forgetting parentheses in .map()">
+```jsx
+// ❌ Missing parentheses — returns undefined
+{users.map(user => {
+  <li key={user.id}>{user.name}</li>
+})}
+
+// ✅ Use parentheses for implicit return
+{users.map(user => (
+  <li key={user.id}>{user.name}</li>
+))}
+
+// ✅ Or use explicit return with curly braces
+{users.map(user => {
+  return <li key={user.id}>{user.name}</li>;
+})}
+```
+
+<Warning>
+Arrow functions with `{}` need an explicit `return`. Arrow functions with `()` implicitly return the expression. This is a JavaScript gotcha, not a React one — but it shows up constantly in `.map()` calls.
+</Warning>
+</Accordion>
+</AccordionGroup>
 
 ## What's next?
 
-{/* TODO: Card linking to forms-in-react */}
+You can render lists of data. Now let's learn how to handle user input — forms are how users interact with your app.
+
+<Card title="Forms in React" icon="input-text" href="/react-essentials/forms-in-react">
+Build controlled forms that sync input values with React state
+</Card>

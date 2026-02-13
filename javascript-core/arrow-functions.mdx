@@ -3,24 +3,215 @@ title: "Arrow functions"
 description: "Write shorter, cleaner functions with the modern arrow syntax"
 ---
 
-{/* TODO: Write arrow functions content */}
+## The arrow function syntax
 
-## Arrow function syntax
+Arrow functions are a shorter way to write functions. They were added in ES6 and are now the most common function syntax in modern JavaScript — especially in React.
 
-{/* TODO: () => {} examples */}
+```javascript
+// Regular function
+function add(a, b) {
+  return a + b;
+}
+
+// Arrow function
+const add = (a, b) => {
+  return a + b;
+};
+
+console.log(add(3, 5)); // 8
+```
+
+Drop the `function` keyword, add `=>` after the parameters. That's it.
 
 ## Implicit return
 
-{/* TODO: Single expression shorthand */}
+When your function body is a single expression, you can skip the curly braces and the `return` keyword:
 
-## When to use arrow functions
+```javascript
+// Full syntax
+const double = (n) => {
+  return n * 2;
+};
 
-{/* TODO: Practical guidelines */}
+// Implicit return — same thing, shorter
+const double = (n) => n * 2;
+
+console.log(double(5)); // 10
+```
+
+This works because JavaScript automatically returns the expression after `=>` when there are no curly braces.
+
+```javascript
+// More examples of implicit return
+const greet = (name) => `Hello, ${name}!`;
+const isAdult = (age) => age >= 18;
+const getFullName = (first, last) => `${first} ${last}`;
+
+console.log(greet("Sarah"));            // "Hello, Sarah!"
+console.log(isAdult(25));               // true
+console.log(getFullName("Sarah", "Chen")); // "Sarah Chen"
+```
+
+<Tip>
+If your function does one thing and returns a value, use the implicit return. If it has multiple lines or side effects (like `console.log`), use curly braces with an explicit `return`.
+</Tip>
+
+## Single parameter shorthand
+
+When an arrow function has exactly one parameter, you can drop the parentheses:
+
+```javascript
+// With parentheses
+const double = (n) => n * 2;
+
+// Without parentheses — same thing
+const double = n => n * 2;
+
+// Zero parameters — parentheses required
+const getTimestamp = () => Date.now();
+
+// Multiple parameters — parentheses required
+const add = (a, b) => a + b;
+```
+
+<Info>
+Some teams require parentheses around all parameters for consistency. Either style is fine — Prettier will handle this for you based on your config.
+</Info>
+
+## Where you'll use arrow functions
+
+Arrow functions shine as callbacks — functions you pass to other functions. You'll write these constantly:
+
+```javascript
+// Array methods
+const numbers = [1, 2, 3, 4, 5];
+const doubled = numbers.map(n => n * 2);        // [2, 4, 6, 8, 10]
+const evens = numbers.filter(n => n % 2 === 0); // [2, 4]
+
+// Sorting
+const names = ["Charlie", "Alice", "Bob"];
+names.sort((a, b) => a.localeCompare(b)); // ["Alice", "Bob", "Charlie"]
+
+// Timers
+setTimeout(() => {
+  console.log("This runs after 1 second");
+}, 1000);
+```
+
+In React, arrow functions are everywhere:
+
+```jsx
+// Event handlers
+<button onClick={() => setCount(count + 1)}>Increment</button>
+
+// Rendering lists
+{users.map(user => <li key={user.id}>{user.name}</li>)}
+
+// Effects
+useEffect(() => {
+  fetchUsers();
+}, []);
+```
+
+## Arrow functions vs regular functions
+
+For this course, here's the practical rule:
+
+| Use case | Syntax |
+|---|---|
+| Standalone, named functions | `function greet(name) { }` |
+| Callbacks and inline functions | `(params) => expression` |
+| React event handlers | `() => doSomething()` |
+| Array methods (.map, .filter) | `item => transform(item)` |
+
+<Info>
+Arrow functions have a technical difference with `this` binding, but you won't encounter it in this course. React function components and hooks don't rely on `this`, so it's a non-issue. If you're curious, MDN has a [detailed explanation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Arrow_functions).
+</Info>
 
 ## Comparing to Python lambdas
 
-{/* TODO: Tabs component with JS vs Python */}
+<Tabs>
+<Tab title="JavaScript">
+```javascript
+// Arrow functions can have multiple lines
+const calculateTotal = (price, taxRate) => {
+  const tax = price * taxRate;
+  return price + tax;
+};
+
+// Or a single expression
+const double = n => n * 2;
+
+// Used as callbacks
+const prices = [10, 20, 30];
+const withTax = prices.map(p => p * 1.08);
+```
+</Tab>
+
+<Tab title="Python">
+```python
+# Lambdas are limited to one expression
+double = lambda n: n * 2
+
+# For anything more, you need def
+def calculate_total(price, tax_rate):
+    tax = price * tax_rate
+    return price + tax
+
+# Used as callbacks
+prices = [10, 20, 30]
+with_tax = list(map(lambda p: p * 1.08, prices))
+```
+</Tab>
+</Tabs>
+
+JavaScript's arrow functions are more versatile than Python's lambdas. They can have multiple lines, multiple statements, and they're used far more often because JavaScript relies heavily on callbacks.
+
+## Common mistakes
+
+<AccordionGroup>
+<Accordion title="Forgetting to return with curly braces">
+```javascript
+// ❌ Wrong: Curly braces but no return
+const double = (n) => {
+  n * 2; // This computes but doesn't return anything
+};
+console.log(double(5)); // undefined
+
+// ✅ Correct: Either add return...
+const double = (n) => {
+  return n * 2;
+};
+
+// ✅ ...or use implicit return (no curly braces)
+const double = (n) => n * 2;
+```
+
+<Warning>
+With curly braces, you must use `return`. Without curly braces, the return is implicit. Mixing these up is the most common arrow function mistake.
+</Warning>
+</Accordion>
+
+<Accordion title="Returning an object literal">
+```javascript
+// ❌ Wrong: JavaScript thinks {} is a function body
+const getUser = () => { name: "Sarah", age: 28 }; // SyntaxError
+
+// ✅ Correct: Wrap the object in parentheses
+const getUser = () => ({ name: "Sarah", age: 28 });
+console.log(getUser()); // { name: "Sarah", age: 28 }
+```
+
+<Warning>
+When implicitly returning an object, wrap it in parentheses `()`. Without them, JavaScript interprets the curly braces as a function body, not an object.
+</Warning>
+</Accordion>
+</AccordionGroup>
 
 ## What's next?
 
-{/* TODO: Card linking to parameters-arguments */}
+You can write functions in both styles. Now let's look at what goes *inside* the parentheses — parameters, default values, and destructuring.
+
+<Card title="Parameters and arguments" icon="sliders" href="/javascript-core/parameters-arguments">
+Default values, rest parameters, and destructuring
+</Card>

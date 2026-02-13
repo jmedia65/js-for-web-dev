@@ -3,20 +3,226 @@ title: "Promises"
 description: "Handle async operations with JavaScript Promises"
 ---
 
-{/* TODO: Write promises content */}
+## What is a Promise?
 
-## What is a Promise
+A Promise is an object that represents the eventual result of an async operation. Instead of passing a callback, the async function returns a Promise — a container that will eventually hold the result (or an error).
 
-{/* TODO: Pending, fulfilled, rejected */}
+```javascript
+const promise = fetch("http://localhost:8000/api/users");
 
-## .then() and .catch()
+console.log(promise); // Promise { <pending> }
+// The data isn't here yet, but the Promise will deliver it when it arrives
+```
 
-{/* TODO: Promise chaining */}
+A Promise has three states:
 
-## Creating promises
+| State | Meaning |
+|---|---|
+| **Pending** | The operation is still running |
+| **Fulfilled** | The operation completed successfully (has a result) |
+| **Rejected** | The operation failed (has an error) |
 
-{/* TODO: new Promise() syntax */}
+<Info>
+Think of a Promise like a food delivery order. It starts as "pending" (being prepared). It either gets "fulfilled" (delivered successfully) or "rejected" (restaurant cancelled the order). You can't change the outcome once it's settled.
+</Info>
+
+## .then() — handling the result
+
+Use `.then()` to specify what happens when the Promise fulfills:
+
+```javascript
+fetch("http://localhost:8000/api/users")
+  .then(response => {
+    console.log("Got response:", response.status);
+    return response.json(); // This also returns a Promise
+  })
+  .then(users => {
+    console.log("Users:", users);
+  });
+```
+
+`.then()` takes a function that receives the result. It also **returns a new Promise**, which is what enables chaining.
+
+### Chaining Promises
+
+This is the key advantage over callbacks — sequential async operations stay flat:
+
+```javascript
+// Chained .then() calls — no nesting
+fetch("http://localhost:8000/api/users/1")
+  .then(response => response.json())
+  .then(user => fetch(`http://localhost:8000/api/orders?userId=${user.id}`))
+  .then(response => response.json())
+  .then(orders => {
+    console.log("User orders:", orders);
+  });
+```
+
+Compare this to the nested callback version:
+```javascript
+// Callbacks — pyramid of doom
+getUser(1, (err, user) => {
+  getOrders(user.id, (err, orders) => {
+    console.log("User orders:", orders);
+  });
+});
+```
+
+Each `.then()` returns a new Promise, so you can keep chaining. The data flows from one `.then()` to the next.
+
+## .catch() — handling errors
+
+Use `.catch()` to handle errors anywhere in the chain:
+
+```javascript
+fetch("http://localhost:8000/api/users")
+  .then(response => {
+    if (!response.ok) {
+      throw new Error(`HTTP error: ${response.status}`);
+    }
+    return response.json();
+  })
+  .then(users => {
+    console.log(users);
+  })
+  .catch(error => {
+    console.error("Something failed:", error.message);
+  });
+```
+
+A single `.catch()` at the end handles errors from **any step** in the chain. If `fetch()` fails, or `response.ok` is false, or `.json()` fails — the error flows down to `.catch()`.
+
+<Warning>
+Always add `.catch()` at the end of a Promise chain. Without it, errors are silently swallowed. You'll see "Uncaught (in promise)" warnings in the console, but your code won't handle them.
+</Warning>
+
+## .finally() — cleanup code
+
+`.finally()` runs regardless of success or failure. Use it for cleanup:
+
+```javascript
+showSpinner();
+
+fetch("http://localhost:8000/api/users")
+  .then(response => response.json())
+  .then(users => renderUserList(users))
+  .catch(error => showErrorMessage(error))
+  .finally(() => {
+    hideSpinner(); // Runs whether request succeeded or failed
+  });
+```
+
+## Promise.all() — multiple requests in parallel
+
+When you need data from multiple endpoints and they don't depend on each other, run them in parallel:
+
+```javascript
+const [users, products, orders] = await Promise.all([
+  fetch("http://localhost:8000/api/users").then(r => r.json()),
+  fetch("http://localhost:8000/api/products").then(r => r.json()),
+  fetch("http://localhost:8000/api/orders").then(r => r.json()),
+]);
+
+console.log(users, products, orders); // All three results
+```
+
+`Promise.all()` takes an array of Promises and returns a single Promise that resolves when **all** of them complete. If any one fails, the whole thing rejects.
+
+<Tabs>
+<Tab title="JavaScript">
+```javascript
+const [users, posts] = await Promise.all([
+  fetch("/api/users").then(r => r.json()),
+  fetch("/api/posts").then(r => r.json()),
+]);
+```
+</Tab>
+
+<Tab title="Python">
+```python
+import asyncio
+
+users, posts = await asyncio.gather(
+    fetch_users(),
+    fetch_posts(),
+)
+```
+</Tab>
+</Tabs>
+
+JavaScript's `Promise.all()` is like Python's `asyncio.gather()`. Same concept — run multiple async operations concurrently.
+
+## Creating your own Promises
+
+You'll rarely need to create Promises from scratch, but here's how:
+
+```javascript
+function delay(ms) {
+  return new Promise(resolve => {
+    setTimeout(resolve, ms);
+  });
+}
+
+// Usage
+await delay(2000); // Wait 2 seconds
+console.log("Done waiting!");
+```
+
+The `new Promise()` constructor takes a function with two parameters:
+- `resolve(value)` — call when the operation succeeds
+- `reject(error)` — call when the operation fails
+
+```javascript
+function fetchWithTimeout(url, ms) {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject(new Error("Request timed out"));
+    }, ms);
+
+    fetch(url)
+      .then(response => {
+        clearTimeout(timer);
+        resolve(response);
+      })
+      .catch(error => {
+        clearTimeout(timer);
+        reject(error);
+      });
+  });
+}
+```
+
+<Tip>
+Most of the time, you'll *consume* Promises (from `fetch`, libraries, etc.), not create them. Focus on understanding `.then()`, `.catch()`, and `Promise.all()`.
+</Tip>
+
+## Why you'll use async/await instead
+
+Promises solved callback hell, but chaining `.then()` calls can still get verbose. The next step — async/await — lets you write the same async code in a way that reads like synchronous code:
+
+```javascript
+// Promise chain
+fetch("/api/users")
+  .then(response => response.json())
+  .then(users => console.log(users))
+  .catch(error => console.error(error));
+
+// async/await — same thing, cleaner
+try {
+  const response = await fetch("/api/users");
+  const users = await response.json();
+  console.log(users);
+} catch (error) {
+  console.error(error);
+}
+```
+
+async/await is built on top of Promises — it's syntactic sugar, not a replacement. Understanding Promises helps you understand what async/await is doing under the hood.
 
 ## What's next?
 
-{/* TODO: Card linking to async-await */}
+Time to learn async/await — the modern syntax you'll use 90% of the time for async operations.
+
+<Card title="Async/await" icon="code" href="/async-apis/async-await">
+Write async code that reads like synchronous code
+</Card>

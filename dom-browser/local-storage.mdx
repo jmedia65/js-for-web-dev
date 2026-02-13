@@ -3,20 +3,215 @@ title: "Local storage"
 description: "Persist data in the browser between page loads using localStorage"
 ---
 
-{/* TODO: Write local storage content */}
+## Data that survives a page reload
 
-## localStorage.setItem()
+By default, JavaScript data disappears when you close or refresh the page. `localStorage` lets you store data in the browser that persists across page loads, tab closes, and even browser restarts.
 
-{/* TODO: Storing data */}
+```javascript
+// Save
+localStorage.setItem("username", "sarah_chen");
 
-## localStorage.getItem()
+// Retrieve (even after closing and reopening the browser)
+const username = localStorage.getItem("username");
+console.log(username); // "sarah_chen"
+```
 
-{/* TODO: Retrieving data */}
+## The four methods
 
-## Storing objects
+```javascript
+// Store a value
+localStorage.setItem("theme", "dark");
 
-{/* TODO: Must JSON.stringify and JSON.parse */}
+// Get a value
+const theme = localStorage.getItem("theme"); // "dark"
 
-## When to use localStorage
+// Remove a specific value
+localStorage.removeItem("theme");
 
-{/* TODO: Practical use cases and limitations */}
+// Clear everything
+localStorage.clear();
+```
+
+That's the entire API. Four methods, all synchronous, all straightforward.
+
+## localStorage only stores strings
+
+This is the most important thing to know. `localStorage` values are always strings.
+
+```javascript
+// ❌ Storing a number — gets converted to string
+localStorage.setItem("count", 42);
+const count = localStorage.getItem("count");
+console.log(count);        // "42" (string!)
+console.log(typeof count); // "string"
+console.log(count + 1);    // "421" (string concatenation, not addition)
+
+// ✅ Convert back to number
+const count = Number(localStorage.getItem("count"));
+console.log(count + 1); // 43
+```
+
+## Storing objects and arrays
+
+Since localStorage only stores strings, you need `JSON.stringify()` and `JSON.parse()`:
+
+```javascript
+// Save an object
+const user = { name: "Sarah Chen", role: "admin", theme: "dark" };
+localStorage.setItem("user", JSON.stringify(user));
+
+// Load it back
+const saved = localStorage.getItem("user");
+const loadedUser = JSON.parse(saved);
+console.log(loadedUser.name); // "Sarah Chen"
+```
+
+```javascript
+// Save an array
+const favorites = ["React", "FastAPI", "TypeScript"];
+localStorage.setItem("favorites", JSON.stringify(favorites));
+
+// Load it back
+const loadedFavorites = JSON.parse(localStorage.getItem("favorites"));
+console.log(loadedFavorites); // ["React", "FastAPI", "TypeScript"]
+```
+
+<Warning>
+If you forget `JSON.stringify()` when saving an object, you'll store the useless string `"[object Object]"`. Always stringify objects before saving and parse after loading.
+</Warning>
+
+### Safe loading with a fallback
+
+`localStorage.getItem()` returns `null` if the key doesn't exist. Handle this:
+
+```javascript
+// ❌ Crashes if "settings" doesn't exist
+const settings = JSON.parse(localStorage.getItem("settings"));
+// TypeError: Cannot read properties of null (if key doesn't exist)
+
+// ✅ Safe with fallback
+const settings = JSON.parse(localStorage.getItem("settings")) || {
+  theme: "light",
+  fontSize: 14,
+};
+```
+
+<Tip>
+Always provide a fallback when loading from localStorage. The data might not exist yet (first visit), or the user might have cleared their browser data.
+</Tip>
+
+## Practical use cases
+
+### Saving user preferences
+
+```javascript
+// Theme toggle that remembers the choice
+const themeToggle = document.querySelector("#theme-toggle");
+
+// Load saved preference on page load
+const savedTheme = localStorage.getItem("theme") || "light";
+document.body.className = savedTheme;
+
+// Save when user changes theme
+themeToggle.addEventListener("click", () => {
+  const newTheme = document.body.classList.contains("dark") ? "light" : "dark";
+  document.body.className = newTheme;
+  localStorage.setItem("theme", newTheme);
+});
+```
+
+### Saving form drafts
+
+```javascript
+const form = document.querySelector("#post-form");
+const textarea = document.querySelector("#post-content");
+
+// Load saved draft on page load
+const savedDraft = localStorage.getItem("post-draft");
+if (savedDraft) {
+  textarea.value = savedDraft;
+}
+
+// Auto-save as user types
+textarea.addEventListener("input", () => {
+  localStorage.setItem("post-draft", textarea.value);
+});
+
+// Clear draft when form is submitted
+form.addEventListener("submit", (e) => {
+  e.preventDefault();
+  localStorage.removeItem("post-draft");
+  // ... submit to API
+});
+```
+
+### Simple shopping cart
+
+```javascript
+function getCart() {
+  return JSON.parse(localStorage.getItem("cart")) || [];
+}
+
+function saveCart(cart) {
+  localStorage.setItem("cart", JSON.stringify(cart));
+}
+
+function addToCart(product) {
+  const cart = getCart();
+  cart.push(product);
+  saveCart(cart);
+}
+
+function removeFromCart(productId) {
+  const cart = getCart().filter(item => item.id !== productId);
+  saveCart(cart);
+}
+
+// Usage
+addToCart({ id: 1, name: "Wireless Headphones", price: 79.99 });
+addToCart({ id: 2, name: "USB-C Cable", price: 12.99 });
+console.log(getCart()); // Both items, even after page refresh
+```
+
+## localStorage vs other storage
+
+| Storage | Capacity | Persists | Shared with server | Best for |
+|---|---|---|---|---|
+| `localStorage` | ~5–10 MB | Until cleared | No | Preferences, drafts, cache |
+| `sessionStorage` | ~5–10 MB | Until tab closes | No | Temporary state |
+| Cookies | ~4 KB | Configurable | Yes (sent with every request) | Auth tokens |
+| Backend database | Unlimited | Until deleted | N/A | User data, content |
+
+<Info>
+`sessionStorage` works exactly like `localStorage` but data is cleared when the browser tab closes. Use it for truly temporary data like "which tab is selected" or "scroll position."
+</Info>
+
+## When NOT to use localStorage
+
+- **Sensitive data** — never store passwords, tokens, or personal data. localStorage is readable by any JavaScript on the page (including malicious scripts).
+- **Large data** — the ~5-10 MB limit makes it unsuitable for images, videos, or large datasets.
+- **Data that must sync across devices** — localStorage is per-browser, per-device. Use your backend database for data that should follow the user.
+- **Critical application data** — users can clear localStorage at any time. Don't store anything your app can't recreate from the backend.
+
+<Warning>
+Never store authentication tokens in localStorage. It's vulnerable to XSS attacks — any JavaScript on the page can read it. Use HTTP-only cookies for auth tokens instead.
+</Warning>
+
+## Inspecting localStorage in DevTools
+
+Open DevTools → Application tab → Local Storage (in the sidebar). You can:
+
+- View all stored key-value pairs
+- Edit values directly
+- Delete individual keys or clear everything
+- Watch values change in real time
+
+## What's next?
+
+You've covered the DOM and browser APIs — selecting elements, modifying the page, handling events, working with forms, and persisting data. These are the building blocks that every framework builds on.
+
+Next up: React. You'll see how React takes everything you've learned — DOM manipulation, event handling, state management — and wraps it in a component-based architecture that scales to real applications.
+
+<Card title="What is React?" icon="atom" href="/react-essentials/what-is-react">
+Understand why React exists and what problems it solves
+</Card>

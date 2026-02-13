@@ -3,20 +3,239 @@ title: "Selecting elements"
 description: "Find and target HTML elements on the page using JavaScript"
 ---
 
-{/* TODO: Write selecting elements content */}
+## Finding elements on the page
+
+Before you can change anything on a page, you need to find it. JavaScript gives you two main methods — both use CSS selectors, so if you know CSS, you already know how to use them.
 
 ## document.querySelector()
 
-{/* TODO: CSS selector syntax */}
+Returns the **first** element that matches a CSS selector:
+
+```javascript
+// Select by tag
+const heading = document.querySelector("h1");
+
+// Select by class
+const card = document.querySelector(".user-card");
+
+// Select by ID
+const sidebar = document.querySelector("#sidebar");
+
+// Select by attribute
+const emailInput = document.querySelector('input[type="email"]');
+
+// Select nested elements
+const firstItem = document.querySelector("ul.nav > li");
+```
+
+If no element matches, `querySelector` returns `null` — not an error.
+
+```javascript
+const missing = document.querySelector(".does-not-exist");
+console.log(missing); // null
+
+// ❌ This will crash
+missing.textContent = "Hello"; // TypeError: Cannot read properties of null
+
+// ✅ Check first
+if (missing) {
+  missing.textContent = "Hello";
+}
+```
+
+<Warning>
+`querySelector` returns `null` when it can't find a match. Always check for `null` if you're not 100% sure the element exists, or you'll get `TypeError: Cannot read properties of null`.
+</Warning>
 
 ## document.querySelectorAll()
 
-{/* TODO: Selecting multiple elements */}
+Returns **all** matching elements as a `NodeList`:
 
-## Common selectors
+```javascript
+// Get all paragraphs
+const paragraphs = document.querySelectorAll("p");
+console.log(paragraphs.length); // 5
 
-{/* TODO: IDs, classes, tags, attributes */}
+// Get all elements with the class "card"
+const cards = document.querySelectorAll(".card");
+
+// Get all checked checkboxes
+const checked = document.querySelectorAll('input[type="checkbox"]:checked');
+```
+
+### Iterating over results
+
+```javascript
+const cards = document.querySelectorAll(".card");
+
+// for...of works
+for (const card of cards) {
+  console.log(card.textContent);
+}
+
+// .forEach() works
+cards.forEach(card => {
+  card.classList.add("visible");
+});
+
+// Array methods need conversion
+const cardTexts = [...cards].map(card => card.textContent);
+// or: Array.from(cards).map(card => card.textContent)
+```
+
+<Info>
+`querySelectorAll` returns a `NodeList`, not an array. It has `.forEach()` but not `.map()`, `.filter()`, etc. Spread it into an array with `[...nodeList]` when you need array methods.
+</Info>
+
+## Common CSS selectors
+
+You use the same selectors as CSS. Here's a quick reference:
+
+| Selector | Example | Matches |
+|---|---|---|
+| Tag | `"p"` | All `<p>` elements |
+| Class | `".card"` | Elements with `class="card"` |
+| ID | `"#sidebar"` | Element with `id="sidebar"` |
+| Attribute | `'[data-id="5"]'` | Elements with `data-id="5"` |
+| Child | `"ul > li"` | Direct `<li>` children of `<ul>` |
+| Descendant | `"form input"` | Any `<input>` inside a `<form>` |
+| Multiple | `"h1, h2, h3"` | All `<h1>`, `<h2>`, and `<h3>` elements |
+| Pseudo | `"li:first-child"` | First `<li>` in its parent |
+
+### Practical examples
+
+```javascript
+// Form inputs
+const nameInput = document.querySelector("#user-form input[name='username']");
+
+// Navigation links
+const navLinks = document.querySelectorAll("nav a");
+
+// Active tab
+const activeTab = document.querySelector(".tab.active");
+
+// Data attributes (great for JS hooks)
+const modal = document.querySelector('[data-modal="settings"]');
+```
+
+<Tip>
+Use `data-*` attributes to select elements meant for JavaScript interaction. This keeps your JS selectors separate from your CSS classes: `<button data-action="delete">` instead of `<button class="delete-btn">`.
+</Tip>
+
+## Older methods (still common)
+
+You'll see these in older code and tutorials:
+
+```javascript
+// By ID — no # prefix needed
+const sidebar = document.getElementById("sidebar");
+
+// By class name — returns a live HTMLCollection
+const cards = document.getElementsByClassName("card");
+
+// By tag name — returns a live HTMLCollection
+const paragraphs = document.getElementsByTagName("p");
+```
+
+<Tabs>
+<Tab title="Modern (use this)">
+```javascript
+const sidebar = document.querySelector("#sidebar");
+const cards = document.querySelectorAll(".card");
+```
+</Tab>
+
+<Tab title="Older (you'll still see)">
+```javascript
+const sidebar = document.getElementById("sidebar");
+const cards = document.getElementsByClassName("card");
+```
+</Tab>
+</Tabs>
+
+`querySelector` / `querySelectorAll` are the modern standard. They're more flexible (any CSS selector) and more consistent (`querySelectorAll` always returns a static `NodeList`).
+
+## Scope your selectors
+
+You can call `querySelector` on any element, not just `document`:
+
+```javascript
+const form = document.querySelector("#user-form");
+
+// Search only inside the form
+const nameInput = form.querySelector('input[name="username"]');
+const submitBtn = form.querySelector('button[type="submit"]');
+```
+
+This is useful when you have multiple similar structures on the page and need to target elements within a specific container.
 
 ## Common mistakes
 
-{/* TODO: Selecting elements that don't exist */}
+<AccordionGroup>
+<Accordion title="Selecting elements before they exist">
+```html
+<!-- ❌ Script runs before the body is parsed -->
+<head>
+  <script src="app.js"></script>
+</head>
+<body>
+  <h1>Hello</h1>
+</body>
+```
+
+```javascript
+// app.js — h1 doesn't exist yet when this runs!
+const heading = document.querySelector("h1"); // null
+```
+
+```html
+<!-- ✅ Use defer — script runs after DOM is ready -->
+<head>
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <h1>Hello</h1>
+</body>
+```
+
+<Warning>
+Scripts in `<head>` run before `<body>` is parsed. Use `defer` on your script tag, or place the `<script>` at the bottom of `<body>`. The `defer` approach is modern and preferred.
+</Warning>
+</Accordion>
+
+<Accordion title="Forgetting the dot or hash in selectors">
+```javascript
+// ❌ Wrong — missing . for class
+const card = document.querySelector("card");      // Looks for <card> element
+
+// ✅ Correct
+const card = document.querySelector(".card");      // Looks for class="card"
+
+// ❌ Wrong — missing # for ID
+const sidebar = document.querySelector("sidebar"); // Looks for <sidebar> element
+
+// ✅ Correct
+const sidebar = document.querySelector("#sidebar"); // Looks for id="sidebar"
+```
+</Accordion>
+
+<Accordion title="Treating querySelectorAll like an array">
+```javascript
+const items = document.querySelectorAll(".item");
+
+// ❌ Won't work — NodeList doesn't have .map()
+const names = items.map(item => item.textContent);
+
+// ✅ Spread into an array first
+const names = [...items].map(item => item.textContent);
+```
+</Accordion>
+</AccordionGroup>
+
+## What's next?
+
+You can find elements. Now let's change them — text, styles, classes, and attributes.
+
+<Card title="Modifying elements" icon="pen" href="/dom-browser/modifying-elements">
+Change text, styles, attributes, and classes
+</Card>

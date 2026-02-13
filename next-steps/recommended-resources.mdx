@@ -3,20 +3,134 @@ title: "Recommended resources"
 description: "Continue learning with these curated resources for JavaScript and React"
 ---
 
-{/* TODO: Write resources content */}
-
 ## Official documentation
 
-{/* TODO: MDN, React docs, FastAPI docs */}
+These are the definitive references. When you need to look something up, go here first.
+
+### JavaScript
+
+**MDN Web Docs** — The single best JavaScript reference. Written by Mozilla, used by everyone.
+- JavaScript Guide: `developer.mozilla.org/en-US/docs/Web/JavaScript/Guide`
+- Array methods: `developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array`
+- Fetch API: `developer.mozilla.org/en-US/docs/Web/API/Fetch_API`
+
+<Tip>
+When you Google a JavaScript question, add "MDN" to your search. The MDN result is almost always the most accurate and well-explained answer. Example: "array map MDN".
+</Tip>
+
+### React
+
+**React docs** — Completely rewritten in 2023 with interactive examples and modern patterns.
+- Quick Start: `react.dev/learn`
+- Hooks reference: `react.dev/reference/react`
+- Thinking in React: `react.dev/learn/thinking-in-react`
+
+### FastAPI
+
+**FastAPI docs** — Excellent documentation with a tutorial-first approach.
+- Tutorial: `fastapi.tiangolo.com/tutorial`
+- Deployment: `fastapi.tiangolo.com/deployment`
+
+## What to learn next
+
+You've learned the essentials. Here's what to add to your toolkit, in order of usefulness:
+
+### 1. TypeScript
+
+TypeScript adds types to JavaScript. It catches bugs before your code runs — especially data shape mismatches between frontend and backend.
+
+- **Why**: Catch `undefined` errors, get autocomplete, document your code automatically
+- **When**: Once you're comfortable with JavaScript (after 1-2 projects)
+- **Where to start**: `typescriptlang.org/docs/handbook`
+
+```tsx
+// TypeScript catches this at development time
+interface User {
+  id: number;
+  name: string;
+  email: string;
+}
+
+function greet(user: User) {
+  return `Hello, ${user.username}`; // ❌ Error: 'username' doesn't exist on type 'User'
+}
+```
+
+### 2. React Router
+
+Add multiple pages to your React app. Right now you have one page — React Router gives you `/users`, `/users/3`, `/settings`, etc.
+
+- **Why**: Every real app needs multiple pages/routes
+- **When**: Your next project
+- **Where to start**: `reactrouter.com/start/framework/installation`
+
+### 3. TanStack Query (React Query)
+
+Replaces your manual `useState` + `useEffect` + loading/error pattern for data fetching with a single hook.
+
+- **Why**: Automatic caching, background refetching, loading/error states handled for you
+- **When**: When you're tired of writing the loading/error/data pattern manually
+- **Where to start**: `tanstack.com/query`
+
+```jsx
+// Instead of useState + useEffect + loading + error...
+const { data: users, isLoading, error } = useQuery({
+  queryKey: ['users'],
+  queryFn: getUsers,
+});
+```
+
+### 4. Tailwind CSS
+
+Utility-first CSS framework. Instead of writing CSS files, you add classes directly to your JSX.
+
+- **Why**: Build UIs faster without switching between CSS and JSX files
+- **When**: Anytime — it's just CSS
+- **Where to start**: `tailwindcss.com/docs`
+
+```jsx
+// No CSS files needed
+<button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+  Click me
+</button>
+```
+
+### 5. Testing
+
+Learn to test your components and API calls. Start with Vitest (test runner) and React Testing Library.
+
+- **Why**: Confidence that your code works, catch regressions
+- **When**: Once you have a project worth maintaining
+- **Where to start**: `vitest.dev` and `testing-library.com/docs/react-testing-library`
 
 ## Practice platforms
 
-{/* TODO: Where to practice coding */}
+Build things. Reading tutorials only gets you 20% of the way — building gets you the other 80%.
 
-## Advanced topics
+| Platform | What it's good for |
+|---|---|
+| **Build your own projects** | Best way to learn — pick an idea and build it |
+| **Frontend Mentor** | Real-world design challenges to build |
+| **JavaScript30** | 30 small vanilla JS projects by Wes Bos |
+| **freeCodeCamp** | Structured JavaScript curriculum (free) |
+| **Exercism** | JavaScript exercises with mentoring |
 
-{/* TODO: TypeScript, Next.js, state management */}
+<Tip>
+The best project to build is one you'll actually use. A personal budget tracker, a recipe organizer, a reading list app — something you care about. Motivation matters more than complexity.
+</Tip>
 
-## Community
+## Project ideas
 
-{/* TODO: Where to get help */}
+Start small, then grow:
+
+1. **Todo app** — The classic. CRUD with localStorage, then upgrade to a FastAPI backend.
+2. **Weather dashboard** — Fetch from a public API, display with React.
+3. **Personal bookmarks** — Save links with tags, search and filter them.
+4. **Expense tracker** — Forms, calculations, charts. Full-stack with FastAPI.
+5. **Blog platform** — Markdown posts, categories, admin panel.
+
+Each project reinforces different skills from this course. Pick one and build it this week.
+
+<Card title="Deployment basics" icon="rocket" href="/next-steps/deployment-basics">
+Get your full-stack application live on the internet
+</Card>

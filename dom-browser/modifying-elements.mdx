@@ -3,20 +3,249 @@ title: "Modifying elements"
 description: "Change text, styles, attributes, and classes of HTML elements"
 ---
 
-{/* TODO: Write modifying elements content */}
+## Changing what's on the page
 
-## Changing text
+Once you've selected an element, you can change anything about it — its text, HTML, styles, classes, and attributes. This is how vanilla JavaScript makes pages dynamic.
 
-{/* TODO: textContent and innerHTML */}
+## Changing text content
+
+### textContent — plain text
+
+```javascript
+const heading = document.querySelector("h1");
+
+// Read
+console.log(heading.textContent); // "Welcome"
+
+// Write
+heading.textContent = "Hello, Sarah!";
+```
+
+`textContent` sets or gets the plain text of an element. It's safe — any HTML in the string is displayed as text, not rendered.
+
+```javascript
+// HTML is escaped — shows the literal tags
+heading.textContent = "<em>Hello</em>"; // Displays: <em>Hello</em>
+```
+
+### innerHTML — HTML content
+
+```javascript
+const container = document.querySelector(".user-info");
+
+// Read — includes HTML tags
+console.log(container.innerHTML); // "<strong>Sarah</strong> — Admin"
+
+// Write — HTML is parsed and rendered
+container.innerHTML = "<strong>Sarah Chen</strong> — <em>Editor</em>";
+```
+
+`innerHTML` parses and renders HTML. Use it when you need to insert structured content.
+
+<Warning>
+Never set `innerHTML` with user input. It creates a cross-site scripting (XSS) vulnerability. If a user types `<script>alert('hacked')</script>`, it will execute. Use `textContent` for user-provided data.
+</Warning>
+
+### When to use each
+
+| Method | Use case | Safe from XSS? |
+|---|---|---|
+| `textContent` | Setting plain text | Yes |
+| `innerHTML` | Setting HTML structure | No — sanitize first |
+| `innerText` | Like `textContent` but respects CSS (slower) | Yes |
+
+<Tip>
+Default to `textContent`. Only use `innerHTML` when you specifically need to set HTML, and never with user input.
+</Tip>
 
 ## Changing styles
 
-{/* TODO: element.style and classList */}
+### Inline styles
+
+```javascript
+const card = document.querySelector(".card");
+
+// Set individual properties (camelCase, not kebab-case)
+card.style.backgroundColor = "#f0f9ff";
+card.style.padding = "16px";
+card.style.borderRadius = "8px";
+card.style.display = "none"; // Hide the element
+
+// Read a style
+console.log(card.style.backgroundColor); // "rgb(240, 249, 255)"
+```
+
+CSS property names use **camelCase** in JavaScript:
+
+| CSS | JavaScript |
+|---|---|
+| `background-color` | `backgroundColor` |
+| `font-size` | `fontSize` |
+| `border-radius` | `borderRadius` |
+| `z-index` | `zIndex` |
+| `margin-top` | `marginTop` |
+
+### Removing an inline style
+
+```javascript
+// Set to empty string to remove
+card.style.backgroundColor = "";
+
+// Or remove all inline styles
+card.removeAttribute("style");
+```
+
+<Info>
+`element.style` only reads and sets **inline** styles. It won't show styles from your CSS files. To read the computed (final) style, use `getComputedStyle(element)`.
+</Info>
 
 ## Adding and removing classes
 
-{/* TODO: classList.add, remove, toggle */}
+This is the preferred way to change styles. Instead of setting individual CSS properties, toggle classes that are defined in your stylesheet.
+
+### classList API
+
+```javascript
+const button = document.querySelector(".btn");
+
+// Add a class
+button.classList.add("active");
+// <button class="btn active">
+
+// Remove a class
+button.classList.remove("active");
+// <button class="btn">
+
+// Toggle — add if missing, remove if present
+button.classList.toggle("active");
+
+// Check if a class exists
+if (button.classList.contains("active")) {
+  console.log("Button is active");
+}
+
+// Add multiple classes
+button.classList.add("primary", "large");
+
+// Remove multiple classes
+button.classList.remove("primary", "large");
+```
+
+### Practical examples
+
+```javascript
+// Show/hide an element
+const modal = document.querySelector(".modal");
+modal.classList.toggle("hidden");
+
+// Highlight the active navigation link
+const navLinks = document.querySelectorAll(".nav-link");
+navLinks.forEach(link => link.classList.remove("active"));
+clickedLink.classList.add("active");
+
+// Dark mode toggle
+document.body.classList.toggle("dark-mode");
+```
+
+```css
+/* Your CSS file */
+.hidden { display: none; }
+.active { color: #3b82f6; font-weight: bold; }
+.dark-mode { background: #1a1a2e; color: #eee; }
+```
+
+<Tip>
+Prefer `classList` over `element.style` for most visual changes. CSS classes are reusable, easier to maintain, and keep your JavaScript focused on logic rather than styling.
+</Tip>
 
 ## Changing attributes
 
-{/* TODO: setAttribute, getAttribute */}
+### setAttribute / getAttribute
+
+```javascript
+const link = document.querySelector("a.docs-link");
+
+// Read an attribute
+console.log(link.getAttribute("href")); // "/docs"
+
+// Set an attribute
+link.setAttribute("href", "/new-docs");
+link.setAttribute("target", "_blank");
+
+// Remove an attribute
+link.removeAttribute("target");
+
+// Check if an attribute exists
+link.hasAttribute("target"); // false
+```
+
+### Direct property access
+
+Most common attributes have matching properties:
+
+```javascript
+const img = document.querySelector("img.avatar");
+
+// These work the same as setAttribute/getAttribute
+img.src = "/images/sarah.jpg";
+img.alt = "Sarah Chen's avatar";
+img.width = 64;
+
+const input = document.querySelector("input.email");
+input.value = "sarah@example.com";
+input.placeholder = "Enter your email";
+input.disabled = true;
+input.required = true;
+```
+
+### data attributes
+
+Custom `data-*` attributes are accessed through the `dataset` property:
+
+```javascript
+// HTML: <div data-user-id="42" data-role="admin">
+const card = document.querySelector(".user-card");
+
+// Read — kebab-case becomes camelCase
+console.log(card.dataset.userId); // "42"
+console.log(card.dataset.role);   // "admin"
+
+// Write
+card.dataset.status = "active";
+// HTML becomes: <div data-user-id="42" data-role="admin" data-status="active">
+```
+
+<Info>
+`data-*` attributes are always strings. If you store a number, you'll need to convert it: `Number(card.dataset.userId)`.
+</Info>
+
+## Showing and hiding elements
+
+Three common patterns:
+
+```javascript
+const element = document.querySelector(".notification");
+
+// 1. CSS class (preferred)
+element.classList.toggle("hidden"); // Uses .hidden { display: none }
+
+// 2. Style property
+element.style.display = "none";  // Hide
+element.style.display = "";      // Show (revert to CSS default)
+
+// 3. Hidden attribute
+element.hidden = true;  // Hide
+element.hidden = false; // Show
+```
+
+<Tip>
+The CSS class approach is cleanest. Define a `.hidden` class in CSS and toggle it with `classList.toggle("hidden")`. This keeps your styling in CSS and your logic in JavaScript.
+</Tip>
+
+## What's next?
+
+You can modify existing elements. Now let's learn how to create new elements from scratch and add them to the page.
+
+<Card title="Creating elements" icon="plus" href="/dom-browser/creating-elements">
+Dynamically add new HTML elements to the page
+</Card>

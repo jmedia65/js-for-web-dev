@@ -3,16 +3,243 @@ title: "Create operation"
 description: "Build a form that sends data to your FastAPI backend and creates a new record"
 ---
 
-{/* TODO: Write create operation content */}
+## The full picture
+
+Creating a record involves three parts working together: a FastAPI endpoint, an API client function, and a React form component.
+
+<Tabs>
+<Tab title="Backend (Python)">
+```python
+# backend/main.py
+class UserCreate(BaseModel):
+    name: str
+    email: str
+
+@app.post("/api/users", status_code=201)
+def create_user(user: UserCreate):
+    new_user = {"id": next_id, "name": user.name, "email": user.email}
+    users.append(new_user)
+    return new_user
+```
+</Tab>
+<Tab title="API Client (JS)">
+```jsx
+// frontend/src/api/users.js
+export async function createUser(data) {
+  const response = await fetch(`${API_URL}/api/users`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  return response.json();
+}
+```
+</Tab>
+<Tab title="Component (React)">
+```jsx
+// frontend/src/components/CreateUserForm.jsx
+function CreateUserForm({ onUserCreated }) {
+  // ... form state and submission logic
+}
+```
+</Tab>
+</Tabs>
 
 ## The form component
 
-{/* TODO: React form with state */}
+```jsx
+import { useState } from 'react';
+import { createUser } from '../api/users';
 
-## Sending data to the API
+function CreateUserForm({ onUserCreated }) {
+  const [formData, setFormData] = useState({ name: "", email: "" });
+  const [error, setError] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
 
-{/* TODO: POST request with fetch */}
+  function handleChange(e) {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  }
 
-## Handling success and errors
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setError(null);
+    setSubmitting(true);
 
-{/* TODO: User feedback patterns */}
+    try {
+      const newUser = await createUser(formData);
+      onUserCreated(newUser);    // Tell parent about the new user
+      setFormData({ name: "", email: "" }); // Reset form
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input
+        name="name"
+        value={formData.name}
+        onChange={handleChange}
+        placeholder="Name"
+        required
+      />
+      <input
+        name="email"
+        type="email"
+        value={formData.email}
+        onChange={handleChange}
+        placeholder="Email"
+        required
+      />
+
+      {error && <p className="error">{error}</p>}
+
+      <button type="submit" disabled={submitting}>
+        {submitting ? "Creating..." : "Create User"}
+      </button>
+    </form>
+  );
+}
+```
+
+Key details:
+- **`onUserCreated` callback** — the form doesn't manage the user list, it just notifies the parent
+- **`submitting` state** — disables the button to prevent double submissions
+- **Form reset** — clears inputs after successful creation
+- **Error display** — shows the error message from the API
+
+## The parent component
+
+The parent owns the user list and passes the callback:
+
+```jsx
+function UserDashboard() {
+  const [users, setUsers] = useState([]);
+
+  function handleUserCreated(newUser) {
+    setUsers(prev => [...prev, newUser]);
+  }
+
+  return (
+    <div>
+      <h1>Users</h1>
+      <CreateUserForm onUserCreated={handleUserCreated} />
+      <ul>
+        {users.map(user => (
+          <li key={user.id}>{user.name} — {user.email}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+```
+
+When the form creates a user, the API returns the full user object (with its new `id`). The parent adds it to the list. The UI updates instantly — no need to refetch.
+
+## Adding validation
+
+Combine frontend validation with backend error handling:
+
+```jsx
+function CreateUserForm({ onUserCreated }) {
+  const [formData, setFormData] = useState({ name: "", email: "" });
+  const [errors, setErrors] = useState({});
+  const [submitting, setSubmitting] = useState(false);
+
+  function validate() {
+    const newErrors = {};
+    if (!formData.name.trim()) newErrors.name = "Name is required";
+    if (!formData.email.trim()) newErrors.email = "Email is required";
+    else if (!formData.email.includes("@")) newErrors.email = "Invalid email";
+    return newErrors;
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+
+    // Frontend validation (instant feedback)
+    const validationErrors = validate();
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      return;
+    }
+
+    setErrors({});
+    setSubmitting(true);
+
+    try {
+      const newUser = await createUser(formData);
+      onUserCreated(newUser);
+      setFormData({ name: "", email: "" });
+    } catch (err) {
+      // Backend validation error (e.g., duplicate email)
+      if (err.fieldErrors) {
+        setErrors(err.fieldErrors);
+      } else {
+        setErrors({ general: err.message });
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  function handleChange(e) {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    if (errors[name]) setErrors(prev => ({ ...prev, [name]: null }));
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <div>
+        <input name="name" value={formData.name} onChange={handleChange} placeholder="Name" />
+        {errors.name && <p className="error">{errors.name}</p>}
+      </div>
+      <div>
+        <input name="email" value={formData.email} onChange={handleChange} placeholder="Email" />
+        {errors.email && <p className="error">{errors.email}</p>}
+      </div>
+
+      {errors.general && <p className="error">{errors.general}</p>}
+
+      <button type="submit" disabled={submitting}>
+        {submitting ? "Creating..." : "Create User"}
+      </button>
+    </form>
+  );
+}
+```
+
+Two layers of validation:
+1. **Frontend** — catches missing fields before sending the request (instant)
+2. **Backend** — catches things like duplicate emails (requires API call)
+
+<Tip>
+Clear field errors when the user starts typing in that field. This gives immediate feedback that they're fixing the issue. The `handleChange` function checks `if (errors[name])` to do this.
+</Tip>
+
+## The data flow
+
+```
+1. User fills out form and clicks "Create"
+2. Frontend validates → shows errors OR continues
+3. fetch() sends POST /api/users with JSON body
+4. FastAPI validates with Pydantic → returns 422 OR continues
+5. Backend creates record → returns 201 + new user object
+6. Frontend receives new user → calls onUserCreated(newUser)
+7. Parent adds to state → React re-renders the list
+```
+
+Every step has error handling. The user always knows what happened.
+
+## What's next?
+
+You can create records. Now let's display them — fetching a list from the API and rendering it in React.
+
+<Card title="Read operation" icon="eye" href="/full-stack/read-operation">
+Fetch and display data from your FastAPI backend in React components
+</Card>

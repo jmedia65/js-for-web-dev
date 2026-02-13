@@ -3,16 +3,220 @@ title: "Update operation"
 description: "Edit existing records with a form that sends PUT requests to your API"
 ---
 
-{/* TODO: Write update operation content */}
+## Two steps: load, then save
 
-## Pre-filling the form
+Updating a record means: load the current data into a form, let the user edit it, then send the changes back to the API.
 
-{/* TODO: Loading existing data into form */}
+<Tabs>
+<Tab title="Backend (Python)">
+```python
+class UserUpdate(BaseModel):
+    name: str | None = None
+    email: str | None = None
 
-## Sending the update
+@app.put("/api/users/{user_id}")
+def update_user(user_id: int, updates: UserUpdate):
+    user = find_user(user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
 
-{/* TODO: PUT request with fetch */}
+    if updates.name is not None:
+        user["name"] = updates.name
+    if updates.email is not None:
+        user["email"] = updates.email
+
+    return user
+```
+</Tab>
+<Tab title="API Client (JS)">
+```jsx
+export async function updateUser(id, data) {
+  const response = await fetch(`${API_URL}/api/users/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  return response.json();
+}
+```
+</Tab>
+</Tabs>
+
+## The edit form component
+
+The key difference from the Create form: initialize state with the existing data.
+
+```jsx
+import { useState } from 'react';
+import { updateUser } from '../api/users';
+
+function EditUserForm({ user, onSave, onCancel }) {
+  const [formData, setFormData] = useState({
+    name: user.name,
+    email: user.email,
+  });
+  const [error, setError] = useState(null);
+  const [saving, setSaving] = useState(false);
+
+  function handleChange(e) {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setError(null);
+    setSaving(true);
+
+    try {
+      const updatedUser = await updateUser(user.id, formData);
+      onSave(updatedUser); // Tell parent about the update
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input name="name" value={formData.name} onChange={handleChange} />
+      <input name="email" value={formData.email} onChange={handleChange} />
+
+      {error && <p className="error">{error}</p>}
+
+      <button type="submit" disabled={saving}>
+        {saving ? "Saving..." : "Save Changes"}
+      </button>
+      <button type="button" onClick={onCancel}>
+        Cancel
+      </button>
+    </form>
+  );
+}
+```
+
+Notice:
+- **State initialized from `user` prop** — form starts with current values
+- **`onSave` callback** — parent receives the updated object from the API
+- **`onCancel` callback** — lets the user exit edit mode without saving
+- **Cancel is `type="button"`** — prevents it from submitting the form
+
+## Toggle between view and edit mode
+
+The parent component switches between displaying data and showing the edit form:
+
+```jsx
+function UserCard({ user, onUpdate }) {
+  const [editing, setEditing] = useState(false);
+
+  function handleSave(updatedUser) {
+    onUpdate(updatedUser);
+    setEditing(false);
+  }
+
+  if (editing) {
+    return (
+      <EditUserForm
+        user={user}
+        onSave={handleSave}
+        onCancel={() => setEditing(false)}
+      />
+    );
+  }
+
+  return (
+    <div className="user-card">
+      <h3>{user.name}</h3>
+      <p>{user.email}</p>
+      <button onClick={() => setEditing(true)}>Edit</button>
+    </div>
+  );
+}
+```
+
+```jsx
+function UserDashboard() {
+  const [users, setUsers] = useState([]);
+
+  function handleUpdate(updatedUser) {
+    setUsers(prev =>
+      prev.map(u => u.id === updatedUser.id ? updatedUser : u)
+    );
+  }
+
+  return (
+    <div>
+      {users.map(user => (
+        <UserCard
+          key={user.id}
+          user={user}
+          onUpdate={handleUpdate}
+        />
+      ))}
+    </div>
+  );
+}
+```
+
+The state update uses `.map()` — replace the old user with the updated one, leave everything else unchanged.
+
+<Info>
+`prev.map(u => u.id === updatedUser.id ? updatedUser : u)` is the standard pattern for updating one item in a list. It creates a new array where only the matching item is replaced. You'll use this pattern constantly.
+</Info>
 
 ## Optimistic vs pessimistic updates
 
-{/* TODO: When to update UI before/after API */}
+**Pessimistic** (wait for server, then update UI):
+
+```jsx
+async function handleSave(formData) {
+  setSaving(true);
+  try {
+    const updated = await updateUser(user.id, formData); // Wait for API
+    onUpdate(updated); // Then update UI
+  } catch (err) {
+    setError(err.message); // Show error, UI unchanged
+  } finally {
+    setSaving(false);
+  }
+}
+```
+
+**Optimistic** (update UI immediately, roll back on error):
+
+```jsx
+async function handleSave(formData) {
+  const previousUser = { ...user }; // Save backup
+
+  // Update UI immediately (optimistic)
+  onUpdate({ ...user, ...formData });
+  setEditing(false);
+
+  try {
+    await updateUser(user.id, formData); // Confirm with server
+  } catch (err) {
+    onUpdate(previousUser); // Roll back on failure
+    setError("Save failed. Your changes were reverted.");
+    setEditing(true);
+  }
+}
+```
+
+| Approach | UX | Complexity | When to use |
+|---|---|---|---|
+| Pessimistic | Spinner, then update | Simple | Most operations (start here) |
+| Optimistic | Instant, may roll back | More complex | Frequent actions (likes, toggles) |
+
+<Tip>
+Start with pessimistic updates. They're simpler and always correct. Only switch to optimistic updates for actions where the slight delay feels sluggish — like toggling a checkbox or liking a post.
+</Tip>
+
+## What's next?
+
+You can create, read, and update. The last CRUD operation: deleting records with confirmation.
+
+<Card title="Delete operation" icon="trash" href="/full-stack/delete-operation">
+Remove records with confirmation and proper error handling
+</Card>

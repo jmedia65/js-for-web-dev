@@ -3,16 +3,130 @@ title: "Project setup"
 description: "Initialize a JavaScript project with npm and configure the basics"
 ---
 
-{/* TODO: Write project setup content */}
+## Creating a project
 
-## npm init
+Let's set up a proper JavaScript project from scratch. This is the same process you'll follow for every new project.
 
-{/* TODO: Initializing a project */}
+<Steps>
+<Step title="Create a folder and initialize npm">
+```bash
+mkdir my-js-project
+cd my-js-project
+npm init -y
+```
+
+The `-y` flag accepts all defaults. This creates a `package.json` file in your folder.
+</Step>
+
+<Step title="Create your entry file">
+Create an `index.js` file:
+
+```javascript index.js
+const APP_NAME = "My JS Project";
+
+console.log(`${APP_NAME} is running!`);
+```
+</Step>
+
+<Step title="Add a start script">
+Open `package.json` and update the `scripts` section:
+
+```json package.json
+{
+  "name": "my-js-project",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "node index.js"
+  }
+}
+```
+
+Now you can run your project with:
+
+```bash
+npm start
+# My JS Project is running!
+```
+</Step>
+</Steps>
 
 ## Project structure
 
-{/* TODO: Standard folder layout */}
+A typical JavaScript project looks like this:
 
-## .gitignore basics
+```
+my-js-project/
+├── node_modules/     # Installed packages (don't touch)
+├── src/              # Your source code
+│   └── index.js
+├── package.json      # Project config and dependencies
+├── package-lock.json # Locked dependency versions
+├── .gitignore        # Files to exclude from git
+└── README.md
+```
 
-{/* TODO: What to ignore */}
+For the practice exercises in this course, you don't need the `src/` folder — a flat structure with `.js` files at the root is fine. You'll use a more structured layout when you get to React.
+
+## Setting up .gitignore
+
+Create a `.gitignore` file in your project root:
+
+```text .gitignore
+# Dependencies
+node_modules/
+
+# Environment variables
+.env
+.env.local
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+*.swp
+```
+
+The most important line is `node_modules/`. This folder can contain thousands of files and hundreds of megabytes. Everyone who clones your project runs `npm install` to generate their own copy.
+
+<Warning>
+Always add `.env` to `.gitignore`. Environment files often contain API keys, database passwords, and other secrets that should never be committed to git.
+</Warning>
+
+## .env files
+
+You'll use `.env` files later in the course to store configuration like API URLs. Here's a preview:
+
+```text .env
+VITE_API_URL=http://localhost:8000
+DATABASE_URL=postgresql://localhost:5432/myapp
+```
+
+For now, just know that:
+1. `.env` files store configuration as key-value pairs
+2. They should never be committed to git
+3. Create a `.env.example` file (without real values) to show other developers what variables they need
+
+<Tip>
+Create a `.env.example` file with placeholder values so other developers know what environment variables your project expects. Commit this file to git.
+</Tip>
+
+## Verify your setup
+
+At this point, you should have:
+
+- [x] Node.js installed (`node -v` shows a version)
+- [x] npm available (`npm -v` shows a version)
+- [x] VS Code with ESLint, Prettier, and Error Lens extensions
+- [x] A practice folder where you can create and run `.js` files
+
+If all of that checks out, you're ready to learn JavaScript.
+
+## What's next?
+
+Your development environment is set up. Time to learn the language. Let's start with how JavaScript works and how it compares to Python.
+
+<Card title="JavaScript basics" icon="rocket" href="/javascript-core/overview">
+What JavaScript is, how it compares to Python, and essential syntax
+</Card>

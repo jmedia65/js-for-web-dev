@@ -3,20 +3,160 @@ title: "Deployment basics"
 description: "Get your full-stack application live on the internet"
 ---
 
-{/* TODO: Write deployment content */}
+## Two deployments, not one
 
-## Frontend deployment
+Just like development, your frontend and backend deploy separately. Different platforms, different processes — but they connect the same way: the frontend makes HTTP requests to the backend's URL.
 
-{/* TODO: Vercel, Netlify */}
+```
+Development:
+  Frontend → localhost:5173
+  Backend  → localhost:8000
 
-## Backend deployment
+Production:
+  Frontend → myapp.vercel.app
+  Backend  → myapp-api.railway.app
+```
 
-{/* TODO: Railway, Render, Fly.io */}
+## Deploy the frontend (React)
+
+React builds to static files — HTML, CSS, and JavaScript. Any static hosting platform can serve them.
+
+### Build for production
+
+```bash
+cd frontend
+npm run build
+```
+
+This creates a `dist/` folder with your optimized app. That's what gets deployed.
+
+### Vercel (recommended)
+
+The easiest way to deploy a React app. Connects to your GitHub repo and deploys automatically on every push.
+
+<Steps>
+<Step title="Push your code to GitHub">
+Make sure your `frontend/` folder is in a GitHub repository.
+</Step>
+<Step title="Sign up at vercel.com">
+Sign in with your GitHub account.
+</Step>
+<Step title="Import your repository">
+Click "New Project" → select your repo → set the root directory to `frontend/`.
+</Step>
+<Step title="Add environment variables">
+In project settings, add `VITE_API_URL` with your backend's production URL.
+</Step>
+<Step title="Deploy">
+Vercel builds and deploys automatically. You get a URL like `myapp.vercel.app`.
+</Step>
+</Steps>
+
+### Netlify (alternative)
+
+Same idea as Vercel. Connect GitHub, set build command to `npm run build`, publish directory to `dist/`.
+
+<Info>
+Both Vercel and Netlify have generous free tiers. For personal projects and portfolios, you won't need to pay.
+</Info>
+
+## Deploy the backend (FastAPI)
+
+Your Python backend needs a server that can run a process. This is different from static hosting — it's running actual code.
+
+### Railway (recommended)
+
+<Steps>
+<Step title="Push your backend to GitHub">
+Make sure your `backend/` folder has a `requirements.txt` with all dependencies.
+</Step>
+<Step title="Sign up at railway.app">
+Sign in with your GitHub account.
+</Step>
+<Step title="New project → Deploy from GitHub repo">
+Select your repo and set the root directory to `backend/`.
+</Step>
+<Step title="Add a start command">
+Set the start command to: `uvicorn main:app --host 0.0.0.0 --port $PORT`
+</Step>
+<Step title="Add environment variables">
+Add `DATABASE_URL`, `SECRET_KEY`, `ALLOWED_ORIGINS` (set to your frontend's production URL).
+</Step>
+<Step title="Deploy">
+Railway builds and deploys. You get a URL like `myapp-api.up.railway.app`.
+</Step>
+</Steps>
+
+### Render (alternative)
+
+Similar to Railway. Create a new "Web Service," connect your GitHub repo, set the start command, add environment variables.
+
+### Requirements file
+
+Make sure your `requirements.txt` is complete:
+
+```txt
+fastapi
+uvicorn[standard]
+python-dotenv
+```
+
+Add any other packages your backend uses (SQLAlchemy, httpx, etc.).
 
 ## Environment variables in production
 
-{/* TODO: Setting production vars */}
+This is where the `.env` pattern from the course pays off. In development, you read from `.env` files. In production, you set environment variables in your hosting platform's dashboard.
 
-## Domain setup
+<Tabs>
+<Tab title="Frontend (Vercel)">
+```
+VITE_API_URL=https://myapp-api.up.railway.app
+```
+Set in Vercel → Project Settings → Environment Variables.
+</Tab>
+<Tab title="Backend (Railway)">
+```
+DATABASE_URL=postgresql://...
+SECRET_KEY=your-production-secret
+ALLOWED_ORIGINS=https://myapp.vercel.app
+```
+Set in Railway → Project → Variables.
+</Tab>
+</Tabs>
 
-{/* TODO: Custom domain basics */}
+<Warning>
+Update `ALLOWED_ORIGINS` on your backend to include your frontend's production URL. Without this, CORS will block all requests — the exact same error from the CORS lesson, but in production.
+</Warning>
+
+## The deployment checklist
+
+Before deploying, verify:
+
+- [ ] `npm run build` completes without errors (frontend)
+- [ ] `requirements.txt` includes all Python packages (backend)
+- [ ] Environment variables are set in both platforms
+- [ ] `ALLOWED_ORIGINS` includes your frontend's production URL
+- [ ] `.env` files are NOT committed to Git
+- [ ] Backend start command uses `--host 0.0.0.0` (not localhost)
+
+## After deployment
+
+Test your production app:
+
+1. Open your frontend URL in a browser
+2. Open DevTools → Network tab
+3. Check that API requests go to your production backend URL
+4. Test all CRUD operations
+5. Check the Console for any errors
+
+<Tip>
+If something works locally but not in production, it's almost always one of three things: wrong `VITE_API_URL`, missing `ALLOWED_ORIGINS`, or a missing environment variable. Check these first.
+</Tip>
+
+## What's next?
+
+Your app is live on the internet. One more lesson — where to get help when you're stuck.
+
+<Card title="Get help" icon="comments" href="/next-steps/get-help">
+Join the community, ask questions, and keep learning
+</Card>

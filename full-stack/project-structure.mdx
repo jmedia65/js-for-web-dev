@@ -3,16 +3,216 @@ title: "Project structure"
 description: "Organize your full-stack project with separate frontend and backend folders"
 ---
 
-{/* TODO: Write project structure content */}
+## Two apps, one project
 
-## Backend (FastAPI) folder
+A full-stack app is two separate applications that talk to each other: a **React frontend** (what users see) and a **FastAPI backend** (your API and database). They run independently, communicate over HTTP, and live in separate folders.
 
-{/* TODO: Python project layout */}
+```
+my-fullstack-app/
+├── backend/                # FastAPI (Python)
+│   ├── main.py             # FastAPI app, routes
+│   ├── models.py           # Pydantic models
+│   ├── database.py         # Database connection
+│   ├── requirements.txt    # Python dependencies
+│   ├── .env                # Backend secrets (DB URL, API keys)
+│   └── venv/               # Python virtual environment
+│
+├── frontend/               # React (JavaScript)
+│   ├── src/
+│   │   ├── App.jsx         # Main component
+│   │   ├── main.jsx        # Entry point
+│   │   ├── api/            # API client functions
+│   │   │   └── users.js    # fetch calls to backend
+│   │   ├── components/     # Reusable UI components
+│   │   │   ├── UserCard.jsx
+│   │   │   ├── UserForm.jsx
+│   │   │   └── Spinner.jsx
+│   │   └── pages/          # Page-level components
+│   │       └── Dashboard.jsx
+│   ├── .env                # Frontend config (API URL)
+│   ├── package.json        # JS dependencies
+│   └── vite.config.js      # Vite configuration
+│
+├── .gitignore
+└── README.md
+```
 
-## Frontend (React) folder
+This is the standard structure. You'll see it in almost every full-stack project.
 
-{/* TODO: Vite/React project layout */}
+## The backend (FastAPI)
 
-## Separation of concerns
+Your FastAPI backend is a Python project you already know how to build. Here's the minimum:
 
-{/* TODO: Why separate frontend and backend */}
+```python
+# backend/main.py
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+
+app = FastAPI()
+
+# Allow React frontend to make requests (more on CORS later)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# In-memory storage (use a real database in production)
+users = []
+next_id = 1
+
+class UserCreate(BaseModel):
+    name: str
+    email: str
+
+class User(BaseModel):
+    id: int
+    name: str
+    email: str
+
+@app.get("/api/users")
+def get_users():
+    return users
+
+@app.get("/api/users/{user_id}")
+def get_user(user_id: int):
+    for user in users:
+        if user["id"] == user_id:
+            return user
+    raise HTTPException(status_code=404, detail="User not found")
+
+@app.post("/api/users", status_code=201)
+def create_user(user: UserCreate):
+    global next_id
+    new_user = {"id": next_id, "name": user.name, "email": user.email}
+    users.append(new_user)
+    next_id += 1
+    return new_user
+```
+
+```bash
+# Run the backend
+cd backend
+pip install fastapi uvicorn
+uvicorn main:app --reload --port 8000
+```
+
+Your API is now running at `http://localhost:8000`. You can test it at `http://localhost:8000/docs` (FastAPI's built-in Swagger UI).
+
+## The frontend (React)
+
+Your React frontend is a Vite project that fetches data from the backend:
+
+```bash
+# Create the frontend
+cd my-fullstack-app
+npm create vite@latest frontend -- --template react
+cd frontend
+npm install
+npm run dev
+```
+
+React runs at `http://localhost:5173`. It makes `fetch()` calls to `http://localhost:8000/api/...` to get and send data.
+
+```jsx
+// frontend/src/App.jsx
+import { useState, useEffect } from 'react';
+
+function App() {
+  const [users, setUsers] = useState([]);
+
+  useEffect(() => {
+    fetch("http://localhost:8000/api/users")
+      .then(r => r.json())
+      .then(data => setUsers(data));
+  }, []);
+
+  return (
+    <div>
+      <h1>Users</h1>
+      {users.map(user => (
+        <p key={user.id}>{user.name} — {user.email}</p>
+      ))}
+    </div>
+  );
+}
+
+export default App;
+```
+
+<Info>
+The frontend and backend run on different ports (5173 and 8000). They're completely separate applications. The frontend doesn't know or care that the backend is Python — it just makes HTTP requests and gets JSON back.
+</Info>
+
+## How they communicate
+
+```
+┌─────────────────────┐         HTTP          ┌─────────────────────┐
+│   React Frontend    │  ──── requests ────►  │   FastAPI Backend   │
+│   localhost:5173    │  ◄── JSON responses ── │   localhost:8000    │
+│                     │                        │                     │
+│  • Components       │                        │  • Routes           │
+│  • State (useState) │                        │  • Pydantic models  │
+│  • UI rendering     │                        │  • Database queries  │
+└─────────────────────┘                        └─────────────────────┘
+```
+
+The frontend uses `fetch()` to make HTTP requests (GET, POST, PUT, DELETE). The backend processes the request and returns JSON. The frontend updates its state with the response and re-renders the UI.
+
+This is the same architecture used by every major web application — Gmail, Twitter, Spotify. The only difference is scale.
+
+## Running both together
+
+During development, you need two terminal windows:
+
+<Tabs>
+<Tab title="Terminal 1 — Backend">
+```bash
+cd backend
+source venv/bin/activate   # Activate Python environment
+uvicorn main:app --reload --port 8000
+```
+</Tab>
+<Tab title="Terminal 2 — Frontend">
+```bash
+cd frontend
+npm run dev
+```
+</Tab>
+</Tabs>
+
+<Tip>
+Keep both terminals visible. When you see an error in the browser, check both terminals — the bug could be on either side. FastAPI's terminal shows Python errors. Vite's terminal shows JavaScript build errors.
+</Tip>
+
+## .gitignore
+
+Make sure you don't commit dependencies or secrets:
+
+```gitignore
+# Python
+backend/venv/
+backend/__pycache__/
+backend/.env
+
+# JavaScript
+frontend/node_modules/
+frontend/dist/
+
+# Environment files with secrets
+.env
+*.env.local
+
+# OS files
+.DS_Store
+```
+
+## What's next?
+
+Your project is structured. But those hardcoded URLs (`http://localhost:8000`) won't work in production. Let's fix that with environment variables.
+
+<Card title="Environment variables" icon="key" href="/full-stack/environment-variables">
+Manage configuration and secrets across development and production
+</Card>

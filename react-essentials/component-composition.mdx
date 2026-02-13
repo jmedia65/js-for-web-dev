@@ -3,20 +3,344 @@ title: "Component composition"
 description: "Structure your React app with smart and presentational components"
 ---
 
-{/* TODO: Write component composition content */}
+## Two kinds of components
 
-## Smart vs presentational components
+As your app grows, you'll naturally split components into two roles:
 
-{/* TODO: Container vs display components */}
+| | Smart components | Presentational components |
+|---|---|---|
+| **Also called** | Container, page, parent | Display, UI, child |
+| **Manages state?** | Yes — `useState`, `useEffect` | No — receives data via props |
+| **Fetches data?** | Yes | No |
+| **Handles logic?** | Business logic, API calls | Display logic only (formatting, layout) |
+| **Reusable?** | Usually not | Highly reusable |
+
+```jsx
+// Smart component — owns state, fetches data, passes it down
+function UserDashboard() {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/users")
+      .then(r => r.json())
+      .then(data => setUsers(data))
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return <Spinner />;
+
+  return (
+    <div>
+      <h1>Users</h1>
+      <UserList users={users} />
+    </div>
+  );
+}
+
+// Presentational component — just renders what it receives
+function UserList({ users }) {
+  return (
+    <ul>
+      {users.map(user => (
+        <UserCard key={user.id} name={user.name} email={user.email} />
+      ))}
+    </ul>
+  );
+}
+
+function UserCard({ name, email }) {
+  return (
+    <div className="user-card">
+      <h3>{name}</h3>
+      <p>{email}</p>
+    </div>
+  );
+}
+```
+
+`UserDashboard` knows about APIs and state. `UserList` and `UserCard` know nothing about where data comes from — they just display what they receive. This separation makes presentational components reusable across your app.
+
+<Tip>
+You don't need to force every component into one category. This is a guideline, not a rule. The goal is simple: push state management up and keep display components focused on rendering.
+</Tip>
 
 ## Lifting state up
 
-{/* TODO: Sharing state between components */}
+When two sibling components need the same data, move the state to their shared parent:
 
-## Component hierarchy
+```jsx
+// ❌ Problem: SearchBar and UserList both need the search term,
+// but they're siblings — they can't share state directly
 
-{/* TODO: Organizing component trees */}
+// ✅ Solution: Lift state up to the parent
+function UserPage() {
+  const [users, setUsers] = useState([]);
+  const [search, setSearch] = useState(""); // State lives here
+
+  useEffect(() => {
+    fetch("/api/users")
+      .then(r => r.json())
+      .then(data => setUsers(data));
+  }, []);
+
+  const filtered = users.filter(user =>
+    user.name.toLowerCase().includes(search.toLowerCase())
+  );
+
+  return (
+    <div>
+      <SearchBar search={search} onSearchChange={setSearch} />
+      <UserList users={filtered} />
+    </div>
+  );
+}
+
+function SearchBar({ search, onSearchChange }) {
+  return (
+    <input
+      type="text"
+      value={search}
+      onChange={e => onSearchChange(e.target.value)}
+      placeholder="Search users..."
+    />
+  );
+}
+
+function UserList({ users }) {
+  return (
+    <ul>
+      {users.map(user => (
+        <li key={user.id}>{user.name} — {user.email}</li>
+      ))}
+    </ul>
+  );
+}
+```
+
+`UserPage` owns the state. `SearchBar` updates it via a callback. `UserList` reads the filtered result. Neither child knows about the other — the parent coordinates everything.
+
+<Info>
+"Lifting state up" is the answer to "how do sibling components share data?" Move the state to the nearest common parent. The parent passes data down via props and receives updates via callback props.
+</Info>
+
+## Callback props — child-to-parent communication
+
+Props flow **down** (parent → child). For the reverse direction, pass a function as a prop:
+
+```jsx
+function TodoApp() {
+  const [todos, setTodos] = useState([]);
+
+  function handleAddTodo(text) {
+    setTodos(prev => [...prev, { id: Date.now(), text, done: false }]);
+  }
+
+  function handleToggleTodo(id) {
+    setTodos(prev =>
+      prev.map(todo =>
+        todo.id === id ? { ...todo, done: !todo.done } : todo
+      )
+    );
+  }
+
+  function handleDeleteTodo(id) {
+    setTodos(prev => prev.filter(todo => todo.id !== id));
+  }
+
+  return (
+    <div>
+      <h1>Todos ({todos.length})</h1>
+      <AddTodoForm onAdd={handleAddTodo} />
+      <TodoList
+        todos={todos}
+        onToggle={handleToggleTodo}
+        onDelete={handleDeleteTodo}
+      />
+    </div>
+  );
+}
+
+function AddTodoForm({ onAdd }) {
+  const [text, setText] = useState("");
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    if (!text.trim()) return;
+    onAdd(text);     // Call the parent's function
+    setText("");      // Clear the input
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input
+        value={text}
+        onChange={e => setText(e.target.value)}
+        placeholder="Add a todo..."
+      />
+      <button type="submit">Add</button>
+    </form>
+  );
+}
+
+function TodoList({ todos, onToggle, onDelete }) {
+  return (
+    <ul>
+      {todos.map(todo => (
+        <TodoItem
+          key={todo.id}
+          todo={todo}
+          onToggle={onToggle}
+          onDelete={onDelete}
+        />
+      ))}
+    </ul>
+  );
+}
+
+function TodoItem({ todo, onToggle, onDelete }) {
+  return (
+    <li>
+      <span
+        style={{ textDecoration: todo.done ? "line-through" : "none" }}
+        onClick={() => onToggle(todo.id)}
+      >
+        {todo.text}
+      </span>
+      <button onClick={() => onDelete(todo.id)}>Delete</button>
+    </li>
+  );
+}
+```
+
+The data flow is clear: `TodoApp` owns all the state and logic. Children communicate back by calling the callback props (`onAdd`, `onToggle`, `onDelete`). No child modifies state directly.
+
+## A full composition example
+
+Here's a realistic page that combines everything — fetch, state, forms, lists, and composition:
+
+```jsx
+import { useState, useEffect } from 'react';
+
+// Smart component — owns all the state
+function DashboardPage() {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    async function loadUsers() {
+      try {
+        const response = await fetch("/api/users");
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        setUsers(await response.json());
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadUsers();
+  }, []);
+
+  async function handleCreateUser(userData) {
+    const response = await fetch("/api/users", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(userData),
+    });
+    const newUser = await response.json();
+    setUsers(prev => [...prev, newUser]);
+  }
+
+  async function handleDeleteUser(userId) {
+    await fetch(`/api/users/${userId}`, { method: "DELETE" });
+    setUsers(prev => prev.filter(u => u.id !== userId));
+  }
+
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>Error: {error}</p>;
+
+  return (
+    <div>
+      <h1>User Dashboard</h1>
+      <CreateUserForm onSubmit={handleCreateUser} />
+      <UserTable users={users} onDelete={handleDeleteUser} />
+    </div>
+  );
+}
+
+// Presentational — form with its own local state
+function CreateUserForm({ onSubmit }) {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    onSubmit({ name, email });
+    setName("");
+    setEmail("");
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input value={name} onChange={e => setName(e.target.value)} placeholder="Name" />
+      <input value={email} onChange={e => setEmail(e.target.value)} placeholder="Email" />
+      <button type="submit">Add User</button>
+    </form>
+  );
+}
+
+// Presentational — just renders the list
+function UserTable({ users, onDelete }) {
+  if (users.length === 0) return <p>No users yet.</p>;
+
+  return (
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {users.map(user => (
+          <tr key={user.id}>
+            <td>{user.name}</td>
+            <td>{user.email}</td>
+            <td>
+              <button onClick={() => onDelete(user.id)}>Delete</button>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+```
+
+Notice the pattern: `DashboardPage` handles all API calls and state. `CreateUserForm` has local state for the input fields, but the actual "create" logic lives in the parent. `UserTable` is pure display.
+
+## Rules of thumb
+
+1. **State goes in the highest component that needs it** — not higher, not lower
+2. **If two components need the same data** — lift the state to their parent
+3. **Smart components fetch and manage** — presentational components display
+4. **Callback props for child → parent** — never modify parent state directly from a child
+5. **Local state is fine for UI-only state** — form inputs, open/closed toggles, hover states
+
+<Tip>
+Don't try to make every component "dumb." Form components naturally need local state for their inputs. The goal isn't zero state in children — it's putting *shared* state in the right place and keeping *API logic* in smart components.
+</Tip>
 
 ## What's next?
 
-{/* TODO: Card linking to full-stack/project-structure */}
+You've learned the React essentials — components, props, state, effects, conditional rendering, lists, forms, and composition. These 8 concepts cover 90% of what you'll do in React.
+
+Now let's put it all together. In the next section, you'll connect your React frontend to a FastAPI backend and build a complete full-stack application.
+
+<Card title="Full-stack project structure" icon="folder-tree" href="/full-stack/project-structure">
+Organize a project with a React frontend and FastAPI backend
+</Card>

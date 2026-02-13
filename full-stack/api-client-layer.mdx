@@ -3,20 +3,239 @@ title: "API client layer"
 description: "Separate API calls from components for cleaner, more maintainable code"
 ---
 
-{/* TODO: Write API client layer content */}
+## Stop putting fetch in components
 
-## Separating API calls from components
+Here's what most beginners do — scatter `fetch()` calls throughout their components:
 
-{/* TODO: Why this pattern matters */}
+```jsx
+// ❌ API logic mixed into the component
+function UserList() {
+  const [users, setUsers] = useState([]);
 
-## Creating an API module
+  useEffect(() => {
+    fetch(`${import.meta.env.VITE_API_URL}/api/users`)
+      .then(r => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
+      .then(data => setUsers(data))
+      .catch(err => console.error(err));
+  }, []);
 
-{/* TODO: api/users.js structure */}
+  // ... render
+}
+```
 
-## Base URL configuration
+This works, but it creates problems: the same URL and error-handling logic gets duplicated in every component that needs users. If the API changes, you fix it in 10 places instead of 1.
 
-{/* TODO: Environment variable for API URL */}
+## The API client pattern
+
+Create a dedicated file for each resource's API calls:
+
+```jsx
+// frontend/src/api/users.js
+const API_URL = import.meta.env.VITE_API_URL;
+
+export async function getUsers() {
+  const response = await fetch(`${API_URL}/api/users`);
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  return response.json();
+}
+
+export async function getUser(id) {
+  const response = await fetch(`${API_URL}/api/users/${id}`);
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  return response.json();
+}
+
+export async function createUser(userData) {
+  const response = await fetch(`${API_URL}/api/users`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(userData),
+  });
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  return response.json();
+}
+
+export async function updateUser(id, userData) {
+  const response = await fetch(`${API_URL}/api/users/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(userData),
+  });
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  return response.json();
+}
+
+export async function deleteUser(id) {
+  const response = await fetch(`${API_URL}/api/users/${id}`, {
+    method: "DELETE",
+  });
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+}
+```
+
+Now your components are clean:
+
+```jsx
+// frontend/src/pages/UserList.jsx
+import { useState, useEffect } from 'react';
+import { getUsers } from '../api/users';
+
+function UserList() {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    getUsers()
+      .then(data => setUsers(data))
+      .catch(err => setError(err.message))
+      .finally(() => setLoading(false));
+  }, []);
+
+  // ... render
+}
+```
+
+The component doesn't know about URLs, headers, or HTTP methods. It just calls `getUsers()` and gets data back.
+
+## File structure
+
+```
+frontend/src/
+├── api/
+│   ├── users.js        # User CRUD operations
+│   ├── products.js     # Product CRUD operations
+│   └── auth.js         # Login, logout, register
+├── components/
+│   ├── UserCard.jsx
+│   └── UserForm.jsx
+├── pages/
+│   └── Dashboard.jsx
+└── App.jsx
+```
+
+One API file per resource. Each file exports functions that match the backend endpoints.
+
+<Tip>
+This mirrors how your FastAPI backend is organized. You have a `users` router in Python and a `users.js` API client in JavaScript. When you add a new endpoint to FastAPI, you add a matching function to the API client.
+</Tip>
+
+## Reducing duplication with a helper
+
+Notice how every function repeats the same pattern: fetch, check response, parse JSON. Extract a helper:
+
+```jsx
+// frontend/src/api/client.js
+const API_URL = import.meta.env.VITE_API_URL;
+
+export async function apiClient(endpoint, options = {}) {
+  const response = await fetch(`${API_URL}${endpoint}`, {
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+    ...options,
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.detail || `HTTP ${response.status}`);
+  }
+
+  // DELETE often returns no body
+  if (response.status === 204) return null;
+  return response.json();
+}
+```
+
+Now your API functions are one-liners:
+
+```jsx
+// frontend/src/api/users.js
+import { apiClient } from './client';
+
+export const getUsers = () =>
+  apiClient("/api/users");
+
+export const getUser = (id) =>
+  apiClient(`/api/users/${id}`);
+
+export const createUser = (data) =>
+  apiClient("/api/users", { method: "POST", body: JSON.stringify(data) });
+
+export const updateUser = (id, data) =>
+  apiClient(`/api/users/${id}`, { method: "PUT", body: JSON.stringify(data) });
+
+export const deleteUser = (id) =>
+  apiClient(`/api/users/${id}`, { method: "DELETE" });
+```
+
+<Info>
+The `apiClient` helper reads the FastAPI error message (`error.detail`) when available. This means your backend's validation errors ("Email is required") show up directly in the frontend — no extra work needed.
+</Info>
 
 ## Why this pattern matters
 
-{/* TODO: Testing, reuse, maintenance */}
+| Benefit | Explanation |
+|---|---|
+| **Single source of truth** | API URL defined once in `client.js` |
+| **DRY** | Error handling written once, not in every component |
+| **Easy to change** | API changes? Update one file, not every component |
+| **Testable** | You can mock `getUsers()` in tests without mocking `fetch` |
+| **Readable components** | Components focus on UI, not HTTP details |
+
+This isn't over-engineering — it's the minimum level of organization you need once your app has more than 2-3 API calls.
+
+## Using the API client in components
+
+```jsx
+import { useState, useEffect } from 'react';
+import { getUsers, createUser, deleteUser } from '../api/users';
+
+function UserDashboard() {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    loadUsers();
+  }, []);
+
+  async function loadUsers() {
+    try {
+      setLoading(true);
+      const data = await getUsers();
+      setUsers(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleCreate(userData) {
+    const newUser = await createUser(userData);
+    setUsers(prev => [...prev, newUser]);
+  }
+
+  async function handleDelete(userId) {
+    await deleteUser(userId);
+    setUsers(prev => prev.filter(u => u.id !== userId));
+  }
+
+  // ... render with loading/error/data pattern
+}
+```
+
+Clean, readable, and every API call is one function call.
+
+## What's next?
+
+Your API calls are organized. But how do you make sure the data your frontend sends matches what your backend expects? Let's talk about type safety.
+
+<Card title="Type safety" icon="shield-check" href="/full-stack/type-safety">
+Ensure your frontend and backend agree on data shapes
+</Card>

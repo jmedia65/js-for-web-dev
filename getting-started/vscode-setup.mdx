@@ -3,16 +3,87 @@ title: "Setting up VS Code"
 description: "Configure VS Code with the essential extensions for JavaScript development"
 ---
 
-{/* TODO: Write VS Code setup content */}
+## Why VS Code?
+
+VS Code is the most popular editor for JavaScript development. It has built-in JavaScript support, a huge extension ecosystem, and an integrated terminal where you'll run your code.
+
+If you're already using VS Code for Python, you just need a few extra extensions.
 
 ## Essential extensions
 
-{/* TODO: ESLint, Prettier, Error Lens */}
+Install these three extensions from the VS Code Extensions panel (`Ctrl+Shift+X` / `Cmd+Shift+X`):
+
+<Steps>
+<Step title="ESLint">
+Catches JavaScript errors and enforces code style as you type. It underlines problems in red and yellow so you can fix them before running your code.
+
+Search for: **ESLint** by Microsoft
+</Step>
+
+<Step title="Prettier">
+Automatically formats your code on save — consistent indentation, quotes, semicolons, line breaks. No more arguing about code style.
+
+Search for: **Prettier - Code formatter** by Prettier
+</Step>
+
+<Step title="Error Lens">
+Shows error messages inline, right next to the line that caused the problem. Instead of hovering over a red squiggle, you see the message immediately.
+
+Search for: **Error Lens** by Alexander
+</Step>
+</Steps>
+
+<Tip>
+You probably already have the **Python** extension installed. Keep it — it won't conflict with JavaScript extensions. VS Code handles multiple languages fine.
+</Tip>
 
 ## Recommended settings
 
-{/* TODO: Key VS Code settings for JS development */}
+Open VS Code settings (`Ctrl+,` / `Cmd+,`) and search for these:
 
-## Keyboard shortcuts
+```json settings.json
+{
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.tabSize": 2,
+  "editor.wordWrap": "on",
+  "emmet.includeLanguages": {
+    "javascript": "javascriptreact"
+  }
+}
+```
 
-{/* TODO: Most useful shortcuts */}
+The key settings:
+- **Format on save** — Prettier formats your code every time you save
+- **Tab size 2** — JavaScript convention is 2 spaces (Python uses 4)
+- **Emmet for JSX** — lets you type HTML shortcuts in React files
+
+<Info>
+To edit settings as JSON, open the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`), type "settings json," and select **Preferences: Open User Settings (JSON)**.
+</Info>
+
+## Keyboard shortcuts worth knowing
+
+You don't need to memorize these now. Come back to this list when you're writing more code.
+
+| Shortcut (Mac / Windows) | What it does |
+|---|---|
+| `Cmd+P` / `Ctrl+P` | Quick open file by name |
+| `Cmd+Shift+P` / `Ctrl+Shift+P` | Command Palette |
+| `Cmd+D` / `Ctrl+D` | Select next occurrence of current word |
+| `Option+Up/Down` / `Alt+Up/Down` | Move line up or down |
+| `Cmd+/` / `Ctrl+/` | Toggle line comment |
+| `` Ctrl+` `` | Toggle integrated terminal |
+| `Cmd+B` / `Ctrl+B` | Toggle sidebar |
+
+<Tip>
+The integrated terminal (`` Ctrl+` ``) is where you'll run `node` commands and start React development servers. Get comfortable switching between your code and the terminal.
+</Tip>
+
+## What's next?
+
+Your editor is ready. Let's create your first JavaScript file and run it.
+
+<Card title="Your first JavaScript file" icon="file-code" href="/getting-started/first-javascript-file">
+Create and run your first JavaScript program
+</Card>
