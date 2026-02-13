@@ -37,7 +37,7 @@ function greetUser(name) {
   return message;
 }
 
-const users = ["Jane", "John", "Alice"];
+const users = ["Sarah", "John", "Alice"];
 
 for (const user of users) {
   greetUser(user);
@@ -51,7 +51,7 @@ def greet_user(name):
     print(message)
     return message
 
-users = ["Jane", "John", "Alice"]
+users = ["Sarah", "John", "Alice"]
 
 for user in users:
     greet_user(user)
@@ -61,7 +61,7 @@ The logic is identical. The wrapping is different. Here are the key differences 
 
 | Feature | Python | JavaScript |
 |---|---|---|
-| Variables | `name = "Jane"` | `const name = "Jane";` |
+| Variables | `name = "Sarah"` | `const name = "Sarah";` |
 | Functions | `def greet():` | `function greet() {}` |
 | Blocks | Indentation | Curly braces `{}` |
 | Strings | `f"Hello, {name}"` | `` `Hello, ${name}` `` |
@@ -80,9 +80,9 @@ JavaScript has three syntax rules that differ from Python. Once you internalize 
 ### Semicolons
 
 ```javascript
-const name = "Jane";
+const name = "Sarah";
 const age = 25;
-console.log(name); // "Jane"
+console.log(name); // "Sarah"
 ```
 
 Semicolons end each statement. JavaScript can technically guess where they go (called "automatic semicolon insertion"), but always include them. It avoids subtle bugs and every serious codebase uses them.
@@ -111,12 +111,12 @@ Curly braces `{}` define blocks of code — function bodies, if/else branches, l
 ### Case sensitivity
 
 ```javascript
-const userName = "Jane";
+const userName = "Sarah";
 const UserName = "John";
 const USERNAME = "ALICE";
 
 // These are three different variables
-console.log(userName); // "Jane"
+console.log(userName); // "Sarah"
 console.log(UserName); // "John"
 console.log(USERNAME); // "ALICE"
 ```
@@ -157,13 +157,13 @@ console.log(greeting); // "Hello from JavaScript!"
 Create a `.js` file and run it with Node:
 
 ```javascript hello.js
-const name = "Jane";
+const name = "Sarah";
 console.log(`Welcome to JavaScript, ${name}!`);
 ```
 
 ```bash
 node hello.js
-# Welcome to JavaScript, Jane!
+# Welcome to JavaScript, Sarah!
 ```
 
 <Tip>

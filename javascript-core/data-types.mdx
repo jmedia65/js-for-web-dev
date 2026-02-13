@@ -9,8 +9,8 @@ Every value in JavaScript has a type. There are seven primitive types, but you'l
 
 ```javascript
 // String - text wrapped in quotes
-const name = "Jane Doe";
-const email = 'jane@example.com';
+const name = "Sarah Doe";
+const email = 'sarah@example.com';
 const greeting = `Hello, ${name}!`; // Template literal (more on this next lesson)
 
 // Number - integers and decimals are the same type
@@ -80,12 +80,12 @@ Use `null` when you want to intentionally say "empty" or "no value." Let `undefi
 Use `typeof` to check what type a value is. This is especially useful when debugging or validating API responses.
 
 ```javascript
-typeof "Jane";       // "string"
+typeof "Sarah";       // "string"
 typeof 42;           // "number"
 typeof true;         // "boolean"
 typeof undefined;    // "undefined"
 typeof null;         // "object"  ← This is a bug. Seriously.
-typeof { name: "Jane" }; // "object"
+typeof { name: "Sarah" }; // "object"
 typeof [1, 2, 3];   // "object"  ← Arrays are objects too
 ```
 
@@ -107,8 +107,8 @@ console.log(selectedUser === null); // true
 To check if something is an array, use `Array.isArray()`:
 
 ```javascript
-const users = ["Jane", "John", "Alice"];
-const user = { name: "Jane" };
+const users = ["Sarah", "John", "Alice"];
+const user = { name: "Sarah" };
 
 Array.isArray(users); // true
 Array.isArray(user);  // false

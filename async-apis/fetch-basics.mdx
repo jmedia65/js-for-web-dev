@@ -76,10 +76,10 @@ async function createUser(userData) {
 
 // Usage
 const newUser = await createUser({ 
-  name: "Jane Doe", 
-  email: "jane@example.com" 
+  name: "John Doe", 
+  email: "john@example.com" 
 });
-console.log(newUser); // { id: 1, name: "Jane Doe", email: "jane@example.com" }
+console.log(newUser); // { id: 1, name: "Sarah Doe", email: "sarah@example.com" }
 ```
 
 POST requests need three things:
@@ -272,14 +272,14 @@ A 404 or 500 response won't throw an error automatically. Always check `response
 // ❌ Wrong: Sending object directly
 const response = await fetch('http://localhost:8000/api/users', {
   method: 'POST',
-  body: { name: "Jane", email: "jane@example.com" },
+  body: { name: "Sarah", email: "sarah@example.com" },
 });
 
 // ✅ Correct: Stringify the object
 const response = await fetch('http://localhost:8000/api/users', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ name: "Jane", email: "jane@example.com" }),
+  body: JSON.stringify({ name: "Sarah", email: "sarah@example.com" }),
 });
 ```
 

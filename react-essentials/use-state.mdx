@@ -109,8 +109,8 @@ import { useState } from 'react';
 
 function UserProfile() {
   const [user, setUser] = useState({
-    name: "Jane Doe",
-    email: "jane@example.com",
+    name: "Sarah Doe",
+    email: "sarah@example.com",
     age: 25
   });
   
@@ -330,7 +330,7 @@ Group related data in objects, but keep unrelated concerns (like loading states 
 <Accordion title="Mutating state directly">
 ```jsx
 // ❌ Wrong: Direct mutation
-const [user, setUser] = useState({ name: "Jane", age: 25 });
+const [user, setUser] = useState({ name: "Sarah", age: 25 });
 
 function updateAge() {
   user.age = 26; // React won't detect this!

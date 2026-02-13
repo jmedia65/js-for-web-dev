@@ -15,7 +15,7 @@ JavaScript has two ways to declare variables: `let` for values that change, and 
 // Use const for values that won't change
 const apiUrl = "https://api.example.com";
 const maxRetries = 3;
-const user = { name: "Jane", email: "jane@example.com" };
+const user = { name: "Sarah", email: "sarah@example.com" };
 
 // Use let for values that will change
 let userInput = "";
@@ -52,8 +52,8 @@ With `let`, you can reassign the variable as many times as needed. Use `+=`, `-=
 
 ```javascript
 // Use camelCase for variable names
-const firstName = "Jane";
-const userEmail = "jane@example.com";
+const firstName = "Sarah";
+const userEmail = "sarah@example.com";
 const isLoggedIn = true;
 const totalPrice = 99.99;
 
@@ -102,7 +102,7 @@ Keep variables in the smallest scope possible. This makes your code easier to de
 <Tab title="JavaScript">
 ```javascript
 // JavaScript uses const/let
-const name = "Jane";
+const name = "Sarah";
 let age = 25;
 
 age = 26; // Can reassign let
@@ -112,7 +112,7 @@ age = 26; // Can reassign let
 <Tab title="Python">
 ```python
 # Python doesn't have const
-name = "Jane"
+name = "Sarah"
 age = 25
 
 age = 26  # Can always reassign
@@ -128,11 +128,11 @@ Python doesn't distinguish between changeable and unchangeable variables - every
 <Accordion title="Trying to reassign a const">
 ```javascript
 // ❌ Wrong: Can't reassign const
-const name = "Jane";
+const name = "Sarah";
 name = "John"; // TypeError: Assignment to constant variable
 
 // ✅ Correct: Use let if you need to reassign
-let name = "Jane";
+let name = "Sarah";
 name = "John"; // Works fine
 ```
 
@@ -144,9 +144,9 @@ name = "John"; // Works fine
 <Accordion title="Thinking const makes objects immutable">
 ```javascript
 // This is actually OK with const:
-const user = { name: "Jane", age: 25 };
+const user = { name: "Sarah", age: 25 };
 user.age = 26; // Modifying a property works
-user.email = "jane@example.com"; // Adding a property works
+user.email = "sarah@example.com"; // Adding a property works
 
 // This is what const prevents:
 user = { name: "John" }; // TypeError: Assignment to constant variable

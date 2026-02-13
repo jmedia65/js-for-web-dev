@@ -150,7 +150,7 @@ This course is actively being developed. Contributions are welcome!
 Each lesson follows a consistent structure:
 
 - **Code first, explain after** — every concept opens with a working example
-- **Realistic data** — use names like `Jane Doe`, not `foo`/`bar`
+- **Realistic data** — use names like `John Doe`, not `foo`/`bar`
 - **Python comparisons** — use `<Tabs>` when a side-by-side genuinely helps
 - **Common mistakes** — use `<AccordionGroup>` sections
 - **"What's next?"** — end every lesson with a `<Card>` linking to the next one
