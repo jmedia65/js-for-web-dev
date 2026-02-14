@@ -1,41 +1,29 @@
 # JavaScript for Web Dev
 
-> **Learn JavaScript for modern web development** - from fundamentals to building full-stack applications with React and FastAPI.
+Learn JavaScript for modern web development — from fundamentals to building full-stack applications with React and FastAPI.
 
-A comprehensive, beginner-friendly course that teaches you JavaScript specifically for web development. Focus on the 20% of concepts you'll use 80% of the time, with practical examples and real-world patterns.
+A beginner-friendly course that teaches the 20% of JavaScript you'll use 80% of the time, with practical examples and real-world patterns.
 
-🌐 **Live Course**: [js.maxtermedia.com](https://js.maxtermedia.com) (coming soon)  
-💻 **Example Repo**: [FastAPI + React Full-Stack](https://github.com/jmedia65/fastapi-react-full-stack)
+<!-- **[Start the course](https://js.maxtermedia.com)** -->
 
 ---
 
 ## What You'll Learn
 
-- **JavaScript Core**: Variables, functions, async/await, and essential language features
-- **Working with Data**: Arrays, objects, JSON, and data manipulation
-- **Async & APIs**: Making HTTP requests, handling responses, error handling
-- **DOM & Browser**: Manipulating web pages, handling events, browser APIs
-- **React Essentials**: Components, state, effects, and practical patterns
-- **Full-Stack Integration**: Connecting React to FastAPI, CRUD operations, production patterns
+- **JavaScript Core** — Variables, functions, async/await, and essential language features
+- **Working with Data** — Arrays, objects, JSON, and data manipulation
+- **Async & APIs** — Making HTTP requests, handling responses, error handling
+- **DOM & Browser** — Manipulating web pages, handling events, browser APIs
+- **React Essentials** — Components, state, effects, and practical patterns
+- **Full-Stack Integration** — Connecting React to FastAPI, CRUD operations, production patterns
 
 ---
 
 ## Who This Is For
 
-### ✅ This course is for you if:
+**This course is for you if** you know Python and want to learn JavaScript for web development, you're building full-stack apps with FastAPI and need to learn the frontend, or you prefer practical, hands-on learning over theoretical deep dives.
 
-- You know Python and want to learn JavaScript for web development
-- You're building full-stack apps with FastAPI and need to learn frontend
-- You want to understand how React connects to backend APIs
-- You prefer practical, hands-on learning over theoretical concepts
-- You're tired of tutorials that teach everything except what you actually need
-
-### ❌ This course is NOT for you if:
-
-- You're completely new to programming (start with Python first)
-- You want deep dives into JavaScript internals and computer science theory
-- You're looking for advanced React patterns (Context, Reducers, etc.)
-- You want to learn Vue, Angular, or other frameworks
+**This course is NOT for you if** you're completely new to programming (start with Python first), you want advanced React patterns (Context, Reducers, etc.), or you want to learn Vue, Angular, or other frameworks.
 
 ---
 
@@ -52,60 +40,6 @@ The course is divided into 9 main sections:
 7. **React Essentials** - Components, state, effects, and practical patterns
 8. **Full-Stack Integration** - Connecting React to FastAPI with real examples
 9. **Next Steps** - Where to go from here, resources, and deployment
-
----
-
-## Running the Course Locally
-
-### Prerequisites
-
-- Node.js 18+ ([download](https://nodejs.org/))
-- npm 9+ (comes with Node.js)
-- A code editor (we recommend VS Code)
-
-### Setup
-
-1. **Clone the repository**
-
-```bash
-git clone https://github.com/jmedia65/javascript-for-web-dev.git
-cd javascript-for-web-dev
-```
-
-2. **Install dependencies**
-
-```bash
-npm install
-```
-
-3. **Run the development server**
-
-```bash
-npm run dev
-```
-
-4. **Open in your browser**
-
-Navigate to `http://localhost:3000` to view the course.
-
----
-
-## Project Structure
-
-```
-javascript-for-web-dev/
-├── introduction/               # Welcome, prerequisites
-├── getting-started/            # Setup and tooling
-├── javascript-core/            # Language fundamentals
-├── working-with-data/          # Arrays, objects, JSON
-├── async-apis/                 # Async patterns and fetch
-├── dom-browser/                # DOM manipulation and events
-├── react-essentials/           # React basics and patterns
-├── full-stack/                 # React + FastAPI integration
-├── next-steps/                 # Resources and next steps
-├── docs.json                   # Mintlify configuration
-└── README.md                   # You are here
-```
 
 ---
 
@@ -135,35 +69,11 @@ Since the target audience knows Python, we compare concepts where it aids unders
 
 ---
 
-## Contributing
-
-This course is actively being developed. Contributions are welcome!
-
-### How to Contribute
-
-1. **Found a bug or typo?** Open an issue describing the problem
-2. **Have a suggestion?** Open an issue with your idea
-3. **Want to add content?** Fork the repo and submit a pull request
-
-### Writing Guidelines
-
-Each lesson follows a consistent structure:
-
-- **Code first, explain after** — every concept opens with a working example
-- **Realistic data** — use names like `John Doe`, not `foo`/`bar`
-- **Python comparisons** — use `<Tabs>` when a side-by-side genuinely helps
-- **Common mistakes** — use `<AccordionGroup>` sections
-- **"What's next?"** — end every lesson with a `<Card>` linking to the next one
-
-See any existing lesson (e.g., `javascript-core/variables.mdx`) for the format to follow.
-
----
-
 ## Related Resources
 
 ### Companion Repository
 
-[**FastAPI + React Full-Stack**](https://github.com/jmedia65/fastapi-react-full-stack)  
+[**FastAPI + React Full-Stack**](https://github.com/jmedia65/fastapi-react-full-stack)
 A complete CRUD application showing production-grade patterns for connecting React to FastAPI. Referenced extensively in Section 8 of this course.
 
 ### Recommended Prerequisites
@@ -232,94 +142,33 @@ You won't know everything about JavaScript, but you'll know enough to build real
 
 ---
 
-## Roadmap
+## Need Help?
 
-- [x] Course structure and outline
-- [x] Writing style guide and templates
-- [x] Sample lessons (variables, fetch, useState)
-- [ ] Complete Section 1: Introduction
-- [ ] Complete Section 2: Getting Started
-- [ ] Complete Section 3: JavaScript Core
-- [ ] Complete Section 4: Working with Data
-- [ ] Complete Section 5: Async & APIs
-- [ ] Complete Section 6: DOM & Browser
-- [ ] Complete Section 7: React Essentials
-- [ ] Complete Section 8: Full-Stack Integration
-- [ ] Complete Section 9: Next Steps
-- [ ] Deploy to js.maxtermedia.com
-- [ ] Add interactive code examples
-- [ ] Create video walkthroughs
+### Troubleshooting
 
----
+- If your dev environment isn't running: Run `mint update` to ensure you have the most recent version of the CLI.
+- If a page loads as a 404: Make sure you are running in a folder with a valid `docs.json`.
 
-## FAQ
+### Resources
 
-### Do I need to know Python?
+- [Mintlify documentation](https://mintlify.com/docs)
+- [MDN Web Docs](https://developer.mozilla.org/) — JavaScript reference
+- [React Documentation](https://react.dev/) — Official React docs
+- [FastAPI Documentation](https://fastapi.tiangolo.com/) — Backend framework docs
 
-Not required, but helpful. The course assumes basic programming knowledge. If you know Python, you'll see occasional comparisons that make learning easier.
+### Contact
 
-### Is this course free?
-
-Yes! The course content is completely free and open-source.
-
-### How long does the course take?
-
-Plan for 10-15 hours of focused learning time. You can work through it at your own pace.
-
-### Will this teach me React Native?
-
-No. This course focuses on web development with React for browsers. React Native (mobile apps) is a separate topic.
-
-### Do I need to know TypeScript?
-
-No. The course uses JavaScript. TypeScript is mentioned as a "next step" but not required.
-
-### What about state management libraries?
-
-Basic React state (useState) is covered. Advanced state management (Redux, Zustand) is mentioned in "Next Steps" but not taught in detail.
-
-### Can I use this course for a bootcamp or class?
-
-Yes! The content is open-source. Please provide attribution and link back to the repo.
-
----
-
-## Support
-
-### Found an issue?
-
-[Open a GitHub issue](https://github.com/jmedia65/javascript-for-web-dev/issues)
-
-### Have a question?
-
-Check the course content first - most questions are answered in the lessons. If not, open an issue with the "question" label.
-
-### Want to connect?
-
-- Twitter/X: [@maxtermedia](https://x.com/maxtermedia)
-- LinkedIn: [MaxterMedia](https://www.linkedin.com/company/maxtermedia)
+- Twitter/X: [@maxbraglia](https://x.com/maxbraglia)
+- LinkedIn: [Max Braglia](https://www.linkedin.com/in/maxbraglia/)
+- Website: [maxbraglia.com](https://maxbraglia)
 - Website: [maxtermedia.com](https://maxtermedia.com)
 
 ---
 
 ## License
 
-This course content is licensed under the [MIT License](LICENSE). You're free to use, modify, and distribute the content with attribution.
+This course content is licensed under the [MIT License](LICENSE).
 
 ---
 
-## Acknowledgments
-
-This course structure and style is heavily inspired by:
-
-- [Python for AI Course](https://python.datalumina.com/) by Dave Ebbelaar - for the clean, focused approach
-- [MDN Web Docs](https://developer.mozilla.org/) - for comprehensive JavaScript reference
-- [React Documentation](https://react.dev/) - for clear explanations of React concepts
-
-Special thanks to the open-source community and everyone who has contributed to making web development more accessible.
-
----
-
-**Ready to start learning?** Head to [js.maxtermedia.com](https://js.maxtermedia.com) or clone this repo and run `npm run dev`.
-
-Built with ❤️ by [MaxterMedia](https://maxtermedia.com)
+Built by [Max Braglia](https://maxbraglia.com)
