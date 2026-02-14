@@ -155,7 +155,7 @@ You won't know everything about JavaScript, but you'll know enough to build real
 
 - Twitter/X: [@maxbraglia](https://x.com/maxbraglia)
 - LinkedIn: [Max Braglia](https://www.linkedin.com/in/maxbraglia/)
-- Website: [maxbraglia.com](https://maxbraglia)
+- Website: [maxbraglia.com](https://maxbraglia.com)
 - Website: [maxtermedia.com](https://maxtermedia.com)
 
 ---
