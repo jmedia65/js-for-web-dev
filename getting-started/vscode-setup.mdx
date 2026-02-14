@@ -11,7 +11,7 @@ If you're already using VS Code for Python, you just need a few extra extensions
 
 ## Essential extensions
 
-Install these three extensions from the VS Code Extensions panel (`Ctrl+Shift+X` / `Cmd+Shift+X`):
+Install these two extensions from the VS Code Extensions panel (`Ctrl+Shift+X` / `Cmd+Shift+X`):
 
 <Steps>
 <Step title="ESLint">
@@ -26,41 +26,11 @@ Automatically formats your code on save — consistent indentation, quotes, semi
 Search for: **Prettier - Code formatter** by Prettier
 </Step>
 
-<Step title="Error Lens">
-Shows error messages inline, right next to the line that caused the problem. Instead of hovering over a red squiggle, you see the message immediately.
-
-Search for: **Error Lens** by Alexander
-</Step>
 </Steps>
 
 <Tip>
 You probably already have the **Python** extension installed. Keep it — it won't conflict with JavaScript extensions. VS Code handles multiple languages fine.
 </Tip>
-
-## Recommended settings
-
-Open VS Code settings (`Ctrl+,` / `Cmd+,`) and search for these:
-
-```json settings.json
-{
-  "editor.formatOnSave": true,
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
-  "editor.tabSize": 2,
-  "editor.wordWrap": "on",
-  "emmet.includeLanguages": {
-    "javascript": "javascriptreact"
-  }
-}
-```
-
-The key settings:
-- **Format on save** — Prettier formats your code every time you save
-- **Tab size 2** — JavaScript convention is 2 spaces (Python uses 4)
-- **Emmet for JSX** — lets you type HTML shortcuts in React files
-
-<Info>
-To edit settings as JSON, open the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`), type "settings json," and select **Preferences: Open User Settings (JSON)**.
-</Info>
 
 ## Keyboard shortcuts worth knowing
 
