@@ -66,9 +66,6 @@ function logMessage(message) {
 
 const result = add(5, 3);
 console.log(result); // 8
-
-const noResult = logMessage("Hello");
-console.log(noResult); // undefined
 ```
 
 `return` also exits the function immediately. Code after `return` never runs.
@@ -105,8 +102,10 @@ Function declarations are "hoisted" — you can call them before they appear in 
 
 ## Functions as values
 
-This is where JavaScript differs from Python in a meaningful way. Functions are values — you can pass them to other functions, store them in arrays, return them from functions.
+JavaScript relies much more heavily on functions as values in everyday programming patterns — but Python supports the same concept.
 
+<Tabs>
+<Tab title="JavaScript">
 ```javascript
 function applyOperation(a, b, operation) {
   return operation(a, b);
@@ -118,6 +117,26 @@ function subtract(x, y) { return x - y; }
 console.log(applyOperation(10, 3, add));      // 13
 console.log(applyOperation(10, 3, subtract)); // 7
 ```
+</Tab>
+
+<Tab title="Python">
+```python
+# Almost identical in Python
+def apply_operation(a, b, operation):
+    return operation(a, b)
+
+def add(x, y):
+    return x + y
+
+def subtract(x, y):
+    return x - y
+
+print(apply_operation(10, 3, add))       # 13
+print(apply_operation(10, 3, subtract))  # 7
+```
+</Tab>
+</Tabs>
+
 
 You'll use this pattern constantly. Array methods like `.map()`, `.filter()`, and `.forEach()` all take functions as arguments. React event handlers work the same way.
 
