@@ -86,7 +86,7 @@ A complete CRUD application showing production-grade patterns for connecting Rea
 - Twitter/X: [@maxbraglia](https://x.com/maxbraglia)
 - LinkedIn: [Max Braglia](https://www.linkedin.com/in/maxbraglia/)
 - Website: [maxbraglia.com](https://maxbraglia.com)
-- Website: [maxtermedia.com](https://maxtermedia.com)
+- Company: [maxtermedia.com](https://maxtermedia.com)
 
 ---
 

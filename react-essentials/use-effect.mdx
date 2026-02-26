@@ -16,7 +16,7 @@ function UserList() {
 }
 ```
 
-`useEffect` is the hook for running side effects. You'll use it primarily for one thing: **fetching data when a component loads.**
+`useEffect` is the hook for running side effects. In this course, you'll use it mostly for **fetching data** and **syncing with browser APIs** (like document title or timers).
 
 ## Basic useEffect
 
@@ -73,7 +73,7 @@ useEffect(() => {
 | *(omitted)* | Every single render (rarely wanted) |
 
 <Warning>
-The empty `[]` dependency array is what you'll use 90% of the time. It means "run this effect once when the component first appears." Omitting the array entirely causes the effect to run on every render, which almost always creates bugs or performance problems.
+`[]` is a common beginner pattern for "run on mount" effects (like an initial fetch), but it's not the default for every effect. As a rule: put every prop/state value your effect uses into the dependency array. Omitting the array entirely causes the effect to run on every render, which is usually a bug.
 </Warning>
 
 ## Fetching data on mount
@@ -218,7 +218,7 @@ Cleanup prevents memory leaks and stale data. Common cleanup tasks:
 - Removing event listeners
 
 <Tip>
-You won't need cleanup for most fetch calls. Cleanup is mainly for subscriptions, timers, and event listeners. React will warn you in development (StrictMode) if a cleanup issue exists.
+You won't need cleanup for most simple fetch-on-mount examples. Cleanup is mainly for subscriptions, timers, and event listeners. In development, StrictMode may re-run effects and expose problems earlier, but don't rely on it to catch every cleanup bug.
 </Tip>
 
 ## Common mistakes

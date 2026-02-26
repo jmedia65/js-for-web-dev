@@ -127,7 +127,9 @@ async function getUsers() {
     // Type 2: HTTP error (404, 500, etc.)
     if (!response.ok) {
       const errorBody = await response.json().catch(() => ({}));
-      throw new Error(errorBody.detail || `HTTP ${response.status}`);
+      const error = new Error(errorBody.detail || `HTTP ${response.status}`);
+      error.status = response.status; // Attach status for easier handling later
+      throw error;
     }
 
     return await response.json();
@@ -147,22 +149,26 @@ Don't show raw error messages to users. Translate them into something helpful:
 
 ```javascript
 function getErrorMessage(error) {
+  // Prefer structured data when available
+  const status = error.status;
+
   // Network errors
-  if (error.message === "Failed to fetch") {
+  // Browser messages vary ("Failed to fetch", "NetworkError", etc.)
+  if (!status && error.name === "TypeError") {
     return "Can't connect to the server. Check your internet connection.";
   }
 
   // HTTP errors
-  if (error.message.includes("401")) {
+  if (status === 401 || error.message.includes("401")) {
     return "Please log in to continue.";
   }
-  if (error.message.includes("403")) {
+  if (status === 403 || error.message.includes("403")) {
     return "You don't have permission to do that.";
   }
-  if (error.message.includes("404")) {
+  if (status === 404 || error.message.includes("404")) {
     return "The item you're looking for doesn't exist.";
   }
-  if (error.message.includes("500")) {
+  if (status === 500 || error.message.includes("500")) {
     return "Something went wrong on our end. Please try again.";
   }
 
@@ -190,7 +196,11 @@ function UserList() {
     async function loadUsers() {
       try {
         const response = await fetch("/api/users");
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        if (!response.ok) {
+          const err = new Error(`HTTP ${response.status}`);
+          err.status = response.status;
+          throw err;
+        }
         const data = await response.json();
         setUsers(data);
       } catch (error) {

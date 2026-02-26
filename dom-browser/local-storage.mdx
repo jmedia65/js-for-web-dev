@@ -85,9 +85,9 @@ If you forget `JSON.stringify()` when saving an object, you'll store the useless
 `localStorage.getItem()` returns `null` if the key doesn't exist. Handle this:
 
 ```javascript
-// ❌ Crashes if "settings" doesn't exist
+// This returns null if "settings" doesn't exist (it does NOT crash)
 const settings = JSON.parse(localStorage.getItem("settings"));
-// TypeError: Cannot read properties of null (if key doesn't exist)
+console.log(settings); // null
 
 // ✅ Safe with fallback
 const settings = JSON.parse(localStorage.getItem("settings")) || {
@@ -95,6 +95,8 @@ const settings = JSON.parse(localStorage.getItem("settings")) || {
   fontSize: 14,
 };
 ```
+
+If the stored value is invalid JSON (for example, someone manually edited it in DevTools), `JSON.parse()` *will* throw. Use `try/catch` if the data might be corrupted.
 
 <Tip>
 Always provide a fallback when loading from localStorage. The data might not exist yet (first visit), or the user might have cleared their browser data.
