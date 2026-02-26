@@ -7,6 +7,10 @@ description: "Edit existing records with a form that sends PUT requests to your 
 
 Updating a record means: load the current data into a form, let the user edit it, then send the changes back to the API.
 
+<Info>
+The companion repo keeps update simpler and reuses `UserCreate` for `PUT /api/users/{id}` (full replacement). This lesson introduces a separate `UserUpdate` model with optional fields to teach the common "partial update shape" pattern.
+</Info>
+
 <Tabs>
 <Tab title="Backend (Python)">
 ```python

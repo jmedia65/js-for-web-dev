@@ -62,10 +62,10 @@ function Example() {
 }
 ```
 
-State updates are **asynchronous**. When you call `setCount(5)`, React schedules a re-render but doesn't update `count` immediately. The new value will be available on the next render.
+State updates are **scheduled** (and often batched). When you call `setCount(5)`, React schedules a re-render but doesn't update `count` immediately inside the current event handler. The new value will be available on the next render.
 
 <Warning>
-Don't try to use the updated state value immediately after calling the setter. It won't be updated yet. React batches state updates for performance.
+Don't try to use the updated state value immediately after calling the setter in the same event handler. It won't be updated yet. React batches state updates for performance.
 </Warning>
 
 ## Updating state based on previous value

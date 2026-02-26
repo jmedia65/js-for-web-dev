@@ -27,6 +27,10 @@ console.log(role);  // "admin"
 
 Pull specific properties out of an object by name:
 
+<Info>
+Python mental model: object destructuring is like doing multiple `dict` lookups and assignments in one step (`name = user["name"]`, `email = user["email"]`) — but with a much shorter syntax.
+</Info>
+
 ```javascript
 const product = {
   id: 42,
@@ -73,6 +77,10 @@ console.log(language); // "en" (default — not in object)
 console.log(fontSize); // 14 (default — not in object)
 ```
 
+<Tip>
+Python mental model: this is similar to `settings.get("language", "en")`. One key difference: destructuring defaults only apply when the property is `undefined` (missing). If the value is explicitly `null`, the default is **not** used.
+</Tip>
+
 ### Nested destructuring
 
 ```javascript
@@ -97,6 +105,10 @@ Don't go more than two levels deep with nested destructuring. It quickly becomes
 ## Array destructuring
 
 Pull values out by position:
+
+<Info>
+Python mental model: this is like tuple unpacking (`first, second = values`) — but JavaScript adds useful extras like skipping items and collecting "the rest" with `...remaining`.
+</Info>
 
 ```javascript
 const colors = ["red", "green", "blue"];
@@ -180,6 +192,10 @@ function displayOrder({ id, customer, total }) {
 displayOrder({ id: "ORD-001", customer: "Sarah", total: 149.99, items: [...] });
 // "Order ORD-001 for Sarah: $149.99"
 ```
+
+<Tip>
+If you're coming from Python, this feels like writing `def display_order(order): ...` and immediately doing `id = order["id"]`, `customer = order["customer"]`, `total = order["total"]` at the top of the function.
+</Tip>
 
 ### API responses
 

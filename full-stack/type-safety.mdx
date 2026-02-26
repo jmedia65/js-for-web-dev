@@ -12,11 +12,10 @@ Your FastAPI backend defines data shapes with Pydantic models. Your React fronte
 class UserCreate(BaseModel):
     name: str
     email: str
-    role: str = "viewer"
 ```
 
 ```jsx
-// Frontend sends this — missing "role", has extra "username"
+// Frontend sends this — missing "name", has extra "username"
 const userData = { username: "Sarah", email: "sarah@example.com" };
 await createUser(userData);
 // Backend gets { username: "Sarah", email: "..." }
@@ -36,9 +35,8 @@ The simplest approach: **document the expected shapes in your API client file**.
 /*
  * User shapes (must match backend Pydantic models):
  *
- * UserCreate: { name: string, email: string, role?: string }
- * UserUpdate: { name?: string, email?: string, role?: string }
- * User:       { id: number, name: string, email: string, role: string, created_at: string }
+ * UserCreate: { name: string, email: string }
+ * User:       { id: number, name: string, email: string }
  */
 
 import { apiClient } from './client';
@@ -117,7 +115,7 @@ def create_user(user: UserCreate):
 
 # Update returns the updated object
 @app.put("/api/users/{user_id}")
-def update_user(user_id: int, user: UserUpdate):
+def update_user(user_id: int, user: UserCreate):
     updated = update_user_in_db(user_id, user)
     return updated
 
@@ -133,6 +131,10 @@ The frontend can rely on these patterns:
 - **POST** → returns the created object (with its new `id`)
 - **PUT** → returns the updated object
 - **DELETE** → returns nothing (204 status)
+
+<Info>
+The companion repo keeps the backend simple and uses `UserCreate` for both create and update operations. A separate `UserUpdate` model (with optional fields) is a common next step once you want partial updates.
+</Info>
 
 ## Handling backend validation errors
 
@@ -199,13 +201,11 @@ interface User {
   id: number;
   name: string;
   email: string;
-  role: string;
 }
 
 interface UserCreate {
   name: string;
   email: string;
-  role?: string;
 }
 
 export async function createUser(data: UserCreate): Promise<User> {

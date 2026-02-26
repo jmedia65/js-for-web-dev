@@ -18,6 +18,10 @@ function UserList() {
 
 `useEffect` is the hook for running side effects. In this course, you'll use it mostly for **fetching data** and **syncing with browser APIs** (like document title or timers).
 
+<Info>
+Python mental model: your component function is like a function React may call many times to calculate UI. Keep that part "pure" (return JSX from props/state). `useEffect` is where you register code that should run **after render** to sync with the outside world (network, browser APIs, timers).
+</Info>
+
 ## Basic useEffect
 
 ```jsx
@@ -42,6 +46,10 @@ function UserList() {
 ## The dependency array
 
 The dependency array controls when the effect runs:
+
+<Tip>
+Python mental model: the dependency array is the list of values React watches. You're telling React, "re-run this sync code when these inputs change."
+</Tip>
 
 ```jsx
 // Runs once — when the component mounts
@@ -71,6 +79,10 @@ useEffect(() => {
 | `[userId]` | On mount + whenever `userId` changes |
 | `[a, b]` | On mount + whenever `a` or `b` changes |
 | *(omitted)* | Every single render (rarely wanted) |
+
+<Info>
+In development, `React.StrictMode` may run mount effects twice to help reveal bugs. For a simple `useEffect(..., [])` data-fetch example, that can mean two requests in development unless you guard against it. Production does not do the extra development check.
+</Info>
 
 <Warning>
 `[]` is a common beginner pattern for "run on mount" effects (like an initial fetch), but it's not the default for every effect. As a rule: put every prop/state value your effect uses into the dependency array. Omitting the array entirely causes the effect to run on every render, which is usually a bug.
@@ -307,6 +319,10 @@ Think of useEffect in terms of **synchronization**, not lifecycle:
 <Tip>
 If you're coming from Python or other frameworks, resist thinking in "component lifecycle" terms (mount, update, unmount). Think instead: "this effect should run when these values change." The dependency array is the key to understanding useEffect.
 </Tip>
+
+<Info>
+Also remember: `useEffect` callbacks are closures. They capture values from the render where they were created. That's why missing a dependency can make an effect use an old value ("stale closure").
+</Info>
 
 ## What's next?
 

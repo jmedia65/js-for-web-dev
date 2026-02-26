@@ -26,6 +26,33 @@ console.log(sayHey("John"));    // "Hey, John!"
 
 `createGreeter` has finished running, but `sayHello` still remembers that `greeting` was `"Hello"`. That's a closure.
 
+## Comparing to Python
+
+Closures are not "a JavaScript thing" — Python has them too. If you've written a nested function that uses a variable from the outer function, you've already used closures.
+
+<Tabs>
+<Tab title="JavaScript">
+```javascript
+function makeGreeter(greeting) {
+  return function(name) {
+    return `${greeting}, ${name}!`;
+  };
+}
+```
+</Tab>
+
+<Tab title="Python">
+```python
+def make_greeter(greeting):
+    def greet(name):
+        return f"{greeting}, {name}!"
+    return greet
+```
+</Tab>
+</Tabs>
+
+Same idea in both languages: the inner function keeps access to `greeting` after the outer function returns.
+
 ## Why closures matter
 
 Closures aren't an abstract concept you need to master — they're a pattern that shows up naturally in JavaScript. Here are the places you'll actually use them.
@@ -61,6 +88,10 @@ function attachHandlers(buttons) {
 ```
 
 Each click handler is a closure that captures its own copy of `i`. This is why `let` (block-scoped) works correctly in loops but `var` (function-scoped) doesn't.
+
+<Info>
+Python mental model: this is the same family of problem as Python's "late binding" in loops (for example, lambdas in a loop all using the final value). In JavaScript, `let` usually gives you the behavior you wanted automatically.
+</Info>
 
 ### Data privacy
 
@@ -140,6 +171,10 @@ function fetchUserData(userId) {
 
 <Tip>
 Don't try to memorize closure rules. Write functions inside functions, use variables from the outer scope when it's natural, and you're using closures. The concept will solidify through practice.
+</Tip>
+
+<Tip>
+If you're a Python web dev, you've likely seen closures in decorator factories (functions that return decorators). JavaScript callbacks and React event handlers use the same underlying idea constantly.
 </Tip>
 
 ## What's next?

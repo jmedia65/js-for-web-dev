@@ -41,7 +41,7 @@ function UserCard({ user }) {
 }
 ```
 
-When `user` changes, React automatically updates only the parts of the DOM that need to change. You never touch `document.querySelector` again.
+When `user` changes, React automatically updates the UI to match the new state. In day-to-day React UI code, you usually stop doing manual DOM updates with `document.querySelector` and `element.textContent`.
 
 ## Components: the building blocks
 

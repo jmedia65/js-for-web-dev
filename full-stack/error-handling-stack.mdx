@@ -70,7 +70,7 @@ Your API client translates HTTP errors into JavaScript errors:
 
 ```jsx
 // frontend/src/api/client.js
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = import.meta.env.VITE_API_BASE_URL;
 
 export async function apiClient(endpoint, options = {}) {
   let response;

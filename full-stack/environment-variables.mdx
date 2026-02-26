@@ -12,7 +12,7 @@ In the previous lesson, the frontend had `http://localhost:8000` hardcoded. This
 fetch("http://localhost:8000/api/users")
 
 // ✅ Environment variable — works everywhere
-fetch(`${import.meta.env.VITE_API_URL}/api/users`)
+fetch(`${import.meta.env.VITE_API_BASE_URL}/api/users`)
 ```
 
 ## .env files
@@ -21,7 +21,7 @@ An `.env` file stores key-value pairs that your application reads at startup:
 
 ```bash
 # frontend/.env
-VITE_API_URL=http://localhost:8000
+VITE_API_BASE_URL=http://localhost:8000
 ```
 
 ```bash
@@ -42,7 +42,7 @@ Vite has one important rule: **frontend environment variables must start with `V
 
 ```bash
 # frontend/.env
-VITE_API_URL=http://localhost:8000
+VITE_API_BASE_URL=http://localhost:8000
 VITE_APP_NAME=My App
 
 # ❌ This WON'T be available in your React code
@@ -53,7 +53,7 @@ Access them in your React code with `import.meta.env`:
 
 ```jsx
 // ✅ Available — starts with VITE_
-console.log(import.meta.env.VITE_API_URL);
+console.log(import.meta.env.VITE_API_BASE_URL);
 // "http://localhost:8000"
 
 // ❌ Undefined — doesn't start with VITE_
@@ -69,7 +69,7 @@ The `VITE_` prefix is a security feature. Your React code gets bundled and sent 
 
 ```jsx
 // frontend/src/api/users.js
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = import.meta.env.VITE_API_BASE_URL;
 
 export async function getUsers() {
   const response = await fetch(`${API_URL}/api/users`);
@@ -119,7 +119,7 @@ Create a `.env.example` file that shows what variables are required, without the
 
 ```bash
 # frontend/.env.example
-VITE_API_URL=http://localhost:8000
+VITE_API_BASE_URL=http://localhost:8000
 ```
 
 ```bash
@@ -145,15 +145,19 @@ You can have different `.env` files for different situations:
 
 ```bash
 # frontend/.env                 # Default (development)
-VITE_API_URL=http://localhost:8000
+VITE_API_BASE_URL=http://localhost:8000
 
 # frontend/.env.production      # Used when building for production
-VITE_API_URL=https://api.myapp.com
+VITE_API_BASE_URL=https://api.myapp.com
 ```
 
 Vite automatically loads the right file:
 - `npm run dev` → reads `.env`
 - `npm run build` → reads `.env.production` (if it exists)
+
+<Info>
+The companion repo uses `VITE_API_BASE_URL` (same concept, more explicit name). Its mobile app uses Expo's equivalent prefix: `EXPO_PUBLIC_API_BASE_URL`.
+</Info>
 
 ## What's next?
 

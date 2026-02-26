@@ -68,6 +68,10 @@ ReactDOM.createRoot(document.getElementById('root')).render(
 );
 ```
 
+<Info>
+`React.StrictMode` is a development-only helper. It may render components (and run effects) more than once in development to help catch bugs. This can look surprising at first, but it does not happen in production builds.
+</Info>
+
 **src/App.jsx** — Your main component. This is where you start building.
 
 ```jsx

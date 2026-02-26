@@ -7,6 +7,10 @@ description: "Organize your full-stack project with separate frontend and backen
 
 A full-stack app is two separate applications that talk to each other: a **React frontend** (what users see) and a **FastAPI backend** (your API and database). They run independently, communicate over HTTP, and live in separate folders.
 
+<Info>
+This lesson uses a simplified JS-first structure to teach the pattern clearly. The companion repo uses a more production-style layout: `backend/main.py` + `backend/routers/users.py` + `backend/models.py` + `backend/database.py`, a TypeScript web frontend (`.tsx`/`.ts`), and a `mobile/` Expo app that uses the same API.
+</Info>
+
 ```
 my-fullstack-app/
 ├── backend/                # FastAPI (Python)
@@ -98,6 +102,10 @@ cd backend
 pip install fastapi uvicorn
 uvicorn main:app --reload --port 8000
 ```
+
+<Tip>
+In the companion repo, the backend uses `uv` with `pyproject.toml`, so the command is `uv run fastapi dev main.py` instead of `uvicorn main:app --reload`.
+</Tip>
 
 Your API is now running at `http://localhost:8000`. You can test it at `http://localhost:8000/docs` (FastAPI's built-in Swagger UI).
 

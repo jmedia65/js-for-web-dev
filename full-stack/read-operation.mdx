@@ -132,7 +132,7 @@ function UserDetail({ userId }) {
     <div>
       <h2>{user.name}</h2>
       <p>{user.email}</p>
-      <p>Role: {user.role}</p>
+      <p>User ID: {user.id}</p>
     </div>
   );
 }
@@ -152,7 +152,6 @@ function UserCard({ user }) {
     <div className="user-card">
       <h3>{user.name}</h3>
       <p>{user.email}</p>
-      {user.role === "admin" && <span className="badge">Admin</span>}
     </div>
   );
 }
@@ -184,6 +183,10 @@ function UserList() {
 ```
 
 The smart component (`UserList`) handles state and fetching. The presentational component (`UserCard`) just displays data. This is the composition pattern from the React Essentials section.
+
+<Info>
+The companion repo's `User` shape is intentionally simple: `id`, `name`, and `email`. If you add fields later (like `role`), this same read pattern still works — you just render the new properties.
+</Info>
 
 ## Search and filter
 

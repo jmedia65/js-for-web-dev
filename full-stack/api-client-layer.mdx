@@ -13,7 +13,7 @@ function UserList() {
   const [users, setUsers] = useState([]);
 
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_URL}/api/users`)
+    fetch(`${import.meta.env.VITE_API_BASE_URL}/api/users`)
       .then(r => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json();
@@ -28,13 +28,17 @@ function UserList() {
 
 This works, but it creates problems: the same URL and error-handling logic gets duplicated in every component that needs users. If the API changes, you fix it in 10 places instead of 1.
 
+<Info>
+The companion repo already uses an API client file (`frontend/src/api/users.ts`) with this pattern. In this lesson, we stay in JavaScript and then add an optional shared `client.js` helper as a teaching step to reduce repetition further.
+</Info>
+
 ## The API client pattern
 
 Create a dedicated file for each resource's API calls:
 
 ```jsx
 // frontend/src/api/users.js
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = import.meta.env.VITE_API_BASE_URL;
 
 export async function getUsers() {
   const response = await fetch(`${API_URL}/api/users`);
@@ -129,7 +133,7 @@ Notice how every function repeats the same pattern: fetch, check response, parse
 
 ```jsx
 // frontend/src/api/client.js
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = import.meta.env.VITE_API_BASE_URL;
 
 export async function apiClient(endpoint, options = {}) {
   const response = await fetch(`${API_URL}${endpoint}`, {

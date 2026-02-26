@@ -20,6 +20,10 @@ console.log(user); // { name: "Sarah", age: 28 }
 
 In practice, people use the terms interchangeably. Don't worry about it.
 
+<Info>
+Python mental model: JavaScript is more permissive than Python here. If you pass too few arguments, the missing ones become `undefined` (instead of raising a `TypeError`). If you pass extra arguments, JavaScript ignores them unless you collect them with a rest parameter (`...args`).
+</Info>
+
 ## Default parameters
 
 Give parameters a fallback value when no argument is provided:
@@ -52,6 +56,10 @@ def create_user(name, role="viewer"):
 </Tabs>
 
 Same concept, same position — defaults go in the parameter list. JavaScript uses `=`, Python uses `=`. No surprises here.
+
+<Tip>
+One important JavaScript difference: default parameters are used when the argument is missing **or explicitly `undefined`**. Passing `null` does **not** use the default.
+</Tip>
 
 ### Practical example
 
@@ -121,6 +129,10 @@ def sum(*numbers):
 
 JavaScript uses `...args`, Python uses `*args`. Same idea.
 
+<Info>
+In JavaScript, `...` is used in multiple places (rest parameters, spread syntax). In Python, `*args` and `**kwargs` are split into separate syntaxes/uses. Same family of idea, different syntax rules.
+</Info>
+
 <Warning>
 The rest parameter must be the last parameter. `function bad(...args, last)` is a syntax error.
 </Warning>
@@ -179,6 +191,10 @@ createRequest({ method: "POST", url: "/api/users", body: { name: "Sarah" } });
 
 <Tip>
 Destructured parameters with defaults are the cleanest way to handle options objects. You'll see this pattern in API client functions, React components, and configuration.
+</Tip>
+
+<Tip>
+Python mental model: this is often nicer than passing a long list of positional args, and it plays a similar role to keyword-argument style APIs (`func(url=..., timeout=...)`) — but in JavaScript you're usually passing a single options object.
 </Tip>
 
 ## What's next?

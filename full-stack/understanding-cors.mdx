@@ -34,6 +34,10 @@ Your React frontend (`localhost:5173`) and your FastAPI backend (`localhost:8000
 CORS is a browser-only security feature. It doesn't affect Postman, curl, or server-to-server requests. That's why your API works fine in FastAPI's Swagger UI (`/docs`) or when you test with curl, but breaks when called from React.
 </Info>
 
+<Info>
+The companion repo allows more than one dev origin because the same API is used by multiple clients: `http://localhost:5173` (Vite web frontend) and `http://localhost:8081` (Expo web while testing the mobile app).
+</Info>
+
 ## Why CORS exists
 
 Without CORS, any website could make requests to any other site using your credentials. Imagine visiting a malicious site that silently makes requests to your bank's API using cookies your browser already has stored. CORS prevents this by requiring servers to opt in to receiving requests from other origins.

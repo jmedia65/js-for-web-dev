@@ -19,6 +19,10 @@ console.log(orderId); // ❌ ReferenceError: orderId is not defined
 
 `orderId` exists inside `processOrder` and nowhere else. This is a good thing — it means variables don't leak into places they shouldn't be.
 
+<Info>
+Python mental model: this is the same general idea as Python scope (LEGB: Local, Enclosing, Global, Built-in). The biggest difference you'll feel in JavaScript is that `let`/`const` also create **block scope** for `if`/`for`/`while`.
+</Info>
+
 ## Block scope
 
 Variables declared with `const` and `let` are **block-scoped**. They exist only within the nearest set of curly braces `{}`.
@@ -109,6 +113,10 @@ function outer() {
 
 This is called **lexical scoping** — inner functions can look "up" to their parent's scope, but parents can't look "down" into children.
 
+<Tip>
+This part is very similar to Python: nested functions can read variables from outer functions. That's the foundation for closures in both languages.
+</Tip>
+
 ## Global scope
 
 Variables declared outside any function or block are in the **global scope**. They're accessible everywhere.
@@ -152,6 +160,10 @@ console.log(color); // "blue"
 ```
 
 Each `color` is a different variable in a different scope. The inner-most scope wins. This is called **variable shadowing**.
+
+<Info>
+Python mental model: same idea as name shadowing in nested scopes — a local variable named `color` hides an outer `color`. JavaScript's scope chain and Python's LEGB rule are solving the same problem.
+</Info>
 
 <Info>
 Variable shadowing is legal but can be confusing. Avoid reusing the same variable name in nested scopes. ESLint can warn you about this with the `no-shadow` rule.

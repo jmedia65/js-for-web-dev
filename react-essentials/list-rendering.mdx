@@ -234,7 +234,7 @@ This is a realistic component. Fetch data, let the user search it, render the fi
 ))}
 ```
 
-React needs keys to efficiently update lists. Without them, React re-renders every item even when only one changed.
+React needs keys to track which item is which across renders. Without stable keys, React can mix up item identity (especially when inserting, deleting, or reordering) and do unnecessary work.
 </Accordion>
 
 <Accordion title="Putting key on the wrong element">

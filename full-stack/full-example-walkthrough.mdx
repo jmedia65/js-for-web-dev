@@ -7,6 +7,10 @@ description: "See a complete CRUD application with React and FastAPI working tog
 
 Let's put everything together. This is a complete user management app — the same patterns you've learned across the last several lessons, wired together into one working application.
 
+<Info>
+This walkthrough is a **JS-first teaching version** of the patterns. The companion repo is more production-structured: backend routes live in `backend/routers/users.py`, models in `backend/models.py`, the web client is TypeScript (`.ts/.tsx` with `frontend/src/types.ts` and `frontend/src/api/users.ts`), and there's also a `mobile/` Expo app using the same FastAPI API.
+</Info>
+
 ```
 my-fullstack-app/
 ├── backend/
@@ -25,6 +29,10 @@ my-fullstack-app/
 ```
 
 ## Backend — the full API
+
+<Info>
+The companion repo uses `UserCreate` for both create and update. This walkthrough shows a separate `UserUpdate` model to demonstrate a common partial-update pattern you'll likely adopt later.
+</Info>
 
 ```python
 # backend/main.py
@@ -112,7 +120,7 @@ Five endpoints. Five HTTP methods. That's the entire backend for a CRUD app.
 
 ```jsx
 // frontend/src/api/client.js
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = import.meta.env.VITE_API_BASE_URL;
 
 export async function apiClient(endpoint, options = {}) {
   const response = await fetch(`${API_URL}${endpoint}`, {

@@ -30,6 +30,10 @@ console.log(original); // [1, 2, 3] — unaffected
 console.log(copy);     // [1, 2, 3, 4]
 ```
 
+<Info>
+Python mental model: `copy = [...original]` is like `copy = [*original]` or `copy = original.copy()`. In all cases, this is a **shallow** copy.
+</Info>
+
 ### Merging arrays
 
 ```javascript
@@ -114,6 +118,10 @@ setUser({ ...user, age: 29 });
 Spread creates a **shallow copy**. If your object contains nested objects, the inner objects are still shared references. For deep nested updates, spread each level: `{ ...user, address: { ...user.address, city: "Seattle" } }`.
 </Warning>
 
+<Tip>
+Python mental model: this is the same behavior as `dict.copy()` or `{**user}` — nested dicts/lists are still shared unless you copy those nested levels too.
+</Tip>
+
 ## Practical patterns
 
 ### Building API request bodies
@@ -161,6 +169,10 @@ console.log(user);
 <Info>
 The `...(condition && { props })` pattern conditionally includes properties. If the condition is false, `false` is spread (which adds nothing). You'll see this when building request bodies with optional fields.
 </Info>
+
+<Tip>
+Python mental model: this is similar to `{**base, **({"role": "admin"} if is_admin else {})}`.
+</Tip>
 
 ## Comparing to Python
 

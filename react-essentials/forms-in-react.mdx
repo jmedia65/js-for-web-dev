@@ -5,7 +5,7 @@ description: "Build controlled forms that sync input values with React state"
 
 ## Controlled components
 
-In vanilla JavaScript, form inputs manage their own values. In React, **you** manage the values with state. This is called a controlled component — React state is the single source of truth.
+In vanilla JavaScript, form inputs manage their own values. In React, you'll often manage input values with state. This is called a controlled component — React state is the single source of truth.
 
 ```jsx
 import { useState } from 'react';
@@ -36,7 +36,7 @@ If you set `value` without `onChange`, the input becomes read-only — the user 
 
 ## All input types
 
-The `value` + `onChange` pattern works the same way for every input type:
+The `value` + `onChange` pattern works the same way for most common input types:
 
 ```jsx
 function AllInputTypes() {
@@ -113,8 +113,12 @@ function AllInputTypes() {
 ```
 
 <Info>
-Checkboxes use `checked` and `e.target.checked`. Everything else uses `value` and `e.target.value`. This is the one difference to remember.
+Checkboxes use `checked` and `e.target.checked`. Most other inputs use `value` and `e.target.value`. (File inputs are a special case and are usually handled as uncontrolled inputs.)
 </Info>
+
+<Tip>
+Even for `<input type="number">`, `e.target.value` is still a **string**. Convert it with `Number(...)` (or `parseInt`/`parseFloat`) when you actually need a number.
+</Tip>
 
 ## Handling form submission
 
