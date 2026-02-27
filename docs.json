@@ -6,11 +6,6 @@
     "dark": "/logo/dark.svg",
     "light": "/logo/light.svg"
   },
-  "seo": {
-    "metatags": {
-      "robots": "noindex"
-    }
-  },
   "favicon": "/favicon.svg",
   "colors": {
     "primary": "#16A34A",
